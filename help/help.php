@@ -1,6 +1,6 @@
 <?php
 
-// URL = http://10.119.192.46:8080/soci/help/help.php?nome=XXXX
+// URL = /soci/help/help.php?nome=XXXX
 
 $nomefile = $_GET['nome'].'.wmv';
 
@@ -17,14 +17,14 @@ $nomefile = $_GET['nome'].'.wmv';
     
                     <object classid="clsid:22D6F312-B0F6-11D0-94AB-0080C74C7E95" width="700"
                             height="360" codebase="http://www.microsoft.com/Windows/MediaPlayer/">
-                       <param name="Filename" value="http://10.119.192.46:8080/soci/help/<?php echo $nomefile; ?>">
+                       <param name="Filename" value="/soci/help/<?php echo $nomefile; ?>">
                        <param name="AutoStart" value="true">
                        <param name="ShowControls" value="true">
                        <param name="BufferingTime" value="2">
                        <param name="ShowStatusBar" value="true">
                        <param name="AutoSize" value="true">
                        <param name="InvokeURLs" value="false">
-                       <embed src="http://10.119.192.46:8080/soci/help/<?php echo $nomefile; ?>"
+                       <embed src="/soci/help/<?php echo $nomefile; ?>"
                               type="application/x-mplayer2" autostart="1" enabled="1" showstatusbar="1"
                               showdisplay="1" showcontrols="1" 
                               pluginspage="http://www.microsoft.com/Windows/MediaPlayer/" 

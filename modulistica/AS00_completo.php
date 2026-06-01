@@ -371,7 +371,7 @@ $querydati_mutua = mysqli_query($connection, $select_mutua);
         
         // <form action="http://10.119.192.46:8080/mutua/modulistica/as01_modulo_delegavoto.php" method="GET" onsubmit="return ray.ajax()" target="_blank">
         $esistenzasociomutua .= '
-        <form action="http://10.119.192.46:8080/soci/modulistica/as00_mutua.php" method="GET" onsubmit="return ray.ajax()" target="_blank">
+        <form action="/soci/modulistica/as00_mutua.php" method="GET" onsubmit="return ray.ajax()" target="_blank">
         <br>
         
                 <input type="hidden" class="form-control" name="passwordsoci" value="as22">
@@ -535,7 +535,7 @@ $querydati_sesso = mysqli_query($connection, $select_sesso);
                                     <table border="0" align="center" width="90%">
                                     </span>
 
-                                    <form action="http://10.119.192.46:8080/soci/modulistica/as00_mutua.php" method="GET" onsubmit="return ray.ajax()" target="_blank">
+                                    <form action="/soci/modulistica/as00_mutua.php" method="GET" onsubmit="return ray.ajax()" target="_blank">
                                     <br>
                                     
                                     <input type="hidden" class="form-control" name="passwordsoci" value="as22">

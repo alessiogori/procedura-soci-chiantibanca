@@ -21,6 +21,6 @@ else
 {	$usr_mail = $_GET['e'] ;
 	setcookie('usr_mail',$usr_mail);   }
 
-header("refresh: 1; url = http://10.197.139.22:8080/soci/");
+header("refresh: 1; url = /soci/");
 
 ?>

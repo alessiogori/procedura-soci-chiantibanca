@@ -764,7 +764,7 @@ $ValoreNominale = number_format($datisocio['VALORE_NOMINALE'],2,',','.');
 			$querydati_mon = mysqli_query($connection, $select_mon);
 
 			echo "<br>
-			<a href='http://10.197.139.22:8080/soci/monitor_new.php?tipo=new&cag=".$cag."&nominativo=".$nominativo."'>Nuova Segnalazione</a>
+			<a href='/soci/monitor_new.php?tipo=new&cag=".$cag."&nominativo=".$nominativo."'>Nuova Segnalazione</a>
 			<br>
 				<table align='center' id='lista' border='1' width='100%'>
 					<tr style='background-color:#6F6F6F;'>

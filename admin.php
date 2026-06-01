@@ -214,13 +214,13 @@ else
 -->
 
 <!-- TEST STAMPA ASSEMBLEA
-<a href="http://10.119.192.46:8080/soci/modulistica/AS00_completo.php?modello=AS00&cag=03265370&socio=TURI GIAMPAOLO&idsocio=47362&luogo=Pistoia" target="_blank">Test AS00 SOCIO BANCA + MUTUA</a>
+<a href="/soci/modulistica/AS00_completo.php?modello=AS00&cag=03265370&socio=TURI GIAMPAOLO&idsocio=47362&luogo=Pistoia" target="_blank">Test AS00 SOCIO BANCA + MUTUA</a>
 <br>
-<a href="http://10.119.192.46:8080/soci/modulistica/AS00_completo.php?modello=AS00&cag=03001756&socio=FEDI ALBA&idsocio=42741&luogo=Pistoia" target="_blank">Test AS00 solo SOCIO BANCA PF</a>
+<a href="/soci/modulistica/AS00_completo.php?modello=AS00&cag=03001756&socio=FEDI ALBA&idsocio=42741&luogo=Pistoia" target="_blank">Test AS00 solo SOCIO BANCA PF</a>
 <br>
-<a href="http://10.119.192.46:8080/soci/modulistica/AS00_completo.php?modello=AS00&cag=03145334&socio=TOSCOFILATI S.R.L.&idsocio=42719&luogo=Montemurlo" target="_blank">Test AS00 solo SOCIO BANCA AZIENDA</a>
+<a href="/soci/modulistica/AS00_completo.php?modello=AS00&cag=03145334&socio=TOSCOFILATI S.R.L.&idsocio=42719&luogo=Montemurlo" target="_blank">Test AS00 solo SOCIO BANCA AZIENDA</a>
 <br>
-<a href="http://10.119.192.46:8080/soci/modulistica/AS05_coupon_ritiro_olio.php?modello=AS05&cag=03063244&socio=FEDI GIANNA&idsocio=42482&luogo=Pistoia" target="_blank">Test AS05 COUPON OLIO</a>
+<a href="/soci/modulistica/AS05_coupon_ritiro_olio.php?modello=AS05&cag=03063244&socio=FEDI GIANNA&idsocio=42482&luogo=Pistoia" target="_blank">Test AS05 COUPON OLIO</a>
 <br>
 -->
 
@@ -228,13 +228,13 @@ else
 <b>Link da aprire in "incognito" per fare test</b> 
 <br>
 
-<a href="http://10.197.139.22:8080/soci/_auth.php?f=995&u=00283&e=rossella.centineo@chiantibanca.it">AREA</a>
+<a href="/soci/_auth.php?f=995&u=00283&e=rossella.centineo@chiantibanca.it">AREA</a>
 <br>
 
-<a href="http://10.197.139.22:8080/soci/_auth.php?f=61&u=00444&e=cristiano.mazzei@chiantibanca.it">FILIALE</a>
+<a href="/soci/_auth.php?f=61&u=00444&e=cristiano.mazzei@chiantibanca.it">FILIALE</a>
 <br>
 
-<a href="http://10.197.139.22:8080/soci/_auth.php?f=100&u=00379&e=stefano.matteucci@chiantibanca.it">CENTRO IMPRESE</a>
+<a href="/soci/_auth.php?f=100&u=00379&e=stefano.matteucci@chiantibanca.it">CENTRO IMPRESE</a>
 </center>
 
 

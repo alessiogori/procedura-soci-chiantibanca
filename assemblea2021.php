@@ -43,7 +43,7 @@
                 </div>
                 <div class="card-body">
                     <video width="300" controls>
-                        <source src="http://10.119.192.46:8080/soci/video/as00_raccoltadeleghe.mp4" type="video/mp4">
+                        <source src="/soci/video/as00_raccoltadeleghe.mp4" type="video/mp4">
                     </video>
               </div>
               </div>
@@ -87,7 +87,7 @@
 <br>         
 * Non sono presenti in Area Riservata nè il modulo di DELEGA nè il modulo delle ISTRUZIONI DI VOTO,<br> in quanto gli stessi potranno essere consegnati in forma personalizzata al Socio che si recherà in una delle sedi come da calendario.
 <br><br>
-<a href="http://10.119.192.46:8080/soci/faq/?qa=questions/assemblea" target="_blank" title="FAQ" style="text-decoration: none;">
+<a href="/soci/faq/?qa=questions/assemblea" target="_blank" title="FAQ" style="text-decoration: none;">
 <h5 class="card-title" style="color:#FFFFFF;"><i class="fas fa-question-circle fa-1x text-gray-300 col-auto"></i>Domande & Risposte</h5>
 </small>
 </center>            

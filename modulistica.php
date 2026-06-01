@@ -412,9 +412,9 @@ echo '		</tbody>
 
 // TEST PER DATAMATRIX
 /*
-echo '&nbsp;<a href="http://10.119.192.46:8080/soci/modulistica/_testdmx.php?modello=DMX&cag=03033148&socio=FEDI+ALESSIO+&idsocio=3060086&luogo=Pistoia" target="_blank">_</a>';
+echo '&nbsp;<a href="/soci/modulistica/_testdmx.php?modello=DMX&cag=03033148&socio=FEDI+ALESSIO+&idsocio=3060086&luogo=Pistoia" target="_blank">_</a>';
 echo '<br>';
-echo '&nbsp;<a href="http://10.119.192.46:8080/soci/modulistica/_testdmx2.php?modello=DMX&cag=03033148&socio=FEDI+ALESSIO+&idsocio=3060086&luogo=Pistoia" target="_blank">_</a>';
+echo '&nbsp;<a href="/soci/modulistica/_testdmx2.php?modello=DMX&cag=03033148&socio=FEDI+ALESSIO+&idsocio=3060086&luogo=Pistoia" target="_blank">_</a>';
 */
 echo '	
       </div>

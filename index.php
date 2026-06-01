@@ -59,7 +59,7 @@ POPUP ALL'APERTURA
           che diventerà a breve l'unico portale destinato al mondo delle due compagini sociali.<br>
           <br>
           Se vuoi proseguire su questo portale clicca la X in alto<br>
-          altrimenti clicca qui per accedere al <a href="http://10.119.192.46:8080/soci/index.php">Portale Soci</a>.</p>
+          altrimenti clicca qui per accedere al <a href="/soci/index.php">Portale Soci</a>.</p>
 
             </div>
         </div>
