@@ -1,0 +1,12 @@
+# File di configurazione specifici per ambiente (credenziali DB reali).
+# Gestiti direttamente su ciascun ambiente (sviluppo, collaudo, produzione),
+# NON versionati per non sovrascrivere le credenziali e non esporle nel repo.
+config/_config.php
+config/_functions.php
+mail_search.php
+
+# Impostazioni locali di Claude Code (per macchina/utente)
+.claude/
+
+# File temporanei e di log generati a runtime
+crea_sds_soci.log
