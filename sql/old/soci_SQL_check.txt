@@ -1,0 +1,300 @@
+************* PRESENTI *************
+// Conteggio dei presenti
+SELECT count(*) FROM `tab_soci_scelta` WHERE presente = 'SI'
+
+// Conteggio dei presenti come DIPENDENTI
+SELECT a.prot, b.int1Socio, a.presente, a.location
+FROM `tab_soci_scelta` as a, `tab_soci_as37` as b
+WHERE a.presente = 'SI'
+AND b.cag in
+(00001829,
+00002095,
+00002191,
+00003456,
+00003457,
+00004075,
+00004120,
+00004560,
+00004587,
+00004589,
+00008374,
+00008551,
+00008598,
+00009810,
+00011803,
+00011813,
+00011817,
+00012003,
+00012121,
+00012269,
+00012596,
+00013869,
+00014510,
+00014589,
+00015221,
+00015297,
+00015631,
+00016964,
+00017833,
+00018560,
+00018744,
+00020679,
+00021254,
+00021711,
+00021989,
+00023070,
+00023866,
+00023906,
+00025310,
+00025714,
+00025745,
+00026795,
+00027431,
+00028550,
+00029396,
+00031958,
+00032197,
+00032890,
+00033630,
+00035915,
+00036578,
+00037802,
+00038983,
+00039370,
+00040747,
+00041156,
+00044135,
+00046403,
+00046419,
+00046960,
+00047214,
+00047323,
+00047327,
+00047979,
+00048946,
+00049744,
+00049956,
+00106708,
+00117875,
+00125152,
+00127854,
+00129315,
+00144620,
+00151816,
+00166688,
+00178916,
+00252880,
+00253026,
+00257979,
+00259051,
+00269199,
+00282130,
+00285023,
+00311851,
+00312417,
+00312482,
+00313750,
+00328871,
+00346850,
+00362602,
+00362605,
+00362937,
+00363589,
+00366780,
+00366784,
+00366999,
+00371419,
+00371552,
+00399867,
+01003450,
+01004209,
+01004339,
+01007120,
+01007417,
+01007500,
+01008102,
+01008142,
+01009054,
+01010652,
+01011596,
+01011889,
+01012191,
+01012372,
+01012462,
+01012719,
+01015186,
+01015369,
+01015690,
+01015838,
+01016227,
+01016295,
+01019961,
+01020185,
+01021494,
+01024319,
+01024321,
+01024859,
+01026658,
+01027241,
+01027339,
+01027661,
+01028790,
+01029579,
+01029840,
+01030037,
+01030260,
+01030687,
+01030944,
+01032494,
+01034163,
+01035595,
+01055786,
+01057399,
+01078791,
+01084115,
+01086641,
+01094597,
+01113874,
+01117053,
+01117317,
+01121465,
+01128726,
+01129006,
+01133172,
+01138262,
+01145763,
+01149785,
+01149906,
+01150896,
+02013307,
+02013396,
+02022022,
+02026457,
+02027142,
+02713171,
+03003196,
+03009099,
+03009823,
+03009879,
+03012144,
+03016591,
+03018199,
+03018751,
+03019231,
+03019244,
+03019411,
+03020298,
+03021517,
+03022165,
+03022666,
+03023507,
+03025376,
+03028266,
+03028377,
+03028749,
+03028776,
+03030209,
+03030232,
+03030234,
+03030472,
+03031054,
+03031055,
+03033323,
+03035684,
+03041226,
+03046086,
+03047775,
+03048270,
+03048648,
+03048675,
+03048710,
+03053366,
+03053493,
+03054173,
+03054995,
+03056969,
+03060196,
+03062473,
+03065146,
+03083221,
+03133377,
+03140578,
+03150025,
+03150801,
+03162466,
+03163536,
+03182102,
+03182437,
+03262585,
+03265370,
+03266676,
+03268182,
+03268214,
+03268807,
+03271265,
+03272244,
+03272270,
+03272420,
+03274571,
+03275344,
+03275980,
+03276447,
+03277071,
+03281107,
+03286436,
+04001632,
+04009289,
+04048869,
+04101617,
+04122534
+)
+AND a.prot = b.prot
+ORDER BY a.location, b.int1Socio
+
+
+
+************* LOCATION *************
+// Controllo location mancanti su presenza SI
+SELECT a.codFil, a.cag, a.int1Socio, s.*
+FROM `tab_soci_as37` as a, `tab_soci_scelta` as s  
+WHERE s.presente = 'SI' and s.location = ''
+AND a.prot = s.prot 
+
+// Eliminazione location se presenza NO
+SELECT * FROM `tab_soci_scelta` WHERE presente = 'NO' and location <> ''
+UPDATE `tab_soci_scelta` set location = '' WHERE presente = 'NO' 
+
+
+************* DELEGHE RICEVUTE *************
+// Controllo quantità deleghe per chi ha ricevuto delega
+SELECT * FROM `tab_soci_scelta` WHERE ricevutodelega = 'SI'
+
+// Conteggio dei Soci per quantità di deleghe ricevute
+SELECT count(*) as qtasoci, qtadeleghe as numdeleghe, sum(qtadeleghe) as qtadeleghe
+FROM `tab_soci_scelta` WHERE ricevutodelega = 'SI'
+GROUP BY (qtadeleghe) 
+
+
+************* DELEGHE DATE *************
+// Controllo valore a NO per chi ha rilasciato delega
+SELECT * FROM `tab_soci_scelta` WHERE datodelega = 'SI'
+
+// Conteggio di quanti HANNO DATO delega
+SELECT count(*) FROM `tab_soci_scelta` WHERE presente = 'NO' and datodelega = 'SI'
+
+// Correzione presenza per deleghe date
+SELECT count(*) FROM `tab_soci_scelta` WHERE presente = '' and datodelega = 'SI'
+SELECT count(*) FROM `tab_soci_scelta` WHERE presente = 'SI' and datodelega = 'SI'
+UPDATE `tab_soci_scelta` set presente = 'NO' WHERE datodelega = 'SI' 
+
+// Correzione quantità deleghe per chi ha dato deleghe
+SELECT count(*) FROM `tab_soci_scelta` WHERE datodelega = 'SI' AND qtadeleghe <> ''
+UPDATE `tab_soci_scelta` set qtadeleghe = '' WHERE datodelega = 'SI' 
+
+
+************* PULLMAN *************
+// Lista dei posti richiesti
+SELECT a.codFil, a.cag, a.int1Socio, s.presente, s.pullman 
+FROM `tab_soci_as37` as a, `tab_soci_scelta` as s 
+WHERE s.pullman = 'SI'
+AND a.prot = s.prot 

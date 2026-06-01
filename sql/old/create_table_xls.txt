@@ -1,0 +1,263 @@
+CREATE TABLE IF NOT EXISTS tab_soci_as37 (
+    `stato` VARCHAR(100) CHARACTER SET utf8,
+    `statoVAL` VARCHAR(100) CHARACTER SET utf8,
+    `prot` VARCHAR(100) CHARACTER SET utf8,
+    `cag` VARCHAR(100) CHARACTER SET utf8,
+    `int1Socio` VARCHAR(100) CHARACTER SET utf8,
+    `int2Socio` VARCHAR(100) CHARACTER SET utf8,
+    `servContabile` VARCHAR(100) CHARACTER SET utf8,
+    `rappContabile` VARCHAR(100) CHARACTER SET utf8,
+    `rappContEditato` VARCHAR(100) CHARACTER SET utf8,
+    `divisa` VARCHAR(100) CHARACTER SET utf8,
+    `protSub` VARCHAR(100) CHARACTER SET utf8,
+    `int1Subentrato` VARCHAR(100) CHARACTER SET utf8,
+    `int2Subentrato` VARCHAR(100) CHARACTER SET utf8,
+    `cagDelegato` VARCHAR(100) CHARACTER SET utf8,
+    `int1Delegato` VARCHAR(100) CHARACTER SET utf8,
+    `int2Delegato` VARCHAR(100) CHARACTER SET utf8,
+    `attivita` VARCHAR(100) CHARACTER SET utf8,
+    `attivitaVAL` VARCHAR(100) CHARACTER SET utf8,
+    `zona` VARCHAR(100) CHARACTER SET utf8,
+    `zonaVAL` VARCHAR(100) CHARACTER SET utf8,
+    `modPagamDiv` VARCHAR(100) CHARACTER SET utf8,
+    `modPagamDivVAL` VARCHAR(100) CHARACTER SET utf8,
+    `regFiscale` VARCHAR(100) CHARACTER SET utf8,
+    `regFiscaleVAL` VARCHAR(100) CHARACTER SET utf8,
+    `dataAmmiss` VARCHAR(100) CHARACTER SET utf8,
+    `dataEntrata` VARCHAR(100) CHARACTER SET utf8,
+    `dataUscita` VARCHAR(100) CHARACTER SET utf8,
+    `dataEstinzione` VARCHAR(100) CHARACTER SET utf8,
+    `causaleUscita` VARCHAR(100) CHARACTER SET utf8,
+    `causaleUscitaVAL` VARCHAR(100) CHARACTER SET utf8,
+    `divAz` VARCHAR(100) CHARACTER SET utf8,
+    `nAz` VARCHAR(100) CHARACTER SET utf8,
+    `nominaleAz` VARCHAR(100) CHARACTER SET utf8,
+    `nAzRiv` VARCHAR(100) CHARACTER SET utf8,
+    `nominaleAzRiv` VARCHAR(100) CHARACTER SET utf8,
+    `nAzTot` VARCHAR(100) CHARACTER SET utf8,
+    `nominaleAzTot` VARCHAR(100) CHARACTER SET utf8,
+    `sovrRimbRC` VARCHAR(100) CHARACTER SET utf8,
+    `sovrRimbRU` VARCHAR(100) CHARACTER SET utf8,
+    `sovrRimbCompl` VARCHAR(100) CHARACTER SET utf8,
+    `sovrNoRimb` VARCHAR(100) CHARACTER SET utf8,
+    `tassa` VARCHAR(100) CHARACTER SET utf8,
+    `residDiv` VARCHAR(100) CHARACTER SET utf8,
+    `residRiv` VARCHAR(100) CHARACTER SET utf8,
+    `divDaAccr` VARCHAR(100) CHARACTER SET utf8,
+    `rivDaAccr` VARCHAR(100) CHARACTER SET utf8,
+    `codFil` VARCHAR(100) CHARACTER SET utf8,
+    `int1Filiale` VARCHAR(100) CHARACTER SET utf8,
+    `int2Filiale` VARCHAR(100) CHARACTER SET utf8,
+    `tipoContropVAL` VARCHAR(100) CHARACTER SET utf8,
+    `tipoControp` VARCHAR(100) CHARACTER SET utf8,
+    `dataNasc` VARCHAR(100) CHARACTER SET utf8,
+    `luogoNasc` VARCHAR(100) CHARACTER SET utf8,
+    `comuneNasc` VARCHAR(100) CHARACTER SET utf8,
+    `CABNasc` VARCHAR(100) CHARACTER SET utf8,
+    `provNasc` VARCHAR(100) CHARACTER SET utf8,
+    `paeseNascVAL` VARCHAR(100) CHARACTER SET utf8,
+    `paeseNasc` VARCHAR(100) CHARACTER SET utf8,
+    `dataDecesso` VARCHAR(100) CHARACTER SET utf8,
+    `titoloOnorificoVAL` VARCHAR(100) CHARACTER SET utf8,
+    `titoloOnorifico` VARCHAR(100) CHARACTER SET utf8,
+    `sessoVAL` VARCHAR(100) CHARACTER SET utf8,
+    `sesso` VARCHAR(100) CHARACTER SET utf8,
+    `telefono` VARCHAR(100) CHARACTER SET utf8,
+    `fax` VARCHAR(100) CHARACTER SET utf8,
+    `indirizzoEMail` VARCHAR(100) CHARACTER SET utf8,
+    `indirizzoPEC` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga1` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga2` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga3` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga4` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga5` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga6` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidRiga7` VARCHAR(100) CHARACTER SET utf8,
+    `indir7ResidPref7` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidTitOnor` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidIntestaz1` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidIntestaz2` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidIndirizzo` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidCAP` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidLocalita` VARCHAR(100) CHARACTER SET utf8,
+    `indirResidProvincia` VARCHAR(100) CHARACTER SET utf8,
+    `indirizResidCasella` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga1` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga2` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga3` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga4` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga5` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga6` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedRiga7` VARCHAR(100) CHARACTER SET utf8,
+    `indir7SpedPref7` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedTitOnor` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedIntestaz1` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedIntestaz2` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedIndirizzo` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedCAP` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedLocalita` VARCHAR(100) CHARACTER SET utf8,
+    `indirSpedProvincia` VARCHAR(100) CHARACTER SET utf8,
+    `indirizSpedCasella` VARCHAR(100) CHARACTER SET utf8,
+    `Column_100` VARCHAR(100) CHARACTER SET utf8,
+    `Column_101` VARCHAR(100) CHARACTER SET utf8,
+    `Column_102` VARCHAR(100) CHARACTER SET utf8,
+    `Column_103` VARCHAR(100) CHARACTER SET utf8,
+    `Column_104` VARCHAR(100) CHARACTER SET utf8
+);
+
+
+
+
+-- phpMyAdmin SQL Dump
+-- version 4.7.9
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3306
+-- Creato il: Feb 05, 2020 alle 10:35
+-- Versione del server: 5.7.21-log
+-- Versione PHP: 5.6.35
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+--
+-- Database: `soci`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `tab_xls_acquistoulterioriazioni`
+--
+
+DROP TABLE IF EXISTS `tab_xls_acquistoulterioriazioni`;
+CREATE TABLE IF NOT EXISTS `tab_xls_acquistoulterioriazioni` (
+  `CDA` varchar(15) DEFAULT NULL,
+  `Filiale` int(11) DEFAULT NULL,
+  `PF_PG` varchar(2) CHARACTER SET utf8 DEFAULT NULL,
+  `CAG` int(11) DEFAULT NULL,
+  `Conto` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `Nominativo` varchar(100) CHARACTER SET utf8 DEFAULT NULL,
+  `Numero_Azioni` int(11) DEFAULT NULL,
+  `Valore_Nominale` int(15) DEFAULT NULL,
+  `Data_Richiesta` varchar(15) CHARACTER SET utf8 DEFAULT NULL,
+  `Azioni_Possedute` int(11) DEFAULT NULL,
+  `Totale_Azioni` int(11) DEFAULT NULL,
+  `Data_AO07` varchar(15) CHARACTER SET utf8 DEFAULT NULL,
+  `Note` int(11) DEFAULT NULL,
+  `Data_Lettera` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `tab_xls_ammissioni`
+--
+
+DROP TABLE IF EXISTS `tab_xls_ammissioni`;
+CREATE TABLE IF NOT EXISTS `tab_xls_ammissioni` (
+  `CDA` varchar(15) DEFAULT NULL,
+  `Filiale` int(11) DEFAULT NULL,
+  `PF_PG` varchar(2) CHARACTER SET utf8 DEFAULT NULL,
+  `CAG` int(11) DEFAULT NULL,
+  `Conto` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `Manca_DB` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Nominativo` varchar(100) CHARACTER SET utf8 DEFAULT NULL,
+  `Data_Domanda` varchar(15) DEFAULT NULL,
+  `Azioni_Sottoscritte` int(11) DEFAULT NULL,
+  `Flag_da_SUCC_CESS` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Qta_Azioni_da_Succ_Cess` int(11) DEFAULT NULL,
+  `Qta_Ulteriori_azioni_da_acquistare` int(11) DEFAULT NULL,
+  `Comune_Residenza` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `Note_Requisiti` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `Attivita_Professione` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `Note` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `Credito` int(11) DEFAULT NULL,
+  `Depositi` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `tab_xls_cessioni`
+--
+
+DROP TABLE IF EXISTS `tab_xls_cessioni`;
+CREATE TABLE IF NOT EXISTS `tab_xls_cessioni` (
+  `CDA` varchar(15) DEFAULT NULL,
+  `Filiale` int(11) DEFAULT NULL,
+  `PF_PG` varchar(2) CHARACTER SET utf8 DEFAULT NULL,
+  `CAG` int(11) DEFAULT NULL,
+  `Conto` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `Nominativo` varchar(100) CHARACTER SET utf8 DEFAULT NULL,
+  `Numero_Azioni` int(11) DEFAULT NULL,
+  `Valore_Nominale` int(15) DEFAULT NULL,
+  `Data_Richiesta` varchar(15) DEFAULT NULL,
+  `Note_Motivazioni` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `Totale_Parziale` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Cessione_a_Banca` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Cessione_a_Socio` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Data` varchar(15) DEFAULT NULL,
+  `Note_AO08` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
+  `Data_Lettera` varchar(15) CHARACTER SET utf8 DEFAULT NULL,
+  `ID` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `tab_xls_decessi_eredi`
+--
+
+DROP TABLE IF EXISTS `tab_xls_decessi_eredi`;
+CREATE TABLE IF NOT EXISTS `tab_xls_decessi_eredi` (
+  `CDA` varchar(15) DEFAULT NULL,
+  `Filiale` int(11) DEFAULT NULL,
+  `PF_PG` varchar(2) CHARACTER SET utf8 DEFAULT NULL,
+  `CAG` int(11) DEFAULT NULL,
+  `Pagamento` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
+  `Nominativo` varchar(100) CHARACTER SET utf8 DEFAULT NULL,
+  `Numero_Azioni` int(11) DEFAULT NULL,
+  `Valore_Nominale` int(15) DEFAULT NULL,
+  `Data_Richiesta` varchar(15) DEFAULT NULL,
+  `Note_Motivazioni` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `Deceduto` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Data_Decesso` varchar(15) DEFAULT NULL,
+  `Oltre_1_anno` int(11) DEFAULT NULL,
+  `Nuovo_Socio_x_Successione` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Intestazione_a_eredi` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Liquidazione_a_eredi` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Data` varchar(15) DEFAULT NULL,
+  `Note_AO08` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
+  `Data_Lettera` varchar(15) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `tab_xls_recessi_esclusioni_sofferenze`
+--
+
+DROP TABLE IF EXISTS `tab_xls_recessi_esclusioni_sofferenze`;
+CREATE TABLE IF NOT EXISTS `tab_xls_recessi_esclusioni_sofferenze` (
+  `CDA` varchar(15) DEFAULT NULL,
+  `Filiale` int(11) DEFAULT NULL,
+  `PF_PG` varchar(2) CHARACTER SET utf8 DEFAULT NULL,
+  `CAG` int(11) DEFAULT NULL,
+  `Conto` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `Nominativo` varchar(100) CHARACTER SET utf8 DEFAULT NULL,
+  `Numero_Azioni` int(11) DEFAULT NULL,
+  `Valore_Nominale` int(15) DEFAULT NULL,
+  `Data_Richiesta` varchar(15) DEFAULT NULL,
+  `Note_Motivazioni` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `Accoglimento_recesso` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Escluso_art_6` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Escluso_art_14` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Escluso_x_Passaggio_a_Sofferenze` varchar(1) CHARACTER SET utf8 DEFAULT NULL,
+  `Data_AO08` varchar(15) DEFAULT NULL,
+  `Note_AO08` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
+  `Data_Lettera` varchar(15) CHARACTER SET utf8 DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+COMMIT;

@@ -1,0 +1,1008 @@
+<?php
+//////////////////////////////////////////////////////////////////
+// SITUAZIONE SOCI
+// Viene usato l'utente ODBCUSER01 creato per SOCI
+// Author: Alessio Fedi - 28.10.2022
+//////////////////////////////////////////////////////////////////
+// Nome Script
+$NOME_SCRIPT = 'SITUAZIONE PLAFOND';
+$TITOLO = 'Situazione PLAFOND Soci';
+$anno = date("Y");
+
+// Execution Time = 0 - No Limit
+ini_set('max_execution_time', '0');
+
+// Includo i dati di connessione
+include("../config/_config.php");
+include("../config/_functions.php");
+
+// including FusionCharts PHP wrapper
+include("../graph/fusioncharts.php"); 
+
+echo '<html>
+        <head>
+        <script type="text/javascript" src="../js/fusioncharts/fusioncharts.js"></script>
+        <script type="text/javascript" src="../js/fusioncharts/themes/fusioncharts.theme.candy.js"></script>
+        <title>'.$TITOLO.'</title>
+        </head>
+        <style type="text/css">
+          @import "../css/bootstrap.css";
+          @import "../css/bootstrap.min.css";
+        </style> 
+
+        <body><br><br>
+        ';
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Connessione all'ODBC SADAS
+$connect = odbc_connect('SADAS', NULL, NULL) or die ('0');
+
+// FINE SEZIONE DA NON MODIFICARE
+// --------------------------------------------------------------------
+$adesso = date("d.m.Y");
+$adesso_anno = date("Y");
+
+
+if (!isset($_GET['datain']) OR empty($_GET['datain']) ) 
+      {
+            $_GET['datain'] = '01/01/2023';
+            $dataMediaPlafond = date("d/m/Y", strtotime($_GET['datain']."-6 months"));            // 6 mesi indietro per calcolare la media delle ammissioni
+            //echo $dataMediaPlafond;
+        }
+
+if (!isset($_GET['dataout']) OR empty($_GET['dataout']) ) 
+      {
+            $_GET['dataout'] = date("d/m/Y", strtotime("-1 day"));            // 1 giorno indietro perchè SADAS è sempre a ieri sera !!
+            $dataMediaPlafond = date("d/m/Y", strtotime($_GET['datain']."-6 months"));            // 6 mesi indietro per calcolare la media delle ammissioni
+      }
+
+// Controllo se la richiesta arriva   
+if (!isset($_GET['filiale']))
+    {$condizionefiliale = '';
+     $titolofiliale = '';
+     $filiale = '';
+     $area = '';
+     $rif = '';
+    }
+    else
+    {
+  // da un FILIALE
+     if (!isset($_GET['area']) OR ($_GET['area']) == "")   
+     {    
+     $condizionefiliale = ' AND ANAG_NAG.FILIALE_CAPOFILA in ('.$_GET['filiale'].')';
+     $condizionefiliale2 = ' AND Filiale in '.$_GET['filiale'].'';
+     $titolofiliale = ' Filiale '.$_GET['filiale'];  
+     $filiale = $_GET['filiale'];
+     $rif = 'Filiale';
+     }
+     else
+  // da una AREA   
+     {    
+     $condizionefiliale = ' AND ANAG_NAG.FILIALE_CAPOFILA in ('.$_GET['filiale'].')';
+     $condizionefiliale2 = ' AND Filiale in ('.$_GET['filiale'].')';
+     $titolofiliale = ' Area '.$_GET['area'];  
+     $filiale = $_GET['area'];
+     $rif = 'Area';
+     }
+    }
+
+
+
+echo '
+      <div class="alert alert-dismissible alert-warning">
+            <h2 class="alert-heading">'.$TITOLO .'</h2>
+            <p class="mb-0 justify-content-between align-items-left">'.$rif.' '.$filiale.' - Dal '.$_GET['datain'].' al '.$_GET['dataout'].'</p>
+            <p class="mb-0 justify-content-between align-items-left">Parametri: ?datain=gg/mm/aaaa (eventuale &dataout=gg/mm/aaaa)</p>
+      </div>
+';
+
+// ----------------------------------------------------------------------------------------------------------
+// 01 - NUOVE AMMISSIONI + ULTERIORI QUOTE (da Fondo) - DA INIZIO ANNO - DETTAGLIO
+// Eq. Soci Stampe Generali > Situazione Fondo Riacquisto Azioni > dal 01.01.2022 flag "solo in Uscita"
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_fondo_us_D =   "
+                        SELECT 
+                        R.IDSOCIO,
+                        R.IDCERTIFICATO,
+                        R.NAZIONI,
+                        R.TIPO_OPERAZIONE,
+                        A.NAG, 
+                        N.INTESTAZIONE_A,
+                        N.INTESTAZIONE_B, 
+                        V.IVAL_AZIONI,
+                        (R.NAZIONI * V.IVAL_AZIONI) AS IMPORTO,
+                        CASE R.TIPO_OPERAZIONE WHEN 'E' THEN 'In entrata' ELSE 'In uscita' END AS TIPO 
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_ANAGRAFICA A, ANAG_NAG N, SOCI_VALORE_AZIONI V
+                        WHERE R.IDSOCIO = A.IDSOCIO 
+                        AND A.NAG = N.NAG
+                        AND R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$_GET['datain']."' 
+                        AND R.TIPO_OPERAZIONE = 'U'
+                    
+                        ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 01 - NUOVE AMMISSIONI + ULTERIORI QUOTE (da Fondo) - DA INIZIO ANNO - RIEPILOGO PER TIPOLOGIA
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_fondo_us_R =   "
+                        SELECT count(*) as qta,
+                        CASE 
+                            R.TIPO_OPERAZIONE WHEN 'E' THEN 'In entrata' ELSE 'In uscita'
+                        END AS TIPO ,
+                            SUM(R.NAZIONI * V.IVAL_AZIONI) AS SUM_IMPORTO  
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_VALORE_AZIONI V
+                        WHERE R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$_GET['datain']."' 
+                        AND R.TIPO_OPERAZIONE = 'U'
+                        GROUP BY CASE R.TIPO_OPERAZIONE WHEN 'E' THEN 'In entrata' ELSE 'In uscita' END
+                        ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 01 - NUOVE AMMISSIONI + ULTERIORI QUOTE (da Fondo) - DA INIZIO ANNO - TOTALE GENERALE
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_fondo_us_T =   "
+                        SELECT 
+                            count(*) as TOTALE_QTA,
+                            SUM(R.NAZIONI * V.IVAL_AZIONI) AS TOTALE_IMPORTO  
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_VALORE_AZIONI V
+                        WHERE R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$_GET['datain']."' 
+                        AND R.TIPO_OPERAZIONE = 'U'
+                    ";
+
+$select_movim_fondo_us_TP =   "
+                        SELECT 
+                            count(*) as TOTALE_QTA,
+                            SUM(R.NAZIONI * V.IVAL_AZIONI) AS TOTALE_IMPORTO  
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_VALORE_AZIONI V
+                        WHERE R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$dataMediaPlafond."' 
+                        AND R.TIPO_OPERAZIONE = 'U'
+                    ";
+/*
+ECHO '<br>Fondo T = <br>';
+echo $select_movim_fondo_us_T;
+ECHO '<br>Fondo TP = <br>';
+echo $select_movim_fondo_us_TP;
+*/
+// ----------------------------------------------------------------------------------------------------------
+// 02 - CESSIONI A BANCA (da Fondo) - DA INIZIO ANNO - DETTAGLIO
+// Eq. Soci Stampe Generali > Situazione Fondo Riacquisto Azioni > dal 01.01.2022 flag "solo in Uscita"
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_fondo_en_D =   "
+                        SELECT 
+                        R.IDSOCIO,
+                        R.IDCERTIFICATO,
+                        R.NAZIONI,
+                        R.TIPO_OPERAZIONE,
+                        A.NAG, 
+                        N.INTESTAZIONE_A,
+                        N.INTESTAZIONE_B, 
+                        V.IVAL_AZIONI,
+                        (R.NAZIONI * V.IVAL_AZIONI) AS IMPORTO,
+                        CASE R.TIPO_OPERAZIONE WHEN 'E' THEN 'In entrata' ELSE 'In uscita' END AS TIPO 
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_ANAGRAFICA A, ANAG_NAG N, SOCI_VALORE_AZIONI V
+                        WHERE R.IDSOCIO = A.IDSOCIO 
+                        AND A.NAG = N.NAG
+                        AND R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$_GET['datain']."' 
+                        AND R.TIPO_OPERAZIONE = 'E'
+                    
+                        ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 02 - CESSIONI A BANCA (da Fondo) - DA INIZIO ANNO - RIEPILOGO PER TIPOLOGIA
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_fondo_en_R =   "
+                        SELECT count(*) as qta,
+                        CASE 
+                            R.TIPO_OPERAZIONE WHEN 'E' THEN 'In entrata' ELSE 'In uscita'
+                        END AS TIPO ,
+                            SUM(R.NAZIONI * V.IVAL_AZIONI) AS SUM_IMPORTO  
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_VALORE_AZIONI V
+                        WHERE R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$_GET['datain']."' 
+                        AND R.TIPO_OPERAZIONE = 'E'
+                        GROUP BY CASE R.TIPO_OPERAZIONE WHEN 'E' THEN 'In entrata' ELSE 'In uscita' END
+                        ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 02 - CESSIONI A BANCA (da Fondo) - DA INIZIO ANNO - TOTALE GENERALE
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_fondo_en_T =   "
+                        SELECT 
+                            count(*) as TOTALE_QTA,
+                            SUM(R.NAZIONI * V.IVAL_AZIONI) AS TOTALE_IMPORTO  
+                        FROM 
+                        SOCI_RIACQUISTO_AZIONI R, SOCI_VALORE_AZIONI V
+                        WHERE R.IDAZIONE = V.IDAZIONE 
+                        AND R.DATA_MOVIMENTO >= '".$_GET['datain']."' 
+                        AND R.TIPO_OPERAZIONE = 'E'
+                    ";
+
+
+
+// ----------------------------------------------------------------------------------------------------------
+// 03 - MOVIMENTI IN USCITA PER PLAFOND - DA INIZIO ANNO - DETTAGLIO
+// Eq. Soci Stampe Generali > Stampa Riepilogo Movimenti per Plafond > dal 01.01.2022 flag "solo in Uscita"
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_uscitaD =   "
+                    SELECT 
+                    M.IDSOCIO,
+                    A.NAG, 
+                    N.INTESTAZIONE_A,
+                    N.INTESTAZIONE_B, 
+                    M.DATA_MOVIMENTO, 
+                    M.CTIPOMOV as TIPO,
+                    M.IMPORTO,
+                    M.ISOVRAPPREZZO 
+                    FROM 
+                    SOCI_MOVIMENTI M, SOCI_ANAGRAFICA A, ANAG_NAG N
+                    WHERE M.IDSOCIO = A.IDSOCIO 
+                    AND A.NAG = N.NAG
+                    AND M.CTIPOMOV IN ('RE','ES','MO','RL') 
+                    AND M.IMPORTO <> 0 
+                    AND M.DATA_MOVIMENTO >= '".$_GET['datain']."'
+                    ORDER BY DATA_MOVIMENTO
+                    ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 03 - MOVIMENTI IN USCITA PER PLAFOND - DA INIZIO ANNO - RIEPILOGO PER TIPOLOGIA
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_uscitaR =   "
+                        SELECT count(*) as qta,
+                        CASE 
+                            WHEN SOCI_MOVIMENTI.CTIPOMOV = 'RE' THEN 'Recesso'
+                            WHEN SOCI_MOVIMENTI.CTIPOMOV = 'ES' THEN 'Esclusione'
+                            WHEN SOCI_MOVIMENTI.CTIPOMOV = 'RL' THEN 'Morte'
+                            WHEN SOCI_MOVIMENTI.CTIPOMOV = 'MO' THEN 'Morte'
+                        ELSE ''
+                        END AS TIPO ,
+                            SUM(SOCI_MOVIMENTI.IMPORTO) AS SUM_IMPORTO ,
+                            SUM(SOCI_MOVIMENTI.ISOVRAPPREZZO) AS SUM_SOVRAPPREZZO 
+                        FROM
+                            SOCI_MOVIMENTI  
+                        WHERE
+                            SOCI_MOVIMENTI.CTIPOMOV IN ( 'RE','ES','MO','RL' ) 
+                        AND
+                            SOCI_MOVIMENTI.IMPORTO <> 0 
+                        AND
+                            SOCI_MOVIMENTI.DATA_MOVIMENTO >=  '".$_GET['datain']."'
+                        GROUP BY
+                            TIPO
+                    ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 03 - MOVIMENTI IN USCITA PER PLAFOND - DA INIZIO ANNO - TOTALE GENERALE
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_uscitaT =   "
+                        SELECT 
+                            count(*) as TOTALE_QTA,
+                            SUM(SOCI_MOVIMENTI.IMPORTO) AS TOTALE_IMPORTO ,
+                            SUM(SOCI_MOVIMENTI.ISOVRAPPREZZO) AS TOTALE_SOVRAPPREZZO 
+                        FROM
+                            SOCI_MOVIMENTI  
+                        WHERE
+                            SOCI_MOVIMENTI.CTIPOMOV IN ( 'RE','ES','MO','RL' ) 
+                        AND
+                            SOCI_MOVIMENTI.IMPORTO <> 0 
+                        AND
+                            SOCI_MOVIMENTI.DATA_MOVIMENTO >=  '".$_GET['datain']."'
+                    ";
+
+
+// ----------------------------------------------------------------------------------------------------------
+// 04 - MOVIMENTI IN ENTRATA PER PLAFOND - DA INIZIO ANNO - DETTAGLIO
+// Eq. Soci Stampe Generali > Stampa Riepilogo Movimenti per Plafond > dal 01.01.2022 flag "solo in Entrata"
+// ----------------------------------------------------------------------------------------------------------
+$select_MAX_nazioni_al =   "
+                        SELECT
+                            MAX(SOCI_CERTIFICATI.NAZIONI_AL) as MAXAZIONIAL
+                        FROM
+                            SOCI_CERTIFICATI  
+                        WHERE
+                            SOCI_CERTIFICATI.DATA_ACQUISTO <=  '".$_GET['datain']."' 
+                        ";
+      
+$result_MAX_nazioni_al = odbc_exec($connect, $select_MAX_nazioni_al);
+while($dati_MAX_nazioni_al = odbc_fetch_object($result_MAX_nazioni_al)) {
+    $maxazionial = $dati_MAX_nazioni_al->MAXAZIONIAL;
+}
+
+$select_MAX_nazioni_alP =   "
+                        SELECT
+                            MAX(SOCI_CERTIFICATI.NAZIONI_AL) as MAXAZIONIAL
+                        FROM
+                            SOCI_CERTIFICATI  
+                        WHERE
+                            SOCI_CERTIFICATI.DATA_ACQUISTO <=  '".$dataMediaPlafond."' 
+                        ";
+      
+$result_MAX_nazioni_alP = odbc_exec($connect, $select_MAX_nazioni_alP);
+while($dati_MAX_nazioni_alP = odbc_fetch_object($result_MAX_nazioni_alP)) {
+    $maxazionialP = $dati_MAX_nazioni_alP->MAXAZIONIAL;
+}
+
+$select_movim_entrataD =   "
+                        SELECT A.IDSOCIO, B.NAG, C.INTESTAZIONE_A, C.INTESTAZIONE_B, A.DATA_MOVIMENTO, A.CTIPOMOV AS TIPO, A.IMPORTO, A.ISOVRAPPREZZO 
+                        FROM SOCI_MOVIMENTI A, SOCI_ANAGRAFICA B, ANAG_NAG C
+                        WHERE A.IDSOCIO = B.IDSOCIO 
+                        AND B.NAG = C.NAG 
+                        AND A.CTIPOMOV = 'AC'
+                        AND A.CDEV = ' ' 
+                        AND A.COPERAZIONE2 = '     '
+                        AND A.IDCERTIFICATO IN
+                        (SELECT IDCERTIFICATO FROM SOCI_CERTIFICATI 
+                            WHERE DATA_ACQUISTO >= '".$_GET['datain']."' 
+                            AND DATA_ACQUISTO <= '".$_GET['dataout']."'
+                            AND NCERT_SUBENTRO = 0 
+                            AND NAZIONI_DAL > ".$maxazionial.")
+                        AND A.IDCERTIFICATO NOT IN (SELECT IDCERT_NEW FROM SOCI_ACCORPAMENTO_CERTIFICATI WHERE BANCA = 299) 
+                        AND A.IMPORTO > 0
+                        AND DATA_MOVIMENTO >= '".$_GET['datain']."'
+                        AND DATA_MOVIMENTO <= '".$_GET['dataout']."'
+                        ORDER BY DATA_MOVIMENTO
+                    ";
+
+
+// ----------------------------------------------------------------------------------------------------------
+// 04 - MOVIMENTI IN ENTRATA PER PLAFOND - DA INIZIO ANNO - RIEPILOGO PER TIPOLOGIA
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_entrataR =   "
+                        SELECT count(*) as qta,
+                        CASE 
+                            WHEN SOCI_MOVIMENTI.CTIPOMOV = 'AC' THEN 'Acquisto (AC)'
+                        ELSE ''
+                        END AS TIPO ,
+                            SUM(SOCI_MOVIMENTI.IMPORTO) AS SUM_IMPORTO ,
+                            SUM(SOCI_MOVIMENTI.ISOVRAPPREZZO) AS SUM_SOVRAPPREZZO 
+                        FROM SOCI_MOVIMENTI A, SOCI_ANAGRAFICA B, ANAG_NAG C
+                        WHERE A.IDSOCIO = B.IDSOCIO 
+                        AND B.NAG = C.NAG 
+                        AND A.CTIPOMOV = 'AC'
+                        AND A.CDEV = ' ' 
+                        AND A.COPERAZIONE2 = '     '
+                        AND A.IDCERTIFICATO IN
+                        (SELECT IDCERTIFICATO FROM SOCI_CERTIFICATI 
+                            WHERE DATA_ACQUISTO >= '".$_GET['datain']."' 
+                            AND DATA_ACQUISTO <= '".$_GET['dataout']."'
+                            AND NCERT_SUBENTRO = 0 
+                            AND NAZIONI_DAL > ".$maxazionial.")
+                        AND A.IDCERTIFICATO NOT IN (SELECT IDCERT_NEW FROM SOCI_ACCORPAMENTO_CERTIFICATI WHERE BANCA = 299) 
+                        AND A.IMPORTO > 0
+                        AND DATA_MOVIMENTO >= '".$_GET['datain']."'
+                        AND DATA_MOVIMENTO <= '".$_GET['dataout']."'
+                        GROUP BY TIPO
+                    ";
+
+// ----------------------------------------------------------------------------------------------------------
+// 04 - MOVIMENTI IN ENTRATA PER PLAFOND - DA INIZIO ANNO - TOTALE GENERALE
+// ----------------------------------------------------------------------------------------------------------
+$select_movim_entrataT =   "
+                        SELECT 
+                            count(*) as TOTALE_QTA,
+                            SUM(SOCI_MOVIMENTI.IMPORTO) AS TOTALE_IMPORTO ,
+                            SUM(SOCI_MOVIMENTI.ISOVRAPPREZZO) AS TOTALE_SOVRAPPREZZO
+                        FROM SOCI_MOVIMENTI A, SOCI_ANAGRAFICA B, ANAG_NAG C 
+                        WHERE A.IDSOCIO = B.IDSOCIO 
+                        AND B.NAG = C.NAG 
+                        AND A.CTIPOMOV = 'AC'
+                        AND A.CDEV = ' ' 
+                        AND A.COPERAZIONE2 = '     '
+                        AND A.IDCERTIFICATO IN
+                        (SELECT IDCERTIFICATO FROM SOCI_CERTIFICATI 
+                            WHERE DATA_ACQUISTO >= '".$_GET['datain']."' 
+                            AND DATA_ACQUISTO <= '".$_GET['dataout']."'
+                            AND NCERT_SUBENTRO = 0 
+                            AND NAZIONI_DAL > ".$maxazionial.")
+                        AND A.IDCERTIFICATO NOT IN (SELECT IDCERT_NEW FROM SOCI_ACCORPAMENTO_CERTIFICATI WHERE BANCA = 299) 
+                        AND A.IMPORTO > 0
+                        AND DATA_MOVIMENTO >= '".$_GET['datain']."'
+                        AND DATA_MOVIMENTO <= '".$_GET['dataout']."'
+                    ";
+
+$select_movim_entrataTP =   "
+                        SELECT 
+                            count(*) as TOTALE_QTA,
+                            SUM(SOCI_MOVIMENTI.IMPORTO) AS TOTALE_IMPORTO ,
+                            SUM(SOCI_MOVIMENTI.ISOVRAPPREZZO) AS TOTALE_SOVRAPPREZZO
+                        FROM SOCI_MOVIMENTI A, SOCI_ANAGRAFICA B, ANAG_NAG C 
+                        WHERE A.IDSOCIO = B.IDSOCIO 
+                        AND B.NAG = C.NAG 
+                        AND A.CTIPOMOV = 'AC'
+                        AND A.CDEV = ' ' 
+                        AND A.COPERAZIONE2 = '     '
+                        AND A.IDCERTIFICATO IN
+                        (SELECT IDCERTIFICATO FROM SOCI_CERTIFICATI 
+                            WHERE DATA_ACQUISTO >= '".$dataMediaPlafond."' 
+                            AND DATA_ACQUISTO <= '".$_GET['dataout']."'
+                            AND NCERT_SUBENTRO = 0 
+                            AND NAZIONI_DAL > ".$maxazionialP.")
+                        AND A.IDCERTIFICATO NOT IN (SELECT IDCERT_NEW FROM SOCI_ACCORPAMENTO_CERTIFICATI WHERE BANCA = 299) 
+                        AND A.IMPORTO > 0
+                        AND DATA_MOVIMENTO >= '".$dataMediaPlafond."'
+                        AND DATA_MOVIMENTO <= '".$_GET['dataout']."'
+                    ";
+
+/*
+ECHO '<br>Capitale T = <br>';
+echo $select_movim_entrataT;
+ECHO '<br>Capitale TP = <br>';
+echo $select_movim_entrataTP;
+*/
+
+// ----------------------------------------------------------------------------------------------------------
+// 05 - VALORI CONTABILI
+// ----------------------------------------------------------------------------------------------------------
+$select_saldi_coge =   "
+                       SELECT
+                             CG_SALDI.COD_RAPP  ,
+                             CG_SALDI.FILIALE  ,
+                             CG_SALDI.NUM_RAPP  ,
+                             CG_SALDI.SALDO_DIV_CONTO/100 AS SALDO,
+                        case CG_SALDI.COD_RAPP
+                        when 1770 then (400000 + (CG_SALDI.SALDO_DIV_CONTO/100))
+                        else
+                             ROUND((CG_SALDI.SALDO_DIV_CONTO/100),0)
+                        end AS SALDO2 
+                        FROM
+                            CG_SALDI  
+                        WHERE
+                            CG_SALDI.COD_RAPP IN ( 2881,2885,1770,2557 ) 
+                        AND
+                            CG_SALDI.FILIALE = 990 
+                        AND
+                            CG_SALDI.NUM_RAPP = 100 
+                        ORDER BY
+                             SALDO ASC
+
+                    ";
+
+
+
+
+// -----------------------------------------------------------------
+// Estrazione dei valori dalle singole Select
+// -----------------------------------------------------------------
+
+echo '<table border="0" align="center">
+        <tr>
+            <td valign="top">';
+
+
+
+      // 01 - DETTAGLIO - ESPORTAZIONE CSV USCITE FONDO
+      // -----------------------------------------------------------------
+        $contenutofile = '';
+        $myfile = fopen("../tmp/situazione_plafond_movimenti_uscita_fondo.csv", "w");
+        $contenutofile .= "IDSocio;NAG;INTESTAZIONE_A;INTESTAZIONE_B;IDCERTIFICATO;TIPO;NAZIONI;IMPORTO\n";
+        $result_movim_fondo_us_D = odbc_exec($connect, $select_movim_fondo_us_D);
+        while($dati_movim_fondo_us_D = odbc_fetch_object($result_movim_fondo_us_D)) {
+
+            $contenutofile .= 
+                $dati_movim_fondo_us_D->IDSOCIO.";".
+                $dati_movim_fondo_us_D->NAG.";".
+                $dati_movim_fondo_us_D->INTESTAZIONE_A.";".
+                $dati_movim_fondo_us_D->INTESTAZIONE_B.";".
+                $dati_movim_fondo_us_D->IDCERTIFICATO.";".
+                $dati_movim_fondo_us_D->TIPO.";".
+                $dati_movim_fondo_us_D->NAZIONI.";".
+                number_format($dati_movim_fondo_us_D->IMPORTO,2,',','.').";"."\n";
+            
+        }
+        fwrite($myfile, $contenutofile);
+        fclose($myfile);
+
+      // 01 - RIEPILOGO USCITE FONDO
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-light">
+                <td align="center" colspan="3">AMMISSIONI + ULT.QUOTE DA FONDO</td>
+              </tr>
+              <tr class="table-light">
+                <td align="center"><small>USCITE FONDO</td>
+                <td align="center"><small>Qtà</td>
+                <td align="right"><small>Valore Capitale</td>
+              </tr>';
+
+      $result_movim_fondo_us_R = odbc_exec($connect, $select_movim_fondo_us_R);
+      while($dati_movim_fondo_us_R = odbc_fetch_object($result_movim_fondo_us_R)) {
+
+                echo "<tr>
+                        <td height='40' align='left'><small>".$dati_movim_fondo_us_R->TIPO."</td>
+                        <td align='right'><small>".$dati_movim_fondo_us_R->QTA."</td>
+                        <td align='right'><small>".number_format($dati_movim_fondo_us_R->SUM_IMPORTO,0,',','.')."</td>
+                      </tr>
+                      <tr>
+                        <td height='40' align='left'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                     </tr> 
+                    ";
+
+      }
+
+        $result_movim_fondo_us_T = odbc_exec($connect, $select_movim_fondo_us_T);
+        while($dati_movim_fondo_us_T = odbc_fetch_object($result_movim_fondo_us_T)) {
+
+            if (($dati_movim_fondo_us_T->TOTALE_QTA) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($dati_movim_fondo_us_T->TOTALE_IMPORTO) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td height='40' align='right'><small><b ".$plusminus.' '.number_format($dati_movim_fondo_us_T->TOTALE_QTA,0,',','.')."</b></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format($dati_movim_fondo_us_T->TOTALE_IMPORTO,0,',','.')."</b>&nbsp;(E)</td>
+                      </tr>
+                      </table>";      
+
+        $valore_E = $dati_movim_fondo_us_T->TOTALE_IMPORTO;
+
+        // Totale per Plafond
+        $result_movim_fondo_us_TP = odbc_exec($connect, $select_movim_fondo_us_TP);
+        while($dati_movim_fondo_us_TP = odbc_fetch_object($result_movim_fondo_us_TP)) {
+            $valore_EP = $dati_movim_fondo_us_TP->TOTALE_IMPORTO;
+        }
+
+        }
+
+        echo '<center><a class="btn btn-outline-warning" href="../tmp/situazione_plafond_movimenti_uscita_fondo.csv">Dettaglio Movimenti Uscita FONDO</a><br><br>';
+
+        echo '</td>
+              <td width="20">&nbsp;&nbsp;</td>
+              <td  valign="top">';
+
+      // 02 - DETTAGLIO - ESPORTAZIONE CSV ENTRATE FONDO (CESSIONI A BANCA)
+      // -----------------------------------------------------------------
+        $contenutofile = '';
+        $myfile = fopen("../tmp/situazione_plafond_movimenti_entrata_fondo.csv", "w");
+        $contenutofile .= "IDSocio;NAG;INTESTAZIONE_A;INTESTAZIONE_B;IDCERTIFICATO;TIPO;NAZIONI;IMPORTO\n";
+        $result_movim_fondo_en_D = odbc_exec($connect, $select_movim_fondo_en_D);
+        while($dati_movim_fondo_en_D = odbc_fetch_object($result_movim_fondo_en_D)) {
+
+            $contenutofile .= 
+                $dati_movim_fondo_en_D->IDSOCIO.";".
+                $dati_movim_fondo_en_D->NAG.";".
+                $dati_movim_fondo_en_D->INTESTAZIONE_A.";".
+                $dati_movim_fondo_en_D->INTESTAZIONE_B.";".
+                $dati_movim_fondo_en_D->IDCERTIFICATO.";".
+                $dati_movim_fondo_en_D->TIPO.";".
+                $dati_movim_fondo_en_D->NAZIONI.";".
+                number_format($dati_movim_fondo_en_D->IMPORTO,2,',','.').";"."\n";
+            
+        }
+        fwrite($myfile, $contenutofile);
+        fclose($myfile);
+
+      // 02 - RIEPILOGO ENTRATE FONDO (CESSIONI A BANCA)
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-success">
+                <td align="center" colspan="3">RIACQ.CESSIONI A BANCA DA FONDO</td>
+              </tr>
+              <tr class="table-success">
+                <td align="center"><small>ENTRATA FONDO</td>
+                <td align="center"><small>Qtà</td>
+                <td align="right"><small>Valore Capitale</td>
+              </tr>';
+
+      $result_movim_fondo_en_R = odbc_exec($connect, $select_movim_fondo_en_R);
+      while($dati_movim_fondo_en_R = odbc_fetch_object($result_movim_fondo_en_R)) {
+
+                echo "<tr>
+                        <td height='40' align='left'><small>".$dati_movim_fondo_en_R->TIPO."</td>
+                        <td align='right'><small>".$dati_movim_fondo_en_R->QTA."</td>
+                        <td align='right'><small>".number_format($dati_movim_fondo_en_R->SUM_IMPORTO,0,',','.')."</td>
+                      </tr>
+                      <tr>
+                        <td height='40' align='left'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                     </tr> 
+                    ";
+
+      }
+
+        $result_movim_fondo_en_T = odbc_exec($connect, $select_movim_fondo_en_T);
+        while($dati_movim_fondo_en_T = odbc_fetch_object($result_movim_fondo_en_T)) {
+
+            if (($dati_movim_fondo_en_T->TOTALE_QTA) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($dati_movim_fondo_en_T->TOTALE_IMPORTO) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td height='40' align='right'><small><b ".$plusminus.' '.number_format($dati_movim_fondo_en_T->TOTALE_QTA,0,',','.')."</b></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format($dati_movim_fondo_en_T->TOTALE_IMPORTO,0,',','.')."</b></td>
+                      </tr>
+                      </table>";      
+        }
+
+        echo '<center><a class="btn btn-outline-warning" href="../tmp/situazione_plafond_movimenti_entrata_fondo.csv">Dettaglio Movimenti Entrata FONDO</a><br><br>';
+
+        echo '</td>
+              <td width="20">&nbsp;&nbsp;</td>
+              <td  valign="top">';
+
+            
+
+      // 03 - DETTAGLIO - ESPORTAZIONE CSV USCITE
+      // -----------------------------------------------------------------
+        $contenutofile = '';
+        $myfile = fopen("../tmp/situazione_plafond_movimenti_uscita.csv", "w");
+        $contenutofile .= "IDSocio;NAG;INTESTAZIONE_A;INTESTAZIONE_B;DATA_MOVIMENTO;TIPO;IMPORTO;SOVRAPPREZZO\n";
+        $result_movim_uscitaD = odbc_exec($connect, $select_movim_uscitaD);
+        while($dati_movim_uscitaD = odbc_fetch_object($result_movim_uscitaD)) {
+
+            $contenutofile .= 
+                $dati_movim_uscitaD->IDSOCIO.";".
+                $dati_movim_uscitaD->NAG.";".
+                $dati_movim_uscitaD->INTESTAZIONE_A.";".
+                $dati_movim_uscitaD->INTESTAZIONE_B.";".
+                $dati_movim_uscitaD->DATA_MOVIMENTO.";".
+                $dati_movim_uscitaD->TIPO.";".
+                number_format($dati_movim_uscitaD->IMPORTO,2,',','.').";".
+                number_format($dati_movim_uscitaD->ISOVRAPPREZZO,2,',','.')."\n";
+            
+        }
+        fwrite($myfile, $contenutofile);
+        fclose($myfile);
+
+      // 03 - RIEPILOGO USCITE
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-light">
+                <td align="center" colspan="4">LIQUIDAZIONI DA CAPITALE</td>
+              </tr>
+              <tr class="table-light">
+                <td align="center"><small>USCITE</td>
+                <td align="center"><small>Qtà</td>
+                <td align="right"><small>Valore Capitale</td>
+                <td align="right"><small>Valore Sovrapprezzo</td>
+              </tr>';
+
+      $result_movim_uscitaR = odbc_exec($connect, $select_movim_uscitaR);
+      while($dati_movim_uscitaR = odbc_fetch_object($result_movim_uscitaR)) {
+
+                echo "<tr>
+                        <td height='40' align='left'><small>".$dati_movim_uscitaR->TIPO."</td>
+                        <td align='right'><small>".$dati_movim_uscitaR->QTA."</td>
+                        <td align='right'><small>".number_format($dati_movim_uscitaR->SUM_IMPORTO,0,',','.')."</td>
+                        <td align='right'><small>".number_format($dati_movim_uscitaR->SUM_SOVRAPPREZZO,0,',','.')."</td>
+                      </tr>
+                    ";
+
+      }
+
+        $result_movim_uscitaT = odbc_exec($connect, $select_movim_uscitaT);
+        while($dati_movim_uscitaT = odbc_fetch_object($result_movim_uscitaT)) {
+
+            if (($dati_movim_uscitaT->TOTALE_QTA) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($dati_movim_uscitaT->TOTALE_IMPORTO) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($dati_movim_uscitaT->TOTALE_SOVRAPPREZZO) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:red;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td height='40' align='right'><small><b ".$plusminus.' '.number_format($dati_movim_uscitaT->TOTALE_QTA,0,',','.')."</b></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format($dati_movim_uscitaT->TOTALE_IMPORTO,0,',','.')."</b>&nbsp;(D)</td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format($dati_movim_uscitaT->TOTALE_SOVRAPPREZZO,0,',','.')."</b></td>
+                      </tr>
+                      </table>";      
+
+        $valore_D = $dati_movim_uscitaT->TOTALE_IMPORTO;
+
+        }
+
+        echo '<center><a class="btn btn-outline-warning" href="../tmp/situazione_plafond_movimenti_uscita.csv">Dettaglio Movimenti Uscita</a><br><br>';
+
+        echo '</td>
+              <td width="20">&nbsp;&nbsp;</td>
+              <td  valign="top">';
+
+      
+      // 04 - DETTAGLIO - ESPORTAZIONE CSV ENTRATE
+      // -----------------------------------------------------------------
+        $contenutofile = '';
+        $myfile = fopen("../tmp/situazione_plafond_movimenti_entrata.csv", "w");
+        $contenutofile .= "IDSocio;NAG;INTESTAZIONE_A;INTESTAZIONE_B;DATA_MOVIMENTO;TIPO;IMPORTO;SOVRAPPREZZO\n";
+        $result_movim_entrataD = odbc_exec($connect, $select_movim_entrataD);
+        while($dati_movim_entrataD = odbc_fetch_object($result_movim_entrataD)) {
+            $contenutofile .= 
+                $dati_movim_entrataD->IDSOCIO.";".
+                $dati_movim_entrataD->NAG.";".
+                $dati_movim_entrataD->INTESTAZIONE_A.";".
+                $dati_movim_entrataD->INTESTAZIONE_B.";".
+                $dati_movim_entrataD->DATA_MOVIMENTO.";".
+                $dati_movim_entrataD->TIPO.";".
+                number_format($dati_movim_entrataD->IMPORTO,2,',','.').";".
+                number_format($dati_movim_entrataD->ISOVRAPPREZZO,2,',','.')."\n";
+        }
+        fwrite($myfile, $contenutofile);
+        fclose($myfile);
+
+      // 04 - RIEPILOGO ENTRATE
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-success">
+                <td align="center" colspan="4">AMMISSIONI+ULT.QUOTE DA CAPITALE</td>
+              </tr>
+              <tr class="table-success">
+                <td align="center"><small>ENTRATE</td>
+                <td align="center"><small>Qtà</td>
+                <td align="right"><small>Valore Capitale</td>
+                <td align="right"><small>Valore Sovrapprezzo</td>
+              </tr>';
+
+      $result_movim_entrataR = odbc_exec($connect, $select_movim_entrataR);
+      while($dati_movim_entrataR = odbc_fetch_object($result_movim_entrataR)) {
+
+                echo "<tr>
+                        <td height='40' align='left'><small>Acquisto (AC)</td>
+                        <td align='right'><small>".$dati_movim_entrataR->QTA."</td>
+                        <td align='right'><small>".number_format($dati_movim_entrataR->SUM_IMPORTO,0,',','.')."</td>
+                        <td align='right'><small>".number_format($dati_movim_entrataR->SUM_SOVRAPPREZZO,0,',','.')."</td>
+                      </tr>
+                      <tr>
+                        <td height='40' align='left'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                        <td align='right'><small></td>
+                     </tr>                      
+                    ";
+
+      }
+
+        $result_movim_entrataT = odbc_exec($connect, $select_movim_entrataT);
+        while($dati_movim_entrataT = odbc_fetch_object($result_movim_entrataT)) {
+
+            if (($dati_movim_entrataT->TOTALE_QTA) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($dati_movim_entrataT->TOTALE_IMPORTO) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($dati_movim_entrataT->TOTALE_SOVRAPPREZZO) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:red;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td height='40' align='right'><small><b ".$plusminus.' '.number_format($dati_movim_entrataT->TOTALE_QTA,0,',','.')."</b></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format($dati_movim_entrataT->TOTALE_IMPORTO,0,',','.')."</b>&nbsp;(B)</td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format($dati_movim_entrataT->TOTALE_SOVRAPPREZZO,0,',','.')."</b></td>
+                      </tr>
+                      </table>";      
+
+        $valore_B = $dati_movim_entrataT->TOTALE_IMPORTO;
+
+        }
+
+
+        // Totale per plafond
+        $result_movim_entrataTP = odbc_exec($connect, $select_movim_entrataTP);
+        while($dati_movim_entrataTP = odbc_fetch_object($result_movim_entrataTP)) {
+            $valore_BP = $dati_movim_entrataTP->TOTALE_IMPORTO;
+        }
+
+
+        echo '<center><a class="btn btn-outline-warning" href="../tmp/situazione_plafond_movimenti_entrata.csv">Dettaglio Movimenti Entrata</a><br><br>';
+
+        echo '</td>
+              <td width="20">&nbsp;&nbsp;</td>
+              <td>
+              </tr>
+              <tr>
+              <td colspan="7">';
+
+
+      // RECUPERO VALORI LIQUIDAZIONI DA FARE PER L'ANNO IN CORSO
+      // stesso script di "liquidazioni_grafico.php"
+      // -----------------------------------------------------------------
+        $dettaglioA = " 
+                        SELECT
+                            count(*) as qta,
+                            sum(importo) as Importo
+                        from view_liquidazioni_dafare 
+                        where filiale <> 999  
+                        ".$condizionefiliale."
+                            and importo <> 0 
+                            and str_to_date(DATA_DECADENZA,'%d/%m/%Y') <  str_to_date('01/01/".$adesso_anno."','%d/%m/%Y')
+                            and Sofferenza != 'S'
+                        ";
+
+        $dbhandle = new mysqli($host, $db_user, $db_psw, $db_name);
+         
+        if ($dbhandle -> connect_error) {
+            exit("There was an error with your connection: ".$dbhandle -> connect_error);
+        }
+
+        $result_areeA = $dbhandle->query($dettaglioA) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+        while ($row_areeA = mysqli_fetch_array($result_areeA)) {
+
+            $totale_liquidazioni_dafare = round($row_areeA['Importo']);
+    
+        }
+
+
+      // 05 - CALCOLO PLAFOND GENERALE
+      // -----------------------------------------------------------------
+        $contenutocoge = '';
+        $result_saldi_coge = odbc_exec($connect, $select_saldi_coge);
+        while($dati_saldi_coge = odbc_fetch_object($result_saldi_coge)) {
+            
+            if ($dati_saldi_coge->COD_RAPP == 2881) {$descrapp = '2881.990.100 - Capitale Sociale'; 
+                $capitale_per_tab_valorefondo = $dati_saldi_coge->SALDO;
+                }
+            if ($dati_saldi_coge->COD_RAPP == 2885) {$descrapp = '2885.990.100 - Sovrapprezzo'; 
+                $sovrapprezzo_per_tab_valorefondo = $dati_saldi_coge->SALDO;}
+            if ($dati_saldi_coge->COD_RAPP == 1770) {$descrapp = '1770.990.100 - Fondo Riacquisto Azioni Proprie'; $saldo2 = 400000-$dati_saldi_coge->SALDO;
+                $fondo_per_tab_valorefondo = $dati_saldi_coge->SALDO;}
+            if ($dati_saldi_coge->COD_RAPP == 2557) {$descrapp = '2557.990.100 - Quote da Liquidare'; }
+
+            $contenutocoge .=
+                    "<tr>
+                        <td align='left'>".$descrapp."</td>
+                        <td align='right'>".number_format($dati_saldi_coge->SALDO,0,',','.')."</td>
+                        <td align='right'></td>
+                     </tr>  ";
+
+        }
+
+
+
+      echo ' <br><br>
+            <table  width="60%" align="center" cellspacing="0">
+              <tr class="table-info">
+                <td height="40" align="center" colspan="3">CALCOLO DISPONIBILITA\' PLAFOND '.$anno.'</td>
+              </tr>';
+
+
+        $date = new DateTime();             
+        $meseOdierno = $date->format('m');  
+        
+        if ( (12 - $meseOdierno) == 0) {$mesiMancanti = 1;}
+        else { $mesiMancanti = 12 - $meseOdierno; }
+
+        $valore_A = 800000;
+        $valore_C = ( ( $valore_BP + $valore_EP ) / 6 ) * $mesiMancanti ;   // Valore ipotetico delle ammissioni da Capitale + Fondo da oggi a fine anno
+
+/*
+ECHO 'BP = '.$valore_BP;
+ECHO '<BR>';
+ECHO 'EP = '.$valore_EP;
+ECHO '<BR>';
+ECHO 'C = '.$valore_C;
+ECHO '<BR>';
+ECHO 'meseodierno = '.$meseOdierno;
+ECHO '<BR>';
+ECHO 'mesimancanti = '.$mesiMancanti;
+*/
+        $disponibilita = ( $valore_A + $valore_B + $valore_C ) + $valore_D - $totale_liquidazioni_dafare; 
+        if (($disponibilita) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+
+        $disponibilita_reale = ( $valore_A + $valore_B ) + $valore_D ; 
+        if (($disponibilita_reale) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+
+        $totale_ingressi = $valore_B + $valore_E ;
+
+                echo "<tr>
+                        <td height='40' align='left'>PLAFOND INIZIALE </td>
+                        <td align='right'>".number_format($valore_A,0,',','.')."</td>
+                        <td align='right'><small>&nbsp; A</td>
+                      </tr>
+                      <tr>
+                        <td height='40' align='left'>+ Ingressi da Capitale</td>
+                        <td align='right'>".number_format($valore_B,0,',','.')."</td>
+                        <td align='right'><small>&nbsp; B</td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'>+ Previsionale ulteriori entrate sino a fine anno <small>(media/mese delle ammissioni ultimi 6 mesi)</small></td>
+                        <td align='right'>".number_format($valore_C,0,',','.')."</td>
+                        <td align='right'><small>&nbsp; C</td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'>- Liquidazioni effettuate da Capitale</small></td>
+                        <td align='right'>".number_format($valore_D,0,',','.')."</td>
+                        <td align='right'><small>&nbsp; D</td>
+                     </tr> 
+                      <tr>
+                        <td height='40' align='left'>+ Liquidazioni da effettuare (al netto Sofferenze)</small></td>
+                        <td align='right'>".number_format($totale_liquidazioni_dafare,0,',','.')."</td>
+                        <td align='right'><small>&nbsp; F</td>
+                     </tr> 
+                      <tr class='table-light'>
+                        <td height='40' align='left'>DISPONIBILITA' ANNUALE IPOTETICA</td>
+                        <td align='right'><b ".$plusminus.' '.number_format($disponibilita,0,',','.')."</b></td>
+                        <td align='right'><small>&nbsp;(A+B+C) -D -F</td>
+                     </tr>                      
+                      <tr class='table-light' style='border-bottom:2px solid green;'>
+                        <td height='40' align='left'>DISPONIBILITA' ATTUALE</td>
+                        <td align='right'><b ".$plusminus.' '.number_format($disponibilita_reale,0,',','.')."</b></td>
+                        <td align='right'><small>&nbsp;(A+B)-D</td>
+                     </tr>                      
+                     </tr>                      
+                      <tr class='table-light'>
+                        <td height='40' align='left'>DISPONIBILITA' ATTUALE (al netto delle liquidazioni da effettuare)</td>
+                        <td align='right'><b ".$plusminus.' '.number_format(($disponibilita_reale-$totale_liquidazioni_dafare),0,',','.')."</b></td>
+                        <td align='right'><small>&nbsp;(A+B) -D -F</td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'></td>
+                        <td align='right'></td>
+                        <td align='right'></td>
+                     </tr>                      
+                      <tr class='table-secondary'>
+                        <td height='40' align='left'>Valore complessivo Ingressi (Capitale + Fondo) </td>
+                        <td align='right'><b>".number_format($totale_ingressi,0,',','.')."</b></td>
+                        <td align='right'><small>&nbsp;(B+E)</td>
+                     </tr>                      
+                      <tr>
+                        <td height='40' align='left'></td>
+                        <td align='right'></td>
+                        <td align='right'></td>
+                     </tr>                      
+                     ".$contenutocoge."
+                      </table>";      
+
+
+        echo '</td>
+              <td width="20">&nbsp;&nbsp;</td>
+              <td>';
+
+
+// ---- FINE TABELLA ----
+echo '</td>
+      </tr>
+      </table>';
+
+
+
+// INSERIMENTO DATI SU TABELLA TAB_VALOREFONDO
+      $updcaricamento = "     UPDATE tab_valorefondo
+                              SET   
+                              aggiornamento = now(), 
+                              valore = ".$fondo_per_tab_valorefondo.",
+                              plafond = ".$disponibilita.",
+                              capitale = ".$capitale_per_tab_valorefondo.",
+                              sovrapprezzo = ".$sovrapprezzo_per_tab_valorefondo." 
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);        
+
+
+
+echo "
+<script language='javascript' type='text/javascript'>
+function windowClose() {
+window.open('','_parent','');
+window.close();
+}
+</script>";
+
+// Close ODBC
+odbc_close($connect);
+
+        echo '<center><a class="btn btn-outline-warning" href="situazione.php" target="_blank">Situazione Soci alla data odierna</a><br><br>';
+
+if ($_SERVER["HTTP_REFERER"] != 'http://10.197.139.22:8080/soci/soci_auth.php') {
+        echo "<br><a class='btn btn-outline-success' style='text-decoration:none;color:white;' onclick=\"windowClose();\" href='../admin_cessioni.php?nominativo=".$_GET['nominativo']."&id=".$_GET['id']."&id2=".$_GET['id2']."&dr=".$_GET['dr']."&vn=".$_GET['vn']."&disponibilita=".$disponibilita."&valA=".$valore_A."&valB=".$valore_B."&valC=".$valore_C."&valE=".$valore_E."' target='_blank'>Previsione Rimborso Cessione ID ".$_GET['id']."</a><br><br>";
+        }
+        else {echo '';}
+
+
+?>

@@ -1,0 +1,24 @@
+***************************************************************
+RIMBORSI DA EFFETTUARE PER GIOVANI SOCI UNDER 30 - CHIANTIMUTUA
+***************************************************************
+L'estrazione e' riferita all'ultimo flusso XML SDD generato
+
+Fare copia-incolla del tracciato qui sotto e fornirlo a Incassi e Pagamenti
+indicando quale deve essere la Data Valuta da applicare
+
+SER.;RAPPORTO;DATAVALUTA;DIVISA;IMPORTO;SEGNO;LETTERACONTAB.;CAUSALE;DESCRIZIONE1;DESCRIZIONE2;DESCRIZIONE3;DESCRIZIONE4;DESCRIZIONE5;DESCRIZIONE6;CONTROPART.;FILIALESETTOR.
+C01;003003037909;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;VIGNI LUNA;;;;449.01.888;003
+C01;003003037909;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;VIGNI LUNA;;;;449.01.888;003
+C01;027000270713;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;LARI LEONARDO;;;;449.01.888;023
+C01;027000270713;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;LARI LEONARDO;;;;449.01.888;023
+C01;024000245122;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;CRESTI ANDREA;;;;449.01.888;024
+C01;024000245122;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;CRESTI ANDREA;;;;449.01.888;024
+C01;043000431602;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;OLMI LUCREZIA MARIA;;;;449.01.888;043
+C01;043000431602;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;OLMI LUCREZIA MARIA;;;;449.01.888;043
+C01;043000433530;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;WU FENGSHUN;;;;449.01.888;043
+C01;043000433530;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;WU FENGSHUN;;;;449.01.888;043
+C01;061000611520;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;BORETTI MARCO;;;;449.01.888;061
+C01;061000611520;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;BORETTI MARCO;;;;449.01.888;061
+C01;066000660787;00/00/0000;EUR;10,00;D;N;048;Rimborso una tantum Giovane Socio;Quota associativa CHIANTIMUTUA;LIGHEZAN CAMELIA FLORENTINA;;;;449.01.888;066
+C01;066000660787;00/00/0000;EUR;34,80;D;N;048;Rimborso una tantum Giovane Socio;Quota annuale CHIANTIMUTUA;LIGHEZAN CAMELIA FLORENTINA;;;;449.01.888;066
+------ CONTEGGIO RECORDS = 14 ------

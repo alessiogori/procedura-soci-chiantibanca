@@ -1,0 +1,6 @@
+RewriteEngine On
+
+RewriteRule ^survey-([a-z0-9\-]+)-([A-Z0-9\-]+).html$ index.php?page=survey&id=$2 [L]
+RewriteRule ^survey--([A-Z0-9\-]+).html$ index.php?page=survey&id=$1 [L]
+
+RewriteRule ^page-([^/\.]+).html$ index.php?page=$1 [L]

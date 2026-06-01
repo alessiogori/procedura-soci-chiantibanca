@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "WebFetch(domain:10.197.139.22)",
+      "Bash(find:*)"
+    ]
+  }
+}

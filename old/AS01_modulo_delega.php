@@ -1,0 +1,202 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+use \setasign\Fpdi\Fpdi;
+require_once('fpdf/fpdf.php');
+require_once('setasign/fpdi/autoload.php');
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+
+if ( ((isset($_GET['action'])) && ($_GET['passwordsoci'] != 'cicalo')) ) {
+    echo 'Errore, password non valida';
+}
+
+elseif ( ((isset($_GET['action'])) && ($_GET['passwordsoci'] == 'cicalo')) ) {
+
+// ---------------------------------------
+// VARIABILI PASSATE DA PORTALE SOCI
+// ---------------------------------------
+$socio = $_GET['socio'];
+$cag = $_GET['cag'];
+$idsocio = $_GET['idsocio'];
+$luogo = $_GET['luogo'];
+$oggi = date("d.m.Y");
+// ---------------------------------------
+
+        include("../config/_config.php");
+
+        // Estrazione dei dati anagrafici necessari
+        $selectdati = " SELECT  prot, cag, luogoNasc as LuogoNascita, dataNasc as DataNascita, provNasc,
+                                indirSpedIndirizzo as Indirizzo, indirSpedCAP as Cap, indirSpedLocalita as Localita, 
+                                indirSpedProvincia, cagDelegato, int1Delegato,
+                                dataAmmiss, dataEntrata, titoloOnorifico,
+                                sesso, telefono, indirizzoEmail, indirizzoPEC, tipoContropVAL, codFil, int1Filiale
+                        FROM tab_soci_as37
+                        WHERE cag = ".$cag;
+
+        $querydati = mysqli_query($connection, $selectdati); 
+
+        if (mysqli_num_rows($querydati) <= 0) {
+
+            $NuMSocio = '';
+            $LuogoNascita = '';
+            $ProvinciaNascita = '';
+            $DataNascita = '';
+            $Indirizzo = '';
+            $Cap = '';
+            $Localita = '';
+            $Provincia = '';
+            $CagDelegato = '';
+            $IntestazioneDelegato = '';
+            $DataAmmissione = '';
+            $dataEntrata = '';
+            $TitoloOnorifico = '';
+            $Sesso = '';
+            $Telefono = '';
+            $Mail = '';
+            $PEC = '';
+            $Filiale = '';
+            $DescFiliale = '';
+            }
+            else
+            {
+
+            while($dati=mysqli_fetch_array($querydati)){ 
+
+                $NuMSocio = $dati['prot'];
+                $LuogoNascita = $dati['LuogoNascita'];
+                $DataNascita = $dati['DataNascita'];
+                $Indirizzo = $dati['Indirizzo'];
+                $Cap = $dati['Cap'];
+                $Localita = $dati['Localita'];
+                $Provincia = $dati['indirSpedProvincia'];
+               
+                if ( $dati['tipoContropVAL'] == 11000 )
+                    {$datinascita = 'Nato/a a '.$LuogoNascita.' il '.$DataNascita;}
+                else {$datinascita = '';}
+
+                $CagDelegato = $dati['cagDelegato'];
+                $IntestazioneDelegato = $dati['int1Delegato'];
+                $DataAmmissione = $dati['dataAmmiss'];
+                $dataEntrata = $dati['dataEntrata'];
+                $TitoloOnorifico = $dati['titoloOnorifico'];
+                $Sesso = $dati['sesso'];
+                $Telefono = $dati['telefono'];
+                $Mail = $dati['indirizzoEmail'];
+                $PEC = $dati['indirizzoPEC'];
+                $Filiale = $dati['codFil'];
+                $DescFiliale = $dati['int1Filiale'];        
+            }
+        }
+
+
+// initiate FPDI
+$pdf = new Fpdi();
+// get the page count
+$pageCount = $pdf->setSourceFile('AS01_modulo_delega.pdf');
+// iterate through all pages
+for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+    // import a page
+    $templateId = $pdf->importPage($pageNo);
+
+    $pdf->AddPage();
+    // use the imported page and adjust the page size
+    $pdf->useTemplate($templateId, ['adjustPageSize' => true]);
+
+    // Scrivo solo nella prima pagina
+    if($pageNo == 2){ 
+        $pdf->SetFont('Helvetica','B','11');
+        $pdf->SetTextColor(0,0,0);                  //nero
+        //$pdf->SetTextColor(0,48,119);             //blu
+        // Data odierna
+        $pdf->SetFont('Helvetica','','11');
+        $pdf->SetXY(15, 182);
+        $pdf->Write(0, $luogo);
+        $pdf->SetXY(52, 182);
+        $pdf->Write(0, $oggi);
+        $pdf->SetXY(110, 11.5);
+        $pdf->Write(0, $simbolo);  
+        // Filiale
+        $pdf->SetXY(26, 34);
+        $pdf->Write(0, $Filiale);  
+        $pdf->SetXY(26, 38);
+        $pdf->Write(0, $DescFiliale); 
+        $pdf->SetFont('Helvetica','I','7');
+        // Titolo
+        $pdf->SetFont('Helvetica','B','12');
+        $pdf->SetXY(36, 20);
+        $pdf->Write(0, $titolo);
+        $pdf->SetFont('Helvetica','B','11');
+        // Nome Socio
+        $pdf->SetXY(42, 65);
+        $pdf->Write(0, $socio);
+        $pdf->SetXY(172, 65);
+        $pdf->Write(0, $cag);  
+        // Dati nascita e residenza
+        $pdf->SetFont('Helvetica','','11');
+        $pdf->SetXY(26, 73);
+        $pdf->Write(0, $LuogoNascita);
+        $pdf->SetXY(80, 73);
+        $pdf->Write(0, $DataNascita);
+        $pdf->SetXY(130, 73);
+        $pdf->Write(0, $Localita .' '.$Provincia);        
+        // Indirizzo Socio
+        $pdf->SetXY(26, 80);
+        $pdf->Write(0, $Indirizzo);
+        /*
+        // Dati ultimo aggiornamento
+        $pdf->SetXY(24, 266);
+        $pdf->Write(0, 'Dati aggiornati al '.$ultimo_aggiornamento);
+        */
+        // Riferimenti in piè di pagina (portati in alto)
+        $pdf->SetFont('Helvetica','I','8');
+        $pdf->SetXY(20, 270);
+        $pdf->Write(0, 'CAG: '.$cag.' - IDsocio '.$idsocio);
+    }
+
+}
+
+// Output the new PDF
+$pdf->Output(); 
+
+
+}
+else
+{
+
+echo '<center style="font-family:courier;">
+        <h2>RISERVATO UFFICIO SOCI</h2>
+        <h3>Integra le informazioni necessarie per completare il modulo</h3>';
+echo '  <fieldset style="width:700px;text-align:left;"">
+        <legend>&nbsp; Motivazioni della <b>Lettera Sostitutiva</b></legend>';
+echo '
+    <form action="'.$_SERVER['PHP_SELF'].'" method="GET" onsubmit="return ray.ajax()"><table border="0" align="center" cellpadding="0" cellspacing="0" width="100%" >
+
+                <input type="password" name="passwordsoci" size="10">&nbsp;Password Soci<br>
+                ';
+
+echo '
+                <input type="hidden" class="form-control" name="action" id="action" value="print">
+                <input type="hidden" class="form-control" name="cag" id="cag" value="'.$_GET['cag'].'">
+                <input type="hidden" class="form-control" name="socio" id="socio" value="'.$_GET['socio'].'">
+                <input type="hidden" class="form-control" name="idsocio" id="idsocio" value="'.$_GET['idsocio'].'">
+                <input type="hidden" class="form-control" name="luogo" id="luogo" value="'.$_GET['luogo'].'">
+
+
+                <br>
+                <button type="submit" class="btn btn-primary">Stampa modello</button><br>
+    </form>
+    </center>
+';
+}
+
+
+?>

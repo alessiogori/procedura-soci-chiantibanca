@@ -1,0 +1,569 @@
+<?php
+// *****************************************************************************
+// Portale Soci
+// Sviluppo e realizzazione: Alessio Fedi (2019)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database MYSQL
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+// Connessione all'ODBC SADAS
+$connect = odbc_connect('SADAS', NULL, NULL) or die ('0');
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+if (!isset($_POST['psw']))
+	{
+	echo '<div id="load" style="display:none;">Loading... Please wait</div>';
+
+	echo '<center><h2>Sorry, non sei autorizzato ad accedere a questa pagina! :-(
+			<br><span style="color:gray;"><i>AREA RISERVATA FILIALE </i></span></h2>	</center>';
+	 echo '<br><br>
+	 <table border=0 align="center" width="25%">
+	 <tr>
+	 <td>
+		<form class="form-inline" action="filiale_auth.php" method="post" onsubmit="return ray.ajax()">
+		  <div class="form-group mx-sm-3 mb-2">
+		    <label for="psw" class="sr-only">Password</label>
+		    <input type="password" class="form-control" name="psw" id="psw" placeholder="Password">
+		  </div>
+		  <button type="submit" class="btn btn-success mb-2">ACCEDI</button>
+		</form>
+	</td>
+	</tr>
+	</table>
+
+	';
+	}
+	
+else 
+	
+	{
+$idk = $_POST['psw'];
+
+	echo '<div id="load" style="display:none;">Loading... Please wait</div>';
+
+// ********************************************************
+// ESTRAZIONE FILIALE
+// ********************************************************
+	$select_psw =	'SELECT 
+						filiale, desc_filiale, psw
+					 FROM tab_psw
+					 WHERE psw = "'.$idk.'"';
+
+logquery ($select_psw); 
+
+	$querydati = mysqli_query($connection, $select_psw);	
+	
+	while($datipsw=mysqli_fetch_array($querydati)){ 
+
+			if ( $datipsw['filiale'] == '') {echo '<b style="color:red;">PASSWORD ERRATA</b>'; }
+			else {
+			$filiale = $datipsw['filiale']; 
+			$desc_filiale = $datipsw['desc_filiale']; 
+			$chiaveURL = $idk.$idk;
+      $chiaveURL2 = $filiale."&area=";
+			}	
+	
+	echo '<div id="load" style="display:none;color:red;background: #fafafa url(img/page-loader.gif) no-repeat center center;height: 50%;"><br>Loading... Please wait</div>';
+
+
+?>
+
+<center>
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+<!-- Content Row 1 -->
+<div class="row">	
+
+<div class="col-lg-12">
+	<div class="alert alert-dismissible alert-success"><h3>Statistiche Filiale Soci ChiantiBanca</h3>
+	<?php echo $filiale.' '.$desc_filiale;?></div>
+</div>
+
+
+<table border="0" align="center" cellpadding="0" cellspacing="0" width="90%" >
+	<tr>
+		<td valign="top">
+
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+          <!-- Content Row 1 -->
+          <div class="row">
+
+            <!-- STATISTICHE -->
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali Banca
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/rep/_report.php?key=<?php echo $chiaveURL2;?>&periodo=202001" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:gray;">Report Generale Filiale</h4>
+                  </a>
+                  <p class="card-text" style="color:gray;">Completo</p> 
+              </div>
+              </div>
+            </div>
+
+            <?php
+      //////////////////////////////////////////////////////////////////
+      // Statistiche Situzione Generale
+      //////////////////////////////////////////////////////////////////   
+      ?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i><i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/situazione.php?filiale=<?php echo $filiale;?>" target="_blank" title="Statistiche Area" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Situazione</h4>
+                  </a>
+                  <p class="card-text">&nbsp;</p> 
+              </div>
+              </div>
+            </div>  
+
+            <?php
+      //////////////////////////////////////////////////////////////////
+      // Elenco dei Soci della Filiale
+      //////////////////////////////////////////////////////////////////   
+      ?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">LISTA
+                  &nbsp;<i class="fas fa-list-alt fa-1x text-gray-300"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                    <form id="form1" action="schedasocio.php" method="post">
+                        <a href="javascript:;" onclick="document.getElementById('form1').submit();" style="text-decoration: none;"><h4 class="card-title" style="color:#FFFFFF;">Elenco Soci BANCA</h4></a>
+                        <input type="hidden" name="filiale" value="<?php echo $filiale;?>">
+                        <input type="hidden" class="form-control" name="ricerca" id="ricerca" value="filiale">
+                    </form>
+              </div>
+              </div>
+            </div>   
+
+            <?php
+      //////////////////////////////////////////////////////////////////
+      // Elenco dei Soci MUTUA della Filiale
+      //////////////////////////////////////////////////////////////////   
+            
+      ?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">LISTA
+                  &nbsp;<i class="fas fa-list-alt fa-1x text-gray-300"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                    <form id="form2" action="mutua_listaschedasocio.php" method="post">
+                        <a href="javascript:;" onclick="document.getElementById('form2').submit();" style="text-decoration: none;"><h4 class="card-title" style="color:#FFFFFF;">Elenco Soci MUTUA</h4></a>
+                        <input type="hidden" name="filiale" value="<?php echo $filiale;?>">
+                        <input type="hidden" class="form-control" name="ricerca" id="ricerca" value="filiale">
+                    </form>
+              </div>
+              </div>
+            </div>   
+
+            <?php
+            
+      //////////////////////////////////////////////////////////////////
+      // Ammissioni a Socio
+      //////////////////////////////////////////////////////////////////   
+      ?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">LISTA
+                  &nbsp;<i class="fas fa-list-alt fa-1x text-gray-300"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                   <a href="lista_ammissioni.php?filiale=(<?php echo $filiale;?>)" target="_blank" title="Ammissioni a Socio" style="text-decoration: none;">
+                   <h4 class="card-title" style="color:#FFFFFF;">Ammissioni a Socio</h4></a>
+              </div>
+              </div>
+            </div>   
+
+            <?php
+      //////////////////////////////////////////////////////////////////
+      // Trasferimenti tra Soci
+      //////////////////////////////////////////////////////////////////   
+      ?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">LISTA
+                  &nbsp;<i class="fas fa-list-alt fa-1x text-gray-300"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                   <a href="lista_trasferimenti.php?filiale=(<?php echo $filiale;?>)" target="_blank" title="Trasferimenti tra Soci/Non Soci" style="text-decoration: none;">
+                   <h4 class="card-title" style="color:#FFFFFF;">Trasferimenti tra Soci</h4></a>
+              </div>
+              </div>
+            </div>   
+
+            <?php
+      //////////////////////////////////////////////////////////////////
+      // Campagna Ulteriori Azioni
+      //////////////////////////////////////////////////////////////////   
+      ?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">LISTA
+                  <i class="fas fa-list-alt fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                   <a href="campagna_azioni.php?filiale=(<?php echo $filiale;?>)" target="_blank" title="Campagna ulteriori azioni" style="text-decoration: none;"></a>
+                   <h4 class="card-title" style="color:#FFFFFF;">Soci con meno di 33 azioni</h4>
+              </div>
+              </div>
+            </div>   
+
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Situazione liquidazioni
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i><i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/liquidazioni_grafico.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Situazione liquidazioni</h4>
+                  </a>
+                  <p class="card-text">Da fare</p> 
+              </div>
+              </div>
+            </div>
+            
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Situazione Volumi
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/volumi_filiale.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:gray;">Volumi</h4>
+                  </a>
+                  <p class="card-text">&nbsp;</p> 
+              </div>
+              </div>
+            </div>
+            
+
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali per le Cessioni a Banca
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  &nbsp;<i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/cessioni_filiale.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Cessione a Banca</h4>
+                  </a>
+                  <p class="card-text">&nbsp;</p> 
+              </div>
+              </div>
+            </div>
+ 
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali per le esclusioni
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  &nbsp;<i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/esclusioni_grafico.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Esclusioni</h4>
+                  </a>
+                  <p class="card-text">per art.6, art.14 e Sofferenze</p>
+              </div>
+              </div>
+            </div>            
+   
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali per i decessi
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  &nbsp;<i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/eredi_grafico.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Decessi</h4>
+                  </a>
+                  <p class="card-text">&nbsp;</p> 
+              </div>
+              </div>
+            </div>       
+   
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali - Suddivisione fasce senza richieste in corso
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/fasce_senzarichieste.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:gray;">Soci senza richieste</h4>
+                  </a>
+                  <p class="card-text" style="color:gray;">Per fasce di quote</p> 
+              </div>
+              </div>
+            </div> 
+                        
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali - Suddivisione Classi di anzianità
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  &nbsp;<i class="fas fa-list-alt fa-1x text-gray-300"></i>
+                  <i class="fab fa-scribd fa-1x text-gray-300"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/fasce_classisocio.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Classi anzianità</h4>
+                  </a>
+                  <p class="card-text">per età nella compagine</p> 
+              </div>
+              </div>
+            </div>             
+                        
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// Statistiche Generali - Giovani
+			//////////////////////////////////////////////////////////////////   
+			?>            
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="stats/giovani_grafico.php?key=<?php echo $chiaveURL;?>" target="_blank" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:gray;">Giovani 17-30 anni</h4>
+                  </a>
+                  <p class="card-text" style="color:gray;">elenchi per età</p> 
+              </div>
+              </div>
+            </div>              
+            <?php
+            if (($filiale == '053') OR ($filiale == '054')) {
+				//////////////////////////////////////////////////////////////////
+				// controllo soci su PISA
+				//////////////////////////////////////////////////////////////////
+
+				    $select_cnt = " SELECT count(*) as qta
+                            FROM sds_soci a
+                            WHERE PA_3 in ('009','008','017','061','019')
+                            AND SOCIO_ISTITUTO between 1 AND 8
+                            AND not exists 
+                            (select * from tab_xls_cessionibanca as b 
+                            WHERE b.Rimborsato <> 'S'
+                            AND b.Totale_Parziale = 'T'
+                            AND a.nag = b.nag) ";
+					
+
+            $qry_cnt = mysqli_query($connection, $select_cnt);
+            while($cnt = mysqli_fetch_array($qry_cnt)){ 
+              $sociPisa = $cnt['qta'];
+            }
+					
+					// Preparo il file per l'estrazione in CSV
+					$contenutopisa = '';
+		            $select_cnta = "
+                            SELECT *
+                            FROM sds_soci a
+                            WHERE PA_3 in ('009','008','017','061','019')
+                            AND SOCIO_ISTITUTO between 1 AND 8
+                            AND not exists 
+                            (select * from tab_xls_cessionibanca as b 
+                            WHERE b.Rimborsato <> 'S'
+                            AND b.Totale_Parziale = 'T'
+                            AND a.nag = b.nag)
+				                    " ;
+				    
+                    $qry_cnta = mysqli_query($connection, $select_cnta);
+                    $myfile = fopen("tmp/socipisa.csv", "w");
+                    $contenutopisa .= "Nag;Intestazione_a;Intestazione_b;Filiale_Capofila\n";
+				    while($cnta = mysqli_fetch_array($qry_cnta)){ 
+					    $contenutopisa .= $cnta['NAG'].";".$cnta['INTESTAZIONE_A'].";".$cnta['INTESTAZIONE_B'].";".$cnta['FILIALE_CAPOFILA']."\n";
+					}
+                    fwrite($myfile, $contenutopisa);
+                    fclose($myfile);
+				?>
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-danger mb-3" style="max-width: 20rem;">
+                <div class="card-header">CHECK
+                  <i class="fas fa-user-check fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                   <h4 class="card-title" style="color:#FFFFFF;">Soci zona PISA = <?php echo $sociPisa;?></h4>
+                   <p class="card-text"><a href="tmp/socipisa.csv">Scarica il dettaglio</a></p> 
+              </div>
+              </div>
+            </div>
+            
+            <?php
+            }
+				//////////////////////////////////////////////////////////////////
+				// controllo soci senza mail
+				//////////////////////////////////////////////////////////////////
+
+                    // Totale senza mail				   
+				    $select_cnt1 = " SELECT count(*) as qta
+				                    FROM tab_soci_as37 
+				                    WHERE indirizzoEMail = ''
+				                    AND StatoVAL not in ('E','S','N')
+				                    AND codFil = CAST(".$filiale." AS UNSIGNED)
+				                    " ;
+				    $qry_cnt1 = mysqli_query($connection, $select_cnt1);
+				    while($cnt1 = mysqli_fetch_array($qry_cnt1)){ 
+					    $sociNOmail = $cnt1['qta'];
+					}
+					
+					// Preparo il file per l'estrazione in CSV
+					$contenuto = '';
+		            $select_cnt1a = "
+                                    SELECT *
+                                    FROM tab_soci_as37
+                                    WHERE indirizzoEMail = ''
+				                    AND StatoVAL not in ('E','S')
+				                    AND codFil = CAST(".$filiale." AS UNSIGNED)
+				                    " ;
+				    
+                    $qry_cnt1a = mysqli_query($connection, $select_cnt1a);
+                    $myfile = fopen("tmp/socisenzaemail".$filiale.".csv", "w");
+                    $contenuto .= "stato;cag;int1Socio;int2Socio;codFil;int1Filiale;telefono;Email;PEC\n";
+				    while($cnt1a = mysqli_fetch_array($qry_cnt1a)){ 
+					    $contenuto .= $cnt1a['stato'].";".$cnt1a['cag'].";".$cnt1a['int1Socio'].";".$cnt1a['int2Socio'].";".$cnt1a['codFil'].";".$cnt1a['int1Filiale'].";".$cnt1a['telefono'].";".$cnt1a['indirizzoEMail'].";".$cnt1a['indirizzoPEC']."\n";
+					}
+                    fwrite($myfile, $contenuto);
+                    fclose($myfile);
+
+				?>
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-danger mb-3" style="max-width: 20rem;">
+                <div class="card-header">CHECK
+                  <i class="fas fa-user-check fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                   <h4 class="card-title" style="color:gray;">Soci senza Email = <?php //echo $sociNOmail;?></h4>
+                   <p class="card-text"><a href="tmp/socisenzaemail<?php //echo $filiale;?>.csv">Scarica il dettaglio</a></p> 
+              </div>
+              </div>
+            </div>
+
+            <?php
+			//////////////////////////////////////////////////////////////////
+			// controllo zone competenza soci
+			//////////////////////////////////////////////////////////////////
+			?>
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-danger mb-3" style="max-width: 20rem;">
+                <div class="card-header">CHECK
+                  &nbsp;<i class="fas fa-user-check fa-1x text-gray-300 col-auto"></i><i class="fab fa-scribd fa-1x text-lightgray-300"></i>
+                </div>
+                <div class="card-body">
+                <a href="check_zonecompetenza.php?fuorizona=italia&filiale=<?php echo $filiale;?>" target="_blank" title="Zone Competenza" style="text-decoration: none;">
+                   <h4 class="card-title" style="color:#FFFFFF;">Zone Competenza Italia</h4>
+                   </a>
+                <a href="check_zonecompetenza.php?fuorizona=estero&filiale=<?php echo $filiale;?>" target="_blank" title="Zone Competenza" style="text-decoration: none;">
+                   <h4 class="card-title" style="color:#FFFFFF;">Zone Competenza Estero</h4>
+                   </a>    
+              </div>
+              </div>
+            </div>
+
+            <?php
+      //////////////////////////////////////////////////////////////////
+      // motivazione in / out soci
+      //////////////////////////////////////////////////////////////////
+      ?>
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-danger mb-3" style="max-width: 20rem;">
+                <div class="card-header">CHECK 
+                  &nbsp;<i class="fas fa-user-check fa-1x text-gray-300 col-auto"></i><i class="fab fa-scribd fa-1x text-lightgray-300"></i>
+                </div>
+                <div class="card-body">
+                <a href="motivazioni.php?start=IN&filiale=<?php echo $filiale;?>" target="_blank" title="Motivazioni Ingressi" style="text-decoration: none;">
+                   <h4 class="card-title" style="color:#FFFFFF;">Motivazioni Ingressi</h4>
+                   </a>
+                <a href="motivazioni.php?start=OUT&filiale=<?php echo $filiale;?>" target="_blank" title="Motivazioni Uscite" style="text-decoration: none;">
+                   <h4 class="card-title" style="color:#FFFFFF;">Motivazioni Uscite</h4>
+                   </a>    
+              </div>
+              </div>
+            </div>
+  
+            
+
+
+
+            <!-- FINE ULTIMO DIV -->
+          </div>
+
+        </td>
+    </tr>
+</table>
+
+<?php
+// fine ELSE
+}
+}
+?>
+
+<!-- chiudo la riga --></div>
+<!-- FINE ULTIMO DIV --></div>
+
+<br><br><center><a href="javascript:history.back();" title="Torna alla ricerca"><img src="img/frecciasx.png"></center>

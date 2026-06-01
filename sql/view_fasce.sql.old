@@ -1,0 +1,66 @@
+// ATTENZIONE: ogni anno cambiare la condizione BETWEEN per aggiornare le date
+
+CREATE VIEW view_fasce AS 
+SELECT
+    'Fascia 1 (18-30 anni)' AS Fascia,
+    codFil,
+    int1Filiale,
+    COUNT(DISTINCT Cag) AS qta
+FROM tab_soci_as37
+WHERE SUBSTRING(dataNasc, 7, 4) BETWEEN 1990 AND 2020 
+AND StatoVAL not in ('E','S','N')  
+AND tipoContropVAL = 11000
+GROUP BY   codFil
+
+UNION
+
+SELECT
+    'Fascia 2 (31-50 anni)' AS Fascia,
+    codFil,
+    int1Filiale,
+    COUNT(DISTINCT Cag) AS qta
+FROM  tab_soci_as37
+WHERE  SUBSTRING(dataNasc, 7, 4) BETWEEN 1970 AND 1989 
+AND StatoVAL not in ('E','S','N') 
+AND tipoContropVAL = 11000
+GROUP BY  codFil
+
+UNION
+
+SELECT
+    'Fascia 3 (51-60 anni)' AS Fascia,
+    codFil,
+    int1Filiale,
+    COUNT(DISTINCT Cag) AS qta
+FROM  tab_soci_as37
+WHERE  SUBSTRING(dataNasc, 7, 4) BETWEEN 1960 AND 1969 
+AND StatoVAL not in ('E','S','N')   
+AND tipoContropVAL = 11000
+GROUP BY  codFil
+
+UNION
+
+SELECT
+    'Fascia 4 (61-70 anni)' AS Fascia,
+    codFil,
+    int1Filiale,
+    COUNT(DISTINCT Cag) AS qta
+FROM  tab_soci_as37
+WHERE  SUBSTRING(dataNasc, 7, 4) BETWEEN 1950 AND 1959 
+AND StatoVAL not in ('E','S','N') 
+AND tipoContropVAL = 11000
+GROUP BY  codFil
+
+UNION
+SELECT
+    'Fascia 5 (oltre 70 anni)' AS Fascia,
+    codFil,
+    int1Filiale,
+    COUNT(DISTINCT Cag) AS qta
+FROM  tab_soci_as37
+WHERE SUBSTRING(dataNasc, 7, 4) <= 1949 
+AND StatoVAL not in ('E','S','N') 
+AND tipoContropVAL = 11000
+GROUP BY  codFil
+
+ORDER BY  1, 2, 3

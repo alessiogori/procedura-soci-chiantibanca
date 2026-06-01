@@ -1,0 +1,707 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+?>
+
+<?php
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+?>
+
+<!--
+<style>
+----- SERVE A METTERE UN'IMMAGINE DI SFONDO SULL'INTERA PAGINA -----  
+body {
+  background: url('img/tmp.jpg') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  background-size: cover;
+  -o-background-size: cover;
+}
+</style>
+-->
+
+<?php
+// CONTATORE ASSEMBLEA
+/*
+			$cd = "<script type='text/javascript'>
+					CountDownTimer('04/28/2021 09:15:00 AM', 'countdown');
+					function CountDownTimer(date, id) {
+					     var end = new Date(date);
+
+					     var _second = 1000;
+					     var _minute = _second * 60;
+					     var _hour = _minute * 60;
+					     var _day = _hour * 24;
+					     var timer;
+
+					     function showRemaining() {
+					         var now = new Date();
+					         var distance = end - now;
+					         if (distance < 0) {
+
+					             clearInterval(timer);
+					             document.getElementById(id).innerHTML = 'EXPIRED!';
+
+					             return;
+					         }
+					         var days = Math.floor(distance / _day);
+					         var hours = Math.floor((distance % _day) / _hour);
+					         var minutes = Math.floor((distance % _hour) / _minute);
+					         var seconds = Math.floor((distance % _minute) / _second);
+
+					         document.getElementById(id).innerHTML = days + ' gg ';
+					         document.getElementById(id).innerHTML += hours + ' hh ';
+					         document.getElementById(id).innerHTML += minutes + ' mm ';
+					         document.getElementById(id).innerHTML += seconds + ' ss ';
+					     }
+
+					     timer = setInterval(showRemaining, 1000);
+					 }
+					 </script>";
+
+					$cd .= '&nbsp;&nbsp;&nbsp;&nbsp;<small><span id="countdown"></span></small>';
+
+
+					// Testo da inserire nel riquadro
+					<br><small><i>Mancano<?php echo $cd; ?></i></small>
+*/
+?>
+
+
+
+<!--  
+*****************************************************************************
+RIQUADRI OPERATIVI
+*****************************************************************************
+-->
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+          <!-- Content Row 1 -->
+          <div class="row justify-content-between">
+
+        <div class="col-md-3">
+              <div class="card shadow border-info mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">STATISTICHE<i class="fas fa-chart-pie fa-1x text-lightgray-300 col-auto"></i></h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+                    <a href="statistiche.php" title="Statistiche banca" style="text-decoration: none;">
+                      <h4 class="card-title" style="color:#FFFFFF;">Dati Generali</h4>
+                    </a>
+                </div>
+              </div>
+        </div>            
+
+        <div class="col-md-3">
+              <div class="card shadow border-info mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">ASSEMBLEA<i class="fas fa-users fa-1x text-lightgray-300 col-auto"></i></h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+                    <a href="assemblea_auth.php" title="Assemblea" style="text-decoration: none;">
+                      <h4 class="card-title" style="color:#FFFFFF;">Info Assemblea 2021</h4>
+                    </a>
+                </div>
+              </div>
+        </div>   
+
+        <div class="col-md-3">
+              <div class="card shadow border-info mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">EVENTI<i class="fas fa-hand-peace fa-1x text-lightgray-300 col-auto"></i></h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+                    <a href="eventi.php" title="Eventi" style="text-decoration: none;">
+                      <h4 class="card-title" style="color:#FFFFFF;">Attività...</h4>
+                    </a>
+                </div>
+              </div>
+        </div>   
+
+        <div class="col-md-3">
+              <div class="card shadow border-info mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">UTILITY<i class="fas fa-cogs fa-1x text-lightgray-300 col-auto"></i></h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+                    <a href="utility.php" title="Eventi" style="text-decoration: none;">
+                      <h4 class="card-title" style="color:#FFFFFF;">Accessori...</h4>
+                    </a>
+                </div>
+              </div>
+        </div>   
+
+      <!-- FINE ULTIMO DIV -->
+      </div>
+
+<!--  
+*****************************************************************************
+NEWS & AGGIORNAMENTO DATI
+*****************************************************************************
+-->
+<?php
+            // Ultimo Aggiornamento 
+            $select_aggto = " SELECT *
+                              FROM tab_ultimo_caricamento WHERE tipo in ('SIB','XLS')" ;
+            $qry_aggto = mysqli_query($connection, $select_aggto);
+              while($aggto = mysqli_fetch_array($qry_aggto)){ 
+
+                    // Date per semaforo status aggiornamento
+                    $f0 = date("Ymd") ;
+                    $f1 = ( date("Ymd") - 7 );
+                    $f2 = ( date("Ymd") - 15 );
+                    $limite = date("Ymd",strtotime($aggto['caricamento'])); 
+
+                    if ( ($limite <= $f0) AND ($limite > $f1) ) {$semaforo = "<img src='img/ico_pallino_green.png'>";}
+                    if ( ($limite <= $f1) AND ($limite > $f2) ) {$semaforo = "<img src='img/ico_pallino_yellow.png'>";}
+                    if   ($limite <= $f2) {$semaforo = "<img src='img/ico_pallino_red.png'>";}
+
+                    if ($aggto['fonte'] == 'tab_soci_as37') 
+                        {$as37 = $aggto['caricamento']; $as37_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_soci_as75') 
+                        {$as75 = $aggto['caricamento']; $as75_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_comuni_soci') 
+                        {$comumi = $aggto['caricamento']; $comumi_semaforo = $semaforo;}                        
+                    if ($aggto['fonte'] == 'tab_xls_ammissioni')
+                        {$ammissioni = $aggto['caricamento']; $amm_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_xls_cessioni') 
+                        {$cessioni = $aggto['caricamento']; $ces_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_xls_decessi_eredi') 
+                        {$eredi = $aggto['caricamento']; $ere_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_xls_recessi_esclusioni_sofferenze') 
+                        {$esclusioni = $aggto['caricamento']; $esc_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_giovani') 
+                        {$giovani = $aggto['caricamento']; $gio_semaforo = $semaforo;}
+                  }
+?>                  
+
+<!-- Content Row -->
+<div class="row align-items-start">
+
+<div class="col-md-3">
+            <!-- Conteggio Soci in essere -->
+              <?php
+                //////////////////////////////////////////////////////////////////
+                // CONTEGGI
+                //////////////////////////////////////////////////////////////////
+                
+                    $select_cnt = " SELECT count(*) as qta, sessoVAL
+                                    FROM tab_soci_as37 
+                                    WHERE StatoVAL not in ('E','S','N')
+                                    GROUP BY sessoVAL" ;
+                    $qry_cnt = mysqli_query($connection, $select_cnt);
+                    while($cnt = mysqli_fetch_array($qry_cnt)){ 
+                	    if 		($cnt['sessoVAL'] == 'M') {$maschi = number_format($cnt['qta'], 0, ',', '.'); $m = $cnt['qta']; }
+                	    elseif 	($cnt['sessoVAL'] == 'F') {$femmine = number_format($cnt['qta'], 0, ',', '.'); $f = $cnt['qta'];}
+                	    else 	{$aziende = number_format($cnt['qta'], 0, ',', '.'); $a = $cnt['qta']-1;} // tolgo ChiantiBanca
+                	}
+                
+                    $totalesoci = $m + $f + $a ; //echo $totalesoci;
+                    //$totalesoci = $maschi + $femmine + $aziende; echo $totalesoci;
+                ?>
+
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">Sintesi Compagine Sociale</h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+
+<table border ="0" width="80%">
+    <tr>
+        <td width="60%" align="center" rowspan="3"><img src="img/ico_people.png" height="60"><br><small>Totale Soci</small><br><h4 class="card-title"><?php echo number_format($totalesoci, 0, ',', '.'); ?></h4></td>
+        <td align="right"><img src="img/ico_man.png" height="30"></td><td align="right"><span class="card-title"><?php echo $maschi; ?></span></td>
+    </tr>
+    <tr>
+        <td align="right"><img src="img/ico_woman.png" height="30"></td><td align="right"><span class="card-title"><?php echo $femmine; ?></span></td>
+    </tr>
+    <tr>
+        <td align="right"><img src="img/ico_azienda.png" height="30"></td><td align="right"><span class="card-title"><?php echo $aziende; ?></span></td>
+    </tr>
+</table>
+
+
+        </div>
+              </div>
+</div>
+
+<div class="col-md-6">
+            <!-- News -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                <table width="100%" cellspacing="0" cellpadding="0">
+              <tr>
+                <td align="left" width="30%">
+                  <h6 class="m-0 font-weight-bold text-light">Ultime novità</h6>
+                </td>
+                <td align="right">
+                  <i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i>
+                  <a href="news_index.php" style="color:white;">Comunicazioni</a>
+                </td>
+                <td align="right">
+                  <i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i>
+                  <a href="https://www.chiantibancanews.it/newsletter.php" style="color:white;" target="_blank">Newsletter</a>
+                </td>               
+                <td align="right">
+                  <i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i>
+                  <a href="https://www.chiantibancanews.it/rassegna.php" style="color:white;" target="_blank">Rassegna Stampa</a>
+                </td>
+              </tr>
+            </table> 
+                  
+                </div>
+                <div class="card-body">
+                  <div class="text-center">
+                  </div>
+
+                  <?php 
+          $query = mysqli_query($connection, 
+          "SELECT DATE_FORMAT(datainsert,'%d.%m.%Y %H:%i') as datainsert, newstitolo, newscategoria, newspost
+           FROM   tab_news");
+            while($news=mysqli_fetch_array($query)){ 
+                     echo html_entity_decode($news['newspost']); 
+                  } 
+              ?>
+
+                </div>
+              </div>
+</div>
+
+<div class="col-md-3">
+
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">Aggiornamenti</h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+
+                <table border="0" width="90%">
+                      <tr>
+                          <td><small><?php echo $as37_semaforo; ?> Dati <b>SIB AS37</b></td>
+                          <td><small><?php echo $as37; ?></td>
+                      </tr>
+                      <tr>
+                          <td><small><?php echo $comumi_semaforo; ?> Dati <b>SIB Comumi</b></td>
+                          <td><small><?php echo $comumi; ?></td>
+                      </tr>
+                      <tr>
+                          <td><small><?php echo $gio_semaforo; ?> Dati <b>SIB Under30</b></td>
+                          <td><small><?php echo $giovani; ?></td>
+                      </tr>                      <!--<tr>
+                          <td><small><?php //echo $as75_semaforo; ?> <b>Dati SIB AS75</b></td>
+                          <td><small><?php //echo $as75; ?></td>
+                      </tr>-->
+                      <tr>
+                          <td><small><?php echo $amm_semaforo; ?> Dati <b>XLS Ammissioni</b></td>
+                          <td><small><?php echo $ammissioni; ?></td>
+                      </tr>
+                      <tr>
+                          <td><small><?php echo $ere_semaforo; ?> Dati <b>XLS Eredi</b></td>
+                          <td><small><?php echo $eredi; ?></td>
+                      </tr>
+                      <tr>
+                          <td><small><?php echo $esc_semaforo; ?> Dati <b>XLS Esclusioni</b></td>
+                          <td><small><?php echo $esclusioni; ?></td>
+                      </tr>
+                      <tr>
+                          <td><small><?php echo $ces_semaforo; ?> Dati <b>XLS Cessioni</b></td>
+                          <td><small><?php echo $cessioni; ?></td>
+                      </tr>
+
+                    </table>
+
+                </div>
+              </div>
+</div>
+
+<!-- FINE RIGA -->
+</div>
+
+<!--  
+*****************************************************************************
+CONTATORI VARI
+*****************************************************************************
+-->
+    <?php
+
+                echo '';   // br
+
+
+        // Conteggio Ammissioni
+        /*
+        $select_amm = " SELECT count(*) as qta FROM tab_xls_ammissioni 
+                        WHERE cda = 'NEXT'
+                          " ;
+        */     
+        $select_amm = " SELECT STR_TO_DATE(CDA, '%d/%m/%Y') as CDA, count(*) as qta FROM tab_xls_ammissioni 
+                        WHERE STR_TO_DATE(CDA, '%d/%m/%Y') = ( select max(STR_TO_DATE(CDA, '%d/%m/%Y')) 
+                        FROM tab_xls_ammissioni )
+                          " ;
+
+        $qry_amm = mysqli_query($connection , $select_amm);
+        $numerorighe = mysqli_num_rows($qry_amm);
+          while($amm = mysqli_fetch_array($qry_amm)){ 
+              
+            if ($numerorighe == 0) 
+                 {$amm_qta = 0; 
+                  $cda = $amm['CDA'];}
+            else {$amm_qta = $amm['qta']; 
+                  $cda = $amm['CDA'];}
+          }
+          
+        // Crea file nuove ammissioni in delibera CDA 
+        $select_amm_txt = "SELECT CDA, Filiale, CAG, Conto, Nominativo, Data_Domanda, Azioni_Sottoscritte, Flag_da_SUCC_CESS, Note 
+                           FROM tab_xls_ammissioni
+                           WHERE STR_TO_DATE(CDA, '%d/%m/%Y') = ( select max(STR_TO_DATE(CDA, '%d/%m/%Y')) 
+                           FROM tab_xls_ammissioni ) 
+                           ORDER BY Filiale, Nominativo";
+        $qry_amm_txt = mysqli_query($connection , $select_amm_txt);     
+        $contenuto_amm_txt = '';
+        $myfile_amm_txt = fopen("tmp/contenuto_ammissioni.csv", "w");
+        $contenuto_amm_txt .= "CDA;FILIALE;CAG;CONTO;NOMINATIVO;DATADOMANDA;AZIONISOTTOSCRITTE;ORIGINE;NOTE\n";
+		while($dati_amm_txt = mysqli_fetch_array($qry_amm_txt)){ 
+                  $contenuto_amm_txt .=  $dati_amm_txt['CDA'].";".
+				                         $dati_amm_txt['Filiale'].";".
+				                         $dati_amm_txt['Conto'].";".
+				                         $dati_amm_txt['Nominativo'].";".
+				                         $dati_amm_txt['Data_Domanda'].";".
+				                         $dati_amm_txt['Azioni_Sottoscritte'].";".
+				                         $dati_amm_txt['Flag_da_SUCC_CESS'].";".
+				                         $dati_amm_txt['Note']."\n";		    
+		}
+        fwrite($myfile_amm_txt, $contenuto_amm_txt);
+        fclose($myfile_amm_txt);
+                    
+        // Conteggio Eredi (intestazioni)
+        $select_ere1 = " SELECT count(*) as qta FROM tab_xls_decessi_eredi
+                        WHERE Intestazione_a_eredi = 'S'
+                        AND Note_AO08 not in ('S2','SM','V2')  " ;
+        $qry_ere1 = mysqli_query($connection, $select_ere1);
+          while($ere1 = mysqli_fetch_array($qry_ere1)){ 
+            {$ere1_qta = $ere1['qta']; }
+          }                    
+
+        // Conteggio Eredi (liquidazioni)
+        $select_ere2 = " SELECT count(*) as qta FROM tab_xls_decessi_eredi
+                        WHERE Liquidazione_a_eredi = 'S'
+                        AND Note_AO08 not in ('S2','SM','V2')  " ;
+        $qry_ere2 = mysqli_query($connection, $select_ere2);
+          while($ere2 = mysqli_fetch_array($qry_ere2)){ 
+            {$ere2_qta = $ere2['qta']; }
+          }                    
+
+        // Conteggio Esclusioni 
+        $select_esc1 = " SELECT count(*) as qta FROM tab_xls_recessi_esclusioni_sofferenze
+                        WHERE Escluso_art_14 = 'S'
+                        AND Note_AO08 not in ('S4','SC','SB')  " ;
+        $qry_esc1 = mysqli_query($connection, $select_esc1);
+          while($esc1 = mysqli_fetch_array($qry_esc1)){ 
+            {$esc1_qta = $esc1['qta']; }
+          }                    
+
+        // Conteggio Esclusioni (Sofferenze)
+        $select_esc2 = " SELECT count(*) as qta FROM tab_xls_recessi_esclusioni_sofferenze
+                        WHERE Escluso_x_Passaggio_a_Sofferenze = 'S'
+                        AND Note_AO08 not in ('S4','SC','SB')  " ;
+        $qry_esc2 = mysqli_query($connection, $select_esc2);
+          while($esc2 = mysqli_fetch_array($qry_esc2)){ 
+            {$esc2_qta = $esc2['qta']; }
+          }                    
+           
+        // Conteggio Cessioni a Banca 
+        $select_ces1 = " SELECT count(*) as qta FROM tab_xls_cessioni
+                        WHERE Cessione_a_Banca = 'S'
+                        AND Note_AO08 not in ('VC/S4','VB','VC','S5','S4','SB','SC','SM')  " ;
+        $qry_ces1 = mysqli_query($connection, $select_ces1);
+          while($ces1 = mysqli_fetch_array($qry_ces1)){ 
+            {$ces1_qta = $ces1['qta']; }
+          }                    
+
+        // Conteggio Cessioni a Socio
+        $select_ces2 = " SELECT count(*) as qta FROM tab_xls_cessioni
+                        WHERE Cessione_a_Socio = 'S'
+                        AND Note_AO08 not in ('VC/S4','VB','VC','S5','S4','SB','SC','SM')  " ;
+        $qry_ces2 = mysqli_query($connection, $select_ces2);
+          while($ces2 = mysqli_fetch_array($qry_ces2)){ 
+            {$ces2_qta = $ces2['qta']; }
+          }    
+
+     ?>
+
+<!-- Content Row -->
+<div class="row align-items-start">
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light"><i class="fas fa-cog fa-1x text-darkgray-300 col-left">&nbsp;</i>Ammissioni</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="tmp/contenuto_ammissioni.csv" style="text-decoration:none;color:orange;" target="_blank">Domande CDA <?php echo $cda; ?> >></a>
+            <span class="badge badge-primary badge-pill"><?php echo $amm_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+           <a href="#sconf" style="text-decoration:none;color:orange;">Elenco domande sconfinanti >></a>
+           
+              <?php 
+              // PopUp per le ammissioni sconfinanti
+              echo '<style type="text/css">
+              /* Stili di base per oscuramento della finestra   */
+              .overlay {
+                  top: 0;
+                  right: 0;
+                  bottom: 0;
+                  left: 0;
+                  z-index: 10;
+                  display: none;
+              /* livello di oscuramento  */
+                  background-color: rgba(0, 0, 0, 0.65);
+                  position: fixed; /* posizionamento fisso */
+                  cursor: default; /* tipo del cursore */
+              }
+              /* attivare livello di oscuramento */
+              .overlay:target {
+                  display: block;
+              }
+              /* stili di finestre pop-up */
+              .popup {
+                  top: -100%;
+                  right: 0;
+                  left: 50%;
+                  font-size: 14px;
+                  z-index: 20;
+                  margin: 0;
+                  width: 85%;
+                  min-width: 320px;
+                  max-width: 600px;
+              /* posizionamento fisso allo scorrimento della pagina  */
+                  position: fixed;
+                  padding: 15px;
+                  border: 1px solid #383838;
+                  background: #555555;
+              /* arrotondamento dei angoli  */
+                  -webkit-border-radius: 4px;
+                  -moz-border-radius: 4px;
+                  -ms-border-radius: 4px;
+                  border-radius: 4px;
+                  font: 14px/18px \'Tahoma\', Arial, sans-serif;
+              /* ombra esetrna */
+                      box-shadow: 0 15px 20px rgba(0,0,0,.22),0 19px 60px rgba(0,0,0,.3);
+                     transform: translate(-50%, -500%);
+                  transition: transform 0.6s ease-out;
+              }
+              /* attivare finestra modale, viene utilizato pseudo-classe:target*/
+              .overlay:target+.popup {
+                  transform: translate(-50%, 0);
+                  top: 20%;
+              }
+              /* formare il bottone di chiusura  */
+              .close {
+                  top: -10px;
+                  right: -10px;
+                  width: 20px;
+                  height: 20px;
+                  position: absolute;
+                  padding: 0;
+                  border: 2px solid #ccc;
+                  border-radius: 15px;
+                  background-color: rgba(61, 61, 61, 0.8);
+                  box-shadow: 0px 0px 10px #000;
+                  text-align: center;
+                  text-decoration: none;
+                  font: 13px/20px \'Tahoma\', Arial, sans-serif;
+                  font-weight: bold;
+                  transition: all ease .8s;
+              }
+              .close:before {
+                  color: rgba(255, 255, 255, 0.9);
+                  content: "X";
+                  text-shadow: 0 -1px rgba(0, 0, 0, 0.9);
+                  font-size: 12px;
+              }
+              .close:hover {
+                  background-color: rgba(252, 20, 0, 0.8);
+                  transform: rotate(360deg);    
+              }
+              /* immagine al interno della afinestra */
+              .popup img {
+                  width: 100%;
+                  height: auto;
+              }
+              /* miniatura a destra/sinistra  */
+              .pic-left, 
+              .pic-right {
+                  width: 25%;
+                  height: auto;
+              }
+              .pic-left {
+                  float: left;
+                  margin: 5px 15px 5px 0;
+              }
+              .pic-right {
+                  float: right;
+                  margin: 5px 0 5px 15px;
+              }
+              /* elemento media, frame  */
+              .popup embed, 
+              .popup iframe {
+                  top: 0;
+                  right: 0;
+                  bottom: 0; 
+                  left: 0; 
+                  display:block;
+                  margin: auto;
+                  min-width: 320px;
+                  max-width: 600px;
+                  width: 100%;
+              }
+              .popup h2 { /* titolo 2 */
+                  margin: 0;
+                  color: #008000;
+                  padding: 5px 0px 10px;
+                  text-align: left;
+                  text-shadow: 1px 1px 3px #adadad;
+                  font-weight: 500;
+                  font-size: 1.4em;
+                  font-family: \'Tahoma\', Arial, sans-serif;
+                  line-height: 1.3;
+              }
+              /* paragrafi*/
+              .popup p {margin: 0; padding: 5px 0}
+              </style>';
+
+              echo '<a href="#x" class="overlay" id="sconf"></a>';
+              echo '<div class="popup">';
+              echo '<center><b>Nuove Domande a Socio in attesa di fondi</b></center>';
+              echo '<table border="0" align="center" width="80%">
+                      <tr>
+                        <td align="left">CdA</td>
+                        <td align="left">Fil&nbsp;</td>
+                        <td align="left">CAG</td>
+                        <td align="left">Conto</td>
+                        <td align="left">Nominativo</td>
+                      </tr>
+                        ';
+
+              $select_sconf = " SELECT CDA, Filiale, Cag, Conto, Nominativo FROM tab_xls_ammissioni
+                              WHERE Manca_DB = 'S'
+                              ORDER BY Filiale, Nominativo  " ;
+              $qry_sconf = mysqli_query($connection, $select_sconf);
+
+                while($sconf = mysqli_fetch_array($qry_sconf)){ 
+                  echo '<tr>
+                            <td align="left">'.$sconf['CDA'].'</td>
+                            <td align="left">'.$sconf['Filiale'].'</td>
+                            <td align="left">'.$sconf['Cag'].'</td>
+                            <td align="left">'.$sconf['Conto'].'</td>
+                            <td align="left">'.$sconf['Nominativo'].'</td>
+                        </tr>';
+                }         
+                    echo '</table>';
+               echo '<a class="close" title="Chiudere" href="#close"></a>
+                    </div>';       
+
+              ?>
+
+            <span class="badge badge-primary badge-pill"></span>
+        </li> 
+      </ul>
+    </div> 
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light"><i class="fas fa-cog fa-1x text-darkgray-300 col-left">&nbsp;</i>Eredi</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Intestazioni a eredi da eseguire
+            <span class="badge badge-primary badge-pill"><?php echo $ere1_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Liquidazioni a eredi da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $ere2_qta; ?></span>
+        </li>
+      </ul>
+    </div>  
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light"><i class="fas fa-cog fa-1x text-darkgray-300 col-left">&nbsp;</i>Esclusioni</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Esclusioni da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $esc1_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Sofferenze da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $esc2_qta; ?></span>
+        </li>
+      </ul>
+    </div>  
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light"><i class="fas fa-cog fa-1x text-darkgray-300 col-left">&nbsp;</i>Cessioni</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Cessioni a Banca da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $ces1_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Cessioni a Socio da eseguire
+            <span class="badge badge-primary badge-pill"><?php echo $ces2_qta; ?></span>
+        </li>
+      </ul>
+    </div>   
+
+</div>  
+
+<!--  
+*****************************************************************************
+FOOTER
+*****************************************************************************
+-->
+<br><br>
+<footer class="text-muted ">
+  <div class="copyright text-center my-auto">
+
+    <span class='mr-2 d-none d-lg-inline text-gray-600 small'>
+    </span>
+  
+  </div>
+</footer>
+
+<!-- End of Footer -->

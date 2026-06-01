@@ -1,0 +1,22 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Attesa Eredi;70;PF;4041548;BENELLI FRANCO ROMANO ;19;571;23/03/2021;;2022;11/12/2019;;;;;;;
+Attesa Eredi;70;PF;4001657;MARI PIERO FAUSTO;19;571;23/03/2021;;2022;21/04/2020;;;;;;;
+Attesa Eredi;70;PF;4010605;CECCHI STEFANO;19;571;23/03/2021;;2022;25/02/2021;;;;;;;
+Attesa Eredi;70;PF;4015912;MECUCCI MARIO;19;571;29/06/2021;;2022;30/12/2019;;;;;;;
+Attesa Eredi;70;PF;4014173;VAGNOLI SILVANO;96;2888;19/07/2021;;2022;17/03/2021;;;;;;;
+Attesa Eredi;70;PF;4111144;DOLCI LUCA;57;1715;03/08/2021;;2022;10/07/2021;;;;;;;
+Sofferenze;70;PG;4003594;DIMENSIONE CASA SRL IN LIQUIDAZIO;19;571;24/05/2018;;2019;;;;;;S;;
+Sofferenze;70;PF;4111083;GRASSI MARCO;38;1143;17/05/2019;;2020;;;;;;S;;
+Sofferenze;70;PF;4055483;IUMIENTO ROSARIO;19;571;13/05/2020;Sofferenze non segnalate a suo tempo (inserite 06.07.2021);2021;;;;;;S;;
+Esclusione;70;PG;4058254;CHEMSERVICE 2 SNC;40;1203;23/12/2020;Società cessata 10/07/2018;2022;;;;;S;;;
+Esclusione;70;PF;4115331;LOMBARDI ISMAELE;28;842;09/12/2020;Rapporti chiusi ;2022;;;;;S;;;
+Esclusione;70;PG;4016237;STEFAB SRL;163;4904;23/12/2020;Società cessata 19/03/2020;2022;;;;;S;;;
+Esclusione;70;PF;4110678;BARGELLI SAURO;154;4633;18/01/2021;Rapporti chiusi - Atto transattivo;2022;;;;;S;;;
+Esclusione;70;PF;4002184;LA MARCA VINCENZO;5;150;06/03/2021;RAC - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;70;PF;4090683;MAGGIO EMANUELA ;28;842;05/08/2021;A seguito revisione zone di competenza (CLO Filiale) - Italia;2022;;;;S;;;;
+Esclusione;70;PF;3830729;PRIORESCHI ALESSIO;50;1504;21/07/2021;RAC - Rapporti chiusi;2022;;;;;S;;;
+Cessione Banca;70;;4097502;GENTILI ALESSANDRA;57;1715;20/03/2019;NECESSITà PERSONALI ;;;;;;;;T;S
+Cessione Banca;70;PF;4110797;CASCARDO LUIGI CARMELO;77;2316;30/01/2020;;;;;;;;;T;S
+Cessione Banca;70;PF;4009760;BACARELLI BABILA;385;11584;27/01/2021;Rapporti ancora aperti;;;;;;;;T;S
+Cessione Banca;70;PF;4008109;LEONARDO ROSA;38;1143;17/03/2021;;;;;;;;;T;S
+Cessione Banca;70;PF;4200881;MANICHI ROSSANA;28;842;10/06/2021;RAC - Rapporti ancora aperti;;;;;;;;T;S

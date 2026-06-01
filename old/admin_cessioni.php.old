@@ -1,0 +1,203 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+
+// Calcolo la variabile data-ora per generare la password al link di Edit Password FiIliali
+$urlpsw = date('YmdH');
+
+/*
+// **** se l'utente arriva dalla Scheda Socio
+if ((strpos($_SERVER['HTTP_REFERER'], 'sqldati_schedasocio.php')) OR 
+	(strpos($_SERVER['HTTP_REFERER'], 'schedasocio.php')))
+{
+*/
+
+if (!isset($_POST['psw']))
+	{
+	echo '<center><h2><span style="color:gray;"><i>AREA RISERVATA UFFICIO SOCI</i></span></h2>	
+					Inserisci la password per accedere al calcolo dati Cessione</center>';
+	echo '<br><br>
+	 <table border=0 align="center" width="25%">
+	 <tr>
+	 <td>
+		<form class="form-inline" action="admin_cessioni.php" method="post" onsubmit="return ray.ajax()">
+		  <div class="form-group mx-sm-3 mb-2">
+		    <label for="psw" class="sr-only">Password</label>
+		    <input type="password" class="form-control" name="psw" id="psw" placeholder="Password">
+		    <input type="hidden" class="form-control" name="nominativo" id="nominativo" value="'.$_GET['nominativo'].'">
+		    <input type="hidden" class="form-control" name="id" id="id" value="'.$_GET['id'].'">
+		    <input type="hidden" class="form-control" name="dr" id="dr" value="'.$_GET['dr'].'">
+		    <input type="hidden" class="form-control" name="vn" id="vn" value="'.$_GET['vn'].'">
+		  </div>
+		  <button type="submit" class="btn btn-success mb-2">ACCEDI</button>
+		</form>
+	</td>
+	</tr>
+	</table>
+
+	';
+	}
+elseif 
+	($_POST['psw'] == "cicalo")
+	{
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+$annodipartenzaMedia = '2020';
+
+// Estrazione dati della posizione in Cessione
+$select = "	select count(*) as qta, sum(Valore_Nominale) as importo from tab_xls_cessioni
+			where Cessione_a_banca = 'S'
+			and Note_AO08 not in ('S4','SA','SB','SC','SM','VB')
+			and id between 
+			(select min(id) from tab_xls_cessioni
+			 where Note_AO08 not in ('S4','SA','SB','SC','SM','VB') )
+			 and (".$_POST['id']."-1)";
+//echo $select;
+logquery ($select);
+$querydati = mysqli_query($connection, $select);
+
+echo "<center><fieldset style='width:900px;text-align:left;'><br>";
+echo '<div class="p-1 mb-2 text-left h5 bg-light text-white">Conteggio relativo alla cessione del Socio</div>';
+echo '<table width="100%" border="1" style="background-color:#222222;">';
+
+	while($datisocio=mysqli_fetch_array($querydati)){ 
+
+	echo '<tr><td colspan="2"><h4>' .$_POST['nominativo'].'</h4></td></tr>';
+	echo '<tr><td>Data Richiesta:</td><td>' .$_POST['dr'].'</td></tr>';
+	echo '<tr><td>Valore nominale richiesto:</td><td>Eur '.number_format($_POST['vn'], 0, ',', '.').'</td></tr>';
+	echo '<tr><td width="50%">Quantita\' di posizioni precedenti</td><td>'.$datisocio['qta']. '</td></tr>';
+	echo '<tr><td width="50%">Importo cessioni precedenti da erogare</td><td>Eur '.number_format($datisocio['importo'], 0, ',', '.').'</td></tr>';
+
+	$importo_totale_cessioni = $datisocio['importo'];
+	}
+
+
+// Estrazione dati della media delle ammissioni deliberate dal CDA per mese/anno
+// Somma del Valore Nominale
+$select_a1 = "	select round(sum(Azioni_Sottoscritte*30.09)) as importo
+				from tab_xls_ammissioni
+				WHERE substring(CDA,7,4) >= ".$annodipartenzaMedia;
+logquery ($select_a1);
+$querydati_a1 = mysqli_query($connection, $select_a1);
+	while($datisocio_a1=mysqli_fetch_array($querydati_a1)){ 
+		$valore_a = $datisocio_a1['importo'];
+	}
+// Conteggio dei mesi da calcolare	
+$select_a2 = "	select substring(CDA,4,7) as mesi
+				from tab_xls_ammissioni
+				WHERE substring(CDA,7,4) >= ".$annodipartenzaMedia." 
+				GROUP BY substring(CDA,4,7) ";
+logquery ($select_a2);
+$querydati_a2 = mysqli_query($connection, $select_a2);
+	while($datisocio_a2=mysqli_fetch_array($querydati_a2)){ 
+		$rowcount_a=mysqli_num_rows($querydati_a2);
+	}
+
+// Estrazione dati della media delle esclusioni/sofferenze deliberate dal CDA per mese/anno
+// Somma del Valore Nominale
+$select_e1 = "	select round(sum(Valore_Nominale)) as importo
+				from tab_xls_recessi_esclusioni_sofferenze
+				WHERE substring(CDA,7,4) >= ".$annodipartenzaMedia."
+				AND Escluso_art_14 = 'S' OR Escluso_x_Passaggio_a_Sofferenze = 'S'
+				AND Note_AO08 not in ('S4','SB','SC')";
+logquery ($select_e1);
+$querydati_e1 = mysqli_query($connection, $select_e1);
+	while($datisocio_e1=mysqli_fetch_array($querydati_e1)){ 
+		$valore_e = $datisocio_e1['importo'];
+	}
+// Conteggio dei mesi da calcolare	
+$select_e2 = "	select substring(CDA,4,7) as mesi
+				from tab_xls_recessi_esclusioni_sofferenze
+				WHERE substring(CDA,7,4) >= ".$annodipartenzaMedia." 
+				AND Escluso_art_14 = 'S' OR Escluso_x_Passaggio_a_Sofferenze = 'S'				
+				GROUP BY substring(CDA,4,7) ";
+logquery ($select_e2);
+$querydati_e2 = mysqli_query($connection, $select_e2);
+	while($datisocio_e2=mysqli_fetch_array($querydati_e2)){ 
+		$rowcount_e=mysqli_num_rows($querydati_e2);
+	}
+
+// Estrazione dati della media delle liquidazioni eredi deliberate dal CDA per mese/anno
+// Somma del Valore Nominale
+$select_l1 = "	select round(sum(Valore_Nominale)) as importo
+				from tab_xls_decessi_eredi
+				WHERE substring(CDA,7,4) >= ".$annodipartenzaMedia."
+				AND Liquidazione_a_eredi = 'S'
+				AND Note_AO08 not in ('S4','SB','SC')";
+logquery ($select_l1);
+$querydati_l1 = mysqli_query($connection, $select_l1);
+	while($datisocio_l1=mysqli_fetch_array($querydati_l1)){ 
+		$valore_l = $datisocio_l1['importo'];
+	}
+// Conteggio dei mesi da calcolare	
+$select_l2 = "	select substring(CDA,4,7) as mesi
+				from tab_xls_decessi_eredi
+				WHERE substring(CDA,7,4) >= ".$annodipartenzaMedia." 
+				AND Liquidazione_a_eredi = 'S'
+				GROUP BY substring(CDA,4,7) ";
+logquery ($select_l2);
+$querydati_l2 = mysqli_query($connection, $select_l2);
+	while($datisocio_l2=mysqli_fetch_array($querydati_l2)){ 
+		$rowcount_l=mysqli_num_rows($querydati_l2);
+	}
+
+echo '<br><br>';
+$media_mese_ammissioni = number_format(($valore_a / $rowcount_a),0,'','.');
+$media_mese_esclsoff   = number_format(($valore_e / $rowcount_e),0,'','.');
+$media_mese_liqeredi   = number_format(($valore_l / $rowcount_l),0,'','.');
+$Differenza            = (($valore_a / $rowcount_a) - (($valore_e / $rowcount_e) + ($valore_l / $rowcount_l)));
+$ipotesi = ($importo_totale_cessioni / $Differenza) ;
+
+// Your date
+$date = new DateTime(); // empty for now or pass any date string as param
+// Adding
+$date->modify('+'.round($ipotesi).' months');
+
+	echo '<tr>
+			<td><b>Media mese</b> del valore nominale di ammissioni nuovi Soci (Anno '.$annodipartenzaMedia.')</td>
+			<td>Eur ' .$media_mese_ammissioni.'</td></tr>';
+	echo '<tr>
+			<td><b>Media mese</b> del valore nominale delle liquidazioni da fare (Anno '.$annodipartenzaMedia.')</td>
+			<td>Eur ' .($media_mese_esclsoff + $media_mese_liqeredi).'</td></tr>';
+	echo '<tr>
+			<td><i>di cui per Esclusioni o Sofferenze</i></td>
+			<td>Eur ' .$media_mese_esclsoff.'</td></tr>';
+	echo '<tr>
+			<td><i>di cui per Liquidazione a Eredi</i></td>
+			<td>Eur ' .$media_mese_liqeredi.'</td></tr>';
+	echo '<tr>
+			<td>Differenza tra entrate e uscite </td>
+			<td>Eur ' .number_format($Differenza,0,'','.').'</td></tr>';
+	echo '<tr>
+			<td>Conteggio (Importo cessioni da erogare : differenza in/out) </td>
+			<td>'.$importo_totale_cessioni.'/'.round($Differenza).' = '.round($ipotesi).' mesi</td></tr>';
+	echo '<tr>
+			<td><h4>Ipotesi rientro </h4></td>
+			<td><h4>' .$date->format('d-m-Y').'</h4></td></tr>';
+	echo '</tr>';
+
+echo '</table></fieldset></center>';
+
+// Fine
+}
+
+?>

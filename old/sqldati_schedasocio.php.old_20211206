@@ -1,0 +1,744 @@
+<?php
+// *****************************************************************************
+// Portale Soci
+// Sviluppo e realizzazione: Alessio Fedi (2019)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+
+if (get_browser_name($_SERVER['HTTP_USER_AGENT']) == "Internet Explorer")
+	{$imgext = "jpg";}
+else
+	{$imgext = "png";}
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+echo '<div id="load" style="display:none;">Loading... Please wait</div>';
+
+echo '<center>';
+
+$adesso = date('d/m');
+
+// ********************************************************
+// DATI SOCIO
+// ********************************************************
+
+$select = "	SELECT *
+			FROM tab_soci_as37
+			WHERE Prot = '".$_GET['id']."'
+			";
+
+logquery ($select); 
+
+$querydati = mysqli_query($connection, $select);
+
+while($datisocio=mysqli_fetch_array($querydati)){ 
+
+		if (substr($datisocio['dataNasc'],0,5) == $adesso) 
+		{$bday = '<i class="fas fa-birthday-cake fa-1x text-gray-300 col-auto"></i>';}
+	else
+		{$bday = '';}
+
+			// ********************************************************
+			// RICERCA LA DATA EFFETTIVA DI INGRESSO SE EX PISTOIA
+			// ********************************************************
+			$dataEntrata_origine = '';
+			$select_storico = "	SELECT dataEntrata_origine
+						FROM tab_storico_pistoia
+						WHERE prot = ".$_GET['id'];
+						
+			$querydati_storico = mysqli_query($connection, $select_storico);
+			while($dati_storico=mysqli_fetch_array($querydati_storico)){ 
+				$dataEntrata_origine = '&nbsp;(Orig. '.$dati_storico['dataEntrata_origine'].')';
+				$dataEntrata_origine2 = $dati_storico['dataEntrata_origine'];
+				}
+
+		    // Controllo se oggi è il suo compliSocio, ovvero il compleanno dalla data di ingresso...se SI metto l'icona della torta
+			if ($dataEntrata_origine == "") { $dataEntrata = $datisocio['dataEntrata']; } else { $dataEntrata = $dataEntrata_origine2; }
+			
+			if (substr($dataEntrata,0,5) == $adesso) 
+				{$complisocio = '<i class="fas fa-birthday-cake fa-1x col-auto" style="color:orange;" title="CompliSocio"></i>';}
+			else
+				{$complisocio = '';}
+			
+
+			// ********************************************************
+			// CONTROLLO SE HA MOVIMENTI IN MONITOR
+			// ********************************************************
+			$select_monitor	  = "	SELECT * FROM tab_monitor_soci
+									WHERE cag = ".$datisocio['cag']." AND attivo = 'S' ";
+			logquery ($select_monitor);
+			$querydati_monitor = mysqli_query($connection, $select_monitor);
+				if(mysqli_num_rows($querydati_monitor) > 0)
+				    while($datisociomonitor = mysqli_fetch_array($querydati_monitor))
+				    {
+				       $esistenzadatimonitor_color = 'yellow;';
+				    }
+				else
+				    $esistenzadatimonitor_color = '#A0B7CE;';
+
+			// **************************************************************
+			// ESTRAGGO LA FONTE DELL'AMMISSIONE (cessione, succc, donazione)
+			// **************************************************************
+			$select_ammiss	  = "	SELECT Flag_da_SUCC_CESS as FonteAmmissione, Note FROM tab_xls_ammissioni
+									WHERE CAG = ".$datisocio['cag'] ;
+			logquery ($select_ammiss); 
+			$querydati_ammiss = mysqli_query($connection, $select_ammiss);
+            if(mysqli_num_rows($querydati_ammiss) > 0)
+				    while($datisocioammiss = mysqli_fetch_array($querydati_ammiss))
+				    {
+				        if ($datisocioammiss['FonteAmmissione'] == 'C') 
+				            {$FonteAmmissione = '<i title="'.$datisocioammiss['Note'].'"> da Cessione</i>';
+				            }
+				        elseif ($datisocioammiss['FonteAmmissione'] == 'S') 
+				            {$FonteAmmissione = '<i title="'.$datisocioammiss['Note'].'"> da Succssione</i>';
+				            }				            
+				        elseif ($datisocioammiss['FonteAmmissione'] == 'D') 
+				            {$FonteAmmissione = '<i title="'.$datisocioammiss['Note'].'"> da Donazione</i>';
+				            }
+				            
+				        else
+				            {$FonteAmmissione = ''; }
+				    }
+				        else
+				            {$FonteAmmissione = ''; }
+
+
+			// ********************************************************
+			// RICERCA SE IL SOCIO E' ANCHE SOCIO MUTUA
+			// ********************************************************
+			$select_mutua 	  = "	SELECT * FROM tab_mutua_elencosoci
+									WHERE cag = ".$datisocio['cag'];
+			logquery ($select_mutua);  
+			$querydati_mutua = mysqli_query($connection, $select_mutua);
+				if(mysqli_num_rows($querydati_mutua) > 0)
+				    while($datisociomutua = mysqli_fetch_array($querydati_mutua))
+				    {
+				       $esistenzasociomutua = 
+					 	"<a href='mutua_schedasocio.php?cag=".$datisociomutua['cag']."' title='Apri Scheda Socio Mutua'><img src='img/mutua_logo_bianco_full.png' width='150'></a>";
+					   $modulimutua = 'si';
+				    }
+				else
+				{
+				    $esistenzasociomutua = '';
+				    $modulimutua = 'no';
+				}
+
+$nominativo = $datisocio['int1Socio'].' '.$datisocio['int2Socio'];
+$cag = $datisocio['cag'];
+
+if ($datisocio['statoVAL'] == 'E') {$pallino = '<img src="img/ico_pallino_red.png" title="ESTINTO">';} 
+elseif ($datisocio['statoVAL'] == 'S') {$pallino = '<img src="img/ico_pallino_white.png" title="USCITO (per Recesso, Decesso o Esclusione)">';} 
+elseif ($datisocio['statoVAL'] == 'N') {$pallino = '<img src="img/ico_pallino_yellow.png" title="AMMESSO con quote non ancora versate">';} 
+else {$pallino = '<img src="img/ico_pallino_green.png" title="In essere">';} 
+
+$ValoreNominale = substr($datisocio['nominaleAzTot'],0,-1);
+
+
+	// -------------------------------------------------------
+	// SCHEDA ANAGRAFICA
+	// -------------------------------------------------------
+	echo "<fieldset style='width:900px;text-align:left;'>
+			<!-- <legend style='color:#00478C;'>Dati Socio</legend> -->";
+	// Titolo con link alla generazione del QRCODE dell'indirizzo
+	// $chl = $datisocio['codFil'].";MG0672;P;".$nominativo.";".$datisocio['indirSpedIndirizzo'].';'.$datisocio['indirSpedCAP'].' '.$datisocio['indirSpedLocalita'].' '.$datisocio['indirSpedProvincia'].';'.$datisocio['indirizzoPEC'];
+	/*echo '<div class="p-1 mb-2 text-left h5 bg-light text-white">DATI SOCIO &nbsp;&nbsp; 
+	        <a style="text-decoration:none;color:#999999" href="https://chart.googleapis.com/chart?cht=qr&chs=120x120&chl='.$chl.'" target="_blank">
+	        QRCODE
+	        </a>
+	     </div>'; */
+
+	echo '<table width="100%" border="0" style="background-color:#222222;">';
+	echo '<tr height="20"><td colspan="4"><b style="font-size:18px;">' .$nominativo.' '.$pallino.' '.$bday.$complisocio.'</b></td>
+			<td align="right" valign="top" rowspan="16" width="150">
+			<img src="img/logo_soci.png" width="100">'.$esistenzasociomutua.'<br><br>
+			<a href="modulistica.php?prot='.$datisocio['prot'].'&cag='.$datisocio['cag'].'&socio='.stripslashes($nominativo).'&idsocio='.$datisocio['prot'].'&mutua="><i class="fas fa-file-signature fa-4x text-gray-300 col-auto" style="color:blue;" title="Modelli precompilati '.$nominativo.'"></i></a>
+
+			</td></tr>';
+	echo '<tr height="20">
+	            <td width="15%" style="color:#A0B7CE;">Numero Socio</td><td width="25%">'.$datisocio['prot']. '</td>
+	            <td width="15%" style="color:#A0B7CE;">Socio dal</td><td width="25%">'.$datisocio['dataEntrata'].$dataEntrata_origine. '</td>
+	       </tr>';
+	echo '<tr height="20">
+	            <td width="15%" style="color:#A0B7CE;">CAG</td><td width="25%">'.$datisocio['cag']. '</td>
+	            <td width="15%" style="color:#A0B7CE;">Azioni possedute</td><td width="25%" style="font-size:14px;">nr.<b>'.$datisocio['nAzTot']. '</b> &nbsp;&nbsp;(Eur '.$ValoreNominale.') </td>
+	       </tr>';
+	echo '<tr height="20"><td width="15%" style="color:#A0B7CE;">Filiale</td><td>'.$datisocio['codFil'].'&nbsp;'.$datisocio['int1Filiale'].'</td><td width="15%" style="color:#A0B7CE;">Nome Delegato</td><td width="25%" style="font-size:14px;">'.$datisocio['int1Delegato'].' '.$datisocio['int2Delegato']. '</td></tr>';
+	echo '<tr height="20"><td width="15%" style="color:#A0B7CE;">Zona di origine</td><td>'.$datisocio['zona']. '</td><td width="15%" style="color:#A0B7CE;">CAG Delegato</td><td width="25%" style="font-size:14px;">'.$datisocio['cagDelegato']. '</td></tr>';
+	echo '<tr height="20"><td width="15%" style="color:#A0B7CE;">Conto Corrente</td><td colspan="3">'.$datisocio['rappContEditato']. '</td></tr>';
+
+	echo '<tr><td width="15%" style="border-bottom:dotted 1px;color:white;"></td><td colspan="3" style="border-bottom:dotted 1px;color:white;"><br></td></tr>'; // riga separazione
+
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Luogo nascita/cost.</td><td colspan="3">'.$datisocio['luogoNasc']. '</td>';
+
+		$eta = ( date("Y") - substr($datisocio['dataNasc'],-4) ); 
+
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Data nascita/cost.</td><td colspan="3">'.$datisocio['dataNasc']. ' ('.$eta.' anni)</td></tr>';
+
+    // Indirizzo di RESIDENZA
+ 	echo '<tr><td width="15%" style="color:#A0B7CE;">Indirizzo Residenza</td><td colspan="3">'.$datisocio['indirResidIndirizzo']. ' - '.$datisocio['indirResidCAP']. ' - '.$datisocio['indirResidLocalita']. ' - '.$datisocio['indirResidProvincia']. '&nbsp;
+		<a href="https://www.google.com/maps/search/?api=1&query='.$datisocio['indirResidIndirizzo'].'+'.$datisocio['indirResidCAP'].'+'.$datisocio['indirResidLocalita'].'+'.$datisocio['indirResidProvincia'].'" target="_blank">
+		<i class="fas fa-map-marker-alt fa-1x text-gray-300 col-auto" alt="Vedi in Google Maps" title="Vedi in Google Maps"></i></a>';
+		
+	// Se presente una nota per la zona di competenza la riporto
+    	$queryzona = 	"SELECT *
+    					 FROM 	tab_comuni_soci_note
+    					 WHERE  cag = ".$datisocio['cag'] ;
+    		 
+    	$querydatizona = mysqli_query($connection, $queryzona);
+        if(mysqli_num_rows($querydatizona) > 0) 
+        while($datisociozona = mysqli_fetch_array($querydatizona))
+            {    
+           
+            if ($datisociozona['status_esito'] == 'Valido')
+                {$notezona = "ico_occhioverde.png"; }
+            elseif ($datisociozona['status_esito'] == 'Escludere')
+                {$notezona = "ico_occhiorosso.png"; }
+            else {$notezona = "ico_occhiogiallo.png"; }
+
+            $datinota = "Annotazione su requisito competenza territoriale: &#10;"
+                        ."ID ".$datisociozona['id']." - OPER " .$datisociozona['operatore']. " - Data ".$datisociozona['data_segnalazione']." &#10; &#10;"
+                        .$datisociozona['note']
+                        ;
+
+            echo '&nbsp;
+            <img src="img/'.$notezona.'" width="20" title="'.$datinota.'">
+            ';
+
+            }
+ 
+    echo '</td></tr>'; 
+
+    // Indirizzo di SPEDIZIONE
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Indirizzo Spedizione</td><td colspan="3">'.$datisocio['indirSpedIndirizzo']. ' - '.$datisocio['indirSpedCAP']. ' - '.$datisocio['indirSpedLocalita']. ' - '.$datisocio['indirSpedProvincia']. '&nbsp;
+		<a href="https://www.google.com/maps/search/?api=1&query='.$datisocio['indirSpedIndirizzo'].'+'.$datisocio['indirSpedCAP'].'+'.$datisocio['indirSpedLocalita'].'+'.$datisocio['indirSpedProvincia'].'" target="_blank">
+		<i class="fas fa-map-marker-alt fa-1x text-gray-300 col-auto" alt="Vedi in Google Maps" title="Vedi in Google Maps"></i>
+		</a>
+		</td></tr>'; 
+		
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Telefono</td><td colspan="3">'.$datisocio['telefono'].'</td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Email</td>
+				<td colspan="3"><a href="mailto:'.$datisocio['indirizzoEMail']. '" target="_blank" style="text-decoration: none;color:lightgray;">'.$datisocio['indirizzoEMail'].'&nbsp;
+				</a></td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">PEC</td>
+				<td colspan="3" style="text-decoration: none;color:lightgray;">'.$datisocio['indirizzoPEC'].'&nbsp;
+				</td></tr>';
+
+	echo '<tr><td width="15%" style="border-bottom:dotted 1px;color:white;"></td><td colspan="3" style="border-bottom:dotted 1px;color:white;"><br></td></tr>'; // riga separazione
+
+	echo '<tr>
+	            <td width="15%" style="color:#A0B7CE;">Ammesso dal</td><td>'.$datisocio['dataAmmiss'].$FonteAmmissione.'</td>
+	            <td width="15%" style="color:#A0B7CE;">Uscito il</td><td style="color:red;">'.$datisocio['dataUscita'].'&nbsp; '.$datisocio['causaleUscita'].'</td></td>
+	        </tr>';
+	echo '<tr>
+	            <td width="15%" style="color:#A0B7CE;">Entrato il</td><td>'.$datisocio['dataEntrata'].'</td>
+	            <td width="15%" style="color:#A0B7CE;">Estinto il</td><td style="color:red;">'.$datisocio['dataEstinzione'].'</td>
+	        </tr>';
+	echo '<tr>
+	            <td width="15%" style="color:#A0B7CE;"><a style="text-decoration:none;color:'.$esistenzadatimonitor_color.'" href="monitor_lista.php?nominativo='.$nominativo.'&cag='.$datisocio['cag'].'">Monitor <i class="fas fa-desktop fa-1x text-gray-300 col-auto"></i></a></td><td>&nbsp;</td>
+	            <td width="15%" style="color:#A0B7CE;">Deceduto il</td><td>'.$datisocio['dataDecesso'].'</td>
+	        </tr>';
+
+
+		if (($datisocio['statoVAL'] == 'E') OR ($datisocio['statoVAL'] == 'S')) {$tmp = '';}
+		else {
+		    $tmp = '1';
+			// Estraggo le informazioni dalla tabella VOLUMI
+			$selectV= "	SELECT *
+						FROM tab_volumi
+						WHERE cag = ".$cag."
+						";
+			logquery ($selectV); 
+			$querydatiV = mysqli_query($connection, $selectV);
+			$numerorighe = mysqli_num_rows($querydatiV); 
+			
+			if ($numerorighe > 0) {
+				    
+			while($datisocioV=mysqli_fetch_array($querydatiV)){ 
+				
+				if ($datisocioV['dipendente'] == 'S') {$ruoloD = "Dipendente Banca" ;} else {$ruoloD = "" ;} 
+				if ($datisocioV['amministratore'] == 'S') {$ruoloA = "Amministratore Banca" ;} else {$ruoloA = "" ;} 
+
+				$dataCensimento = $datisocioV['dataCensimento'] ;
+				$dataPrimoRapporto = $datisocioV['dataPrimoRapporto'] ;
+				$dataUltimoRapporto = $datisocioV['dataUltimoRapporto'] ;
+				$CCnum = $datisocioV['CC_num'] ;
+				$cartenum = $datisocioV['carte'] ;
+				$titnum = $datisocioV['TIT_polizze'] ;
+				
+				    // CONTROLLO SE E' DIPENDENTE BANCA, ALTRIMENTI ABBUIO RACCOLTA E IMPIEGHI
+        			$selectDIP= "	SELECT *
+        						FROM tab_dipendenti
+        						WHERE cag = ".$cag."
+        						";
+        			logquery ($selectDIP); 
+        			$querydatiDIP = mysqli_query($connection, $selectDIP);
+        			$numerorigheDIP = mysqli_num_rows($querydatiDIP); 
+        			if ($numerorigheDIP > 0) {
+        				$raccolta =  '------------';
+        				$impieghi =  '------------';
+        			} else {
+        				$raccolta =  number_format(substr($datisocioV['RACDIR_pers'],0,strlen($datisocioV['RACDIR_pers'])-3), 0, ',', '.'); 
+        				$impieghi =  number_format(substr($datisocioV['IMPIEGHI_sal_pers'],0,strlen($datisocioV['IMPIEGHI_sal_pers'])-3), 0, ',', '.'); 
+        			}
+				}
+			}
+				
+			else {		
+		
+				$ruoloD = '';
+				$ruoloA = '';
+				$dataCensimento = '';
+				$dataPrimoRapporto = '';
+				$dataUltimoRapporto = '';
+				$CCnum = '';
+				$cartenum = '';
+				$titnum = '';
+				$raccolta = '';
+				$impieghi = ''; 			    
+
+			}
+/*
+	echo '<tr><td width="15%" style="border-bottom:dotted 1px;color:white;"></td><td colspan="3" style="border-bottom:dotted 1px;color:white;"><br></td></tr>'; // riga separazione
+
+
+	echo '<tr><td width="15%"></td><td colspan="3"><i>'.$ruoloD.$ruoloA.'</i></td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Censito il</td><td colspan="3">'.$dataCensimento.'</td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Primo rapporto del</td><td colspan="3">'.$dataPrimoRapporto.'&nbsp;&nbsp;&nbsp;(ultimo aperto il '.$dataUltimoRapporto.')</td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Rapporti</td>
+				<td colspan="3">
+				<i class="fas fa-window-restore fa-1x text-gray-300 col-auto"></i>Conti Correnti ('.$CCnum.')
+				<i class="fas fa-credit-card fa-1x text-gray-300 col-auto"></i>Carte ('.$cartenum.')
+				<i class="fas fa-chart-line fa-1x text-gray-300 col-auto"></i>Titoli/Polizze ('.$titnum.')
+			</td></tr>';
+	echo '<tr>
+	        <td width="15%" style="color:#A0B7CE;">Raccolta personale</td><td><i class="fas fa-piggy-bank fa-1x text-gray-300 col-auto"></i>Eur '.$raccolta.'</td>
+	        <td width="15%" style="color:#A0B7CE;">Impieghi personali</td><td><i class="fas fa-business-time fa-1x text-gray-300 col-auto"></i>Eur '.$impieghi.'</td>
+	       </tr>';
+*/
+			}
+	
+}
+?>
+
+</table>
+
+
+<?php
+			// CONTEGGIO CESSIONI PRESENTI
+			$select_c_c = "	SELECT count(*) as qta
+						FROM tab_xls_cessioni
+						WHERE CAG = ".$cag." 
+						AND Note_AO08 not in ('S5','S4','SA','SB','SC','SM','VB','VC') ";
+			$querydati_c_c = mysqli_query($connection, $select_c_c);
+			while($dati_c_c=mysqli_fetch_array($querydati_c_c)){ 
+				if ($dati_c_c['qta'] == 0) {$count_c = '';} else {$count_c = "<span style='color:yellow;'>&nbsp;&nbsp;(".$dati_c_c['qta'].")</span>";}
+			}
+
+			// CONTEGGIO ESCLUSIONI PRESENTI
+			$select_c_e = "	SELECT count(*) as qta
+						FROM tab_xls_recessi_esclusioni_sofferenze
+						WHERE CAG = ".$cag." 
+						AND Note_AO08 not in ('S4','SA','SB','SC','SM','VB','VC') ";
+			$querydati_c_e = mysqli_query($connection, $select_c_e);
+			while($dati_c_e=mysqli_fetch_array($querydati_c_e)){ 
+				if ($dati_c_e['qta'] == 0) {$count_e = '';} else {$count_e = "<span style='color:yellow;'>&nbsp;&nbsp;(".$dati_c_e['qta'].")</span>";}
+			}
+
+			// CONTEGGIO DECESSI PRESENTI
+			$select_c_d = "	SELECT count(*) as qta
+						FROM tab_xls_decessi_eredi
+						WHERE CAG = ".$cag." ";
+			$querydati_c_d = mysqli_query($connection, $select_c_d);
+			while($dati_c_d=mysqli_fetch_array($querydati_c_d)){ 
+				if ($dati_c_d['qta'] == 0) {$count_d = '';} else {$count_d = "<span style='color:yellow;'>&nbsp;&nbsp;(".$dati_c_d['qta'].")</span>";}
+			}
+
+			// CONTEGGIO PAC PRESENTI
+			$select_c_p = "	SELECT count(*) as qta
+						FROM tab_xls_ammissioni
+						WHERE CAG = ".$cag." 
+						AND Pac = 'S' ";
+			$querydati_c_p = mysqli_query($connection, $select_c_p);
+			while($dati_c_p=mysqli_fetch_array($querydati_c_p)){ 
+				if ($dati_c_p['qta'] == 0) {$count_p = '';} else {$count_p = "<span style='color:yellow;'>&nbsp;&nbsp;(".$dati_c_p['qta'].")</span>";}
+			}
+?>
+
+<br>
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" style="text-decoration:none;" data-toggle="tab" href="#DatiGenerali">Dati Generali</a>
+  </li>    
+  <li class="nav-item">
+    <a class="nav-link" style="text-decoration:none;" data-toggle="tab" href="#cessioni">Cessioni<?php echo $count_c;?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" style="text-decoration:none;" data-toggle="tab" href="#esclusioni">Esclusioni<?php echo $count_e;?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" style="text-decoration:none;" data-toggle="tab" href="#decessi">Decessi<?php echo $count_d;?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" style="text-decoration:none;" data-toggle="tab" href="#pac">PAC<?php echo $count_p;?></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" style="text-decoration:none;" data-toggle="tab" href="#legenda">-- Legenda --</a>
+  </li>  
+</ul>
+
+<div id="myTabContent" class="tab-content">
+
+  <div class="tab-pane fade active show" id="DatiGenerali">
+	<?php
+  	// 
+  	// DATI GENERALI
+  	//    
+  	if ($tmp == '') {echo '';}
+    else {
+  	echo '<br>
+				<table align="center" id="lista" border="0" width="100%">';
+	echo '<tr><td width="15%"></td><td colspan="3"><i>'.$ruoloD.$ruoloA.'</i></td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Censito il</td><td colspan="3">'.$dataCensimento.'</td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Primo rapporto del</td><td colspan="3">'.$dataPrimoRapporto.'&nbsp;&nbsp;&nbsp;(ultimo aperto il '.$dataUltimoRapporto.')</td></tr>';
+	echo '<tr><td width="15%" style="color:#A0B7CE;">Rapporti</td>
+				<td colspan="3">
+				<i class="fas fa-window-restore fa-1x text-gray-300 col-auto"></i>Conti Correnti ('.$CCnum.')
+				<i class="fas fa-credit-card fa-1x text-gray-300 col-auto"></i>Carte ('.$cartenum.')
+				<i class="fas fa-chart-line fa-1x text-gray-300 col-auto"></i>Titoli/Polizze ('.$titnum.')
+			</td></tr>';
+	echo '<tr>
+	        <td width="15%" style="color:#A0B7CE;">Raccolta personale</td><td><i class="fas fa-piggy-bank fa-1x text-gray-300 col-auto"></i>Eur '.$raccolta.'</td>
+	        <td width="15%" style="color:#A0B7CE;">Impieghi personali</td><td><i class="fas fa-business-time fa-1x text-gray-300 col-auto"></i>Eur '.$impieghi.'</td>
+	       </tr>';
+	echo '</table>';
+    }
+	?>
+ </div>
+ 
+   <div class="tab-pane fade" id="cessioni">
+
+		<?php
+  		// 
+  		// CESSIONI
+  		//
+			$select_c = "	SELECT *
+						FROM tab_xls_cessioni
+						WHERE CAG = ".$cag."
+						ORDER BY STR_TO_DATE(Data_Richiesta, '%d/%m/%Y') 
+						";
+
+			//logquery ($select);  
+			//echo $select_c;
+
+			$querydati_c = mysqli_query($connection, $select_c);
+
+			echo "<br>
+				<table align='center' id='lista' border='1' width='100%'>
+					<tr class='table-dark'>
+						<td align='left'>Data Richiesta</td>
+						<td align='left'>Data CDA</td>
+						<td align='center'>Tipo</td>
+						<td align='center'>Nr<br>Azioni</td>
+						<td align='center'>Valore<br>Euro</td>
+						<td align='center'>Cessione<br>Banca</td>
+						<td align='center'>Cessione<br>Socio</td>
+						<td align='left'>Operazione</td>
+						<td align='left'>Note</td>
+						<td align='right'>ID</td>
+					</tr>";
+
+			while($dati_c=mysqli_fetch_array($querydati_c)){ 
+			    
+            if (    ($dati_c['Note_AO08'] == 'S5') 
+                OR  ($dati_c['Note_AO08'] == 'S4') 
+                OR  ($dati_c['Note_AO08'] == 'SA')
+                OR  ($dati_c['Note_AO08'] == 'SB')
+                OR  ($dati_c['Note_AO08'] == 'SC')
+                OR  ($dati_c['Note_AO08'] == 'SM')
+                OR  ($dati_c['Note_AO08'] == 'VB')
+                OR  ($dati_c['Note_AO08'] == 'VC')
+                )
+                {$tdstyle = 'title ="QUOTE CEDUTE o LIQUIDATE" style="background-color:green;" ';}
+                else
+                {$tdstyle = 'title ="QUOTE ANCORA A CAPITALE" style="background-color:red;" ';}
+
+			echo "	<tr>
+						<td align='left'>".$dati_c['Data_Richiesta']."</td>
+						<td align='left'>".$dati_c['CDA']."</td>
+						<td align='center' title='P parziale - T totale'>".$dati_c['Totale_Parziale']."</td>
+						<td align='center'>".$dati_c['Numero_Azioni']."</td>
+						<td align='right'>".$dati_c['Valore_Nominale']."</td>
+						<td align='center'>".$dati_c['Cessione_a_Banca']."</td>
+						<td align='center'>".$dati_c['Cessione_a_Socio']."</td>
+						<td align='left' ".$tdstyle.">".$dati_c['Data']." ".$dati_c['Note_AO08']."</td>
+						<td align='left'>
+						<i class='fas fa-search-dollar fa-1x text-gray-300 col-auto' alt='".$dati_c['Conto']."' title='".$dati_c['Conto']."'></i>
+						".$dati_c['Note_Motivazioni']."</td>
+						<td align='right'><a style='text-decoration:none;color:white;' href='admin_cessioni.php?nominativo=".urlencode($nominativo)."&id=".$dati_c['ID']."&id2=".$dati_c['ID2']."&dr=".$dati_c['Data_Richiesta']."&vn=".$dati_c['Valore_Nominale']."' target='_blank'>".$dati_c['ID']."</a></td>
+					</tr>";
+
+			}
+			echo '</table>';
+		?>
+
+  </div>
+  <div class="tab-pane fade" id="esclusioni">
+
+  		<?php
+  		// 
+  		// ESCLUSIONI
+  		//
+			$select_e = "	SELECT *
+						FROM tab_xls_recessi_esclusioni_sofferenze
+						WHERE CAG = ".$cag."
+						ORDER BY STR_TO_DATE(Data_Richiesta, '%d/%m/%Y') 
+						";
+
+			//logquery ($select);  
+			//echo $select_c;
+
+			$querydati_e = mysqli_query($connection, $select_e);
+
+			echo "<br>
+				<table align='center' id='lista' border='1' width='100%'>
+					<tr class='table-dark'>
+						<td align='left' rowspan='2'>Data Richiesta</td>
+						<td align='left' rowspan='2'>Data CDA</td>
+						<td align='center' rowspan='2'>Nr.<br>Azioni</td>
+						<td align='center' rowspan='2'>Valore<br>Euro</td>
+						<td align='center' rowspan='2'>Accogl.<br>Recesso</td>
+						<td align='center' colspan='3'>Tipo Esclusione</td>
+						<td align='left' rowspan='2'>Operazione</td>
+						<td align='left' rowspan='2'>Note</td>
+					</tr>
+					<tr class='table-dark'>
+						<td align='center'>Art.6</td>
+						<td align='center'>Art.14</td>
+						<td align='center'>Soffer</td>
+					</tr>
+						";
+
+			while($dati_e=mysqli_fetch_array($querydati_e)){ 
+
+			if 	($dati_e['Accoglimento_recesso'] == 'N') 
+				{ $descrecesso = 'title ="Il recesso viene respinto in quanto non sussistono i requisiti da Statuto (il soggetto è ancora residente o ha attività o opera in zona di competenza)" style="background-color:brown;" ';}	
+			else
+				{ $descrecesso = ''; }
+
+            if (($dati_e['Note_AO08'] == 'X1') OR ($dati_e['Note_AO08'] == 'X3') OR ($dati_e['Note_AO08'] == ''))
+                {$tdstyle = 'title ="QUOTE ANCORA A CAPITALE" style="background-color:red;" ';}
+            else
+                {$tdstyle = 'title ="QUOTE LIQUIDATE" style="background-color:green;" ';}
+                
+			echo "	<tr>
+						<td align='left'>".$dati_e['Data_Richiesta']."</td>
+						<td align='left'>".$dati_e['CDA']."</td>
+						<td align='center'>".$dati_e['Numero_Azioni']."</td>
+						<td align='right'>".$dati_e['Valore_Nominale']."</td>
+						<td align='center' ".$descrecesso.">".$dati_e['Accoglimento_recesso']."</td>
+						<td align='center'>".$dati_e['Escluso_art_6']."</td>
+						<td align='center'>".$dati_e['Escluso_art_14']."</td>
+						<td align='center'>".$dati_e['Escluso_x_Passaggio_a_Sofferenze']."</td>
+						<td align='left' ".$tdstyle.">".$dati_e['Data_AO08']." ".$dati_e['Note_AO08']."</td>
+						<td align='left'>
+						<i class='fas fa-search-dollar fa-1x text-gray-300 col-auto' alt='".$dati_e['Conto']."' title='".$dati_e['Conto']."'></i>
+						".$dati_e['Note_Motivazioni']."</td>
+					</tr>";
+
+			}
+			echo '</table>';
+		?>
+
+
+  </div>
+  <div class="tab-pane fade" id="decessi">
+
+  		<?php
+  		// DECESSI EREDI
+  		//
+			$select_d = "	SELECT *
+						FROM tab_xls_decessi_eredi
+						WHERE CAG = ".$cag."
+						ORDER BY STR_TO_DATE(Data_Richiesta, '%d/%m/%Y') 
+						";
+
+			//logquery ($select);  
+			//echo $select_d;
+
+			$querydati_d = mysqli_query($connection, $select_d);
+
+			echo "<br>
+				<table align='center' id='lista' border='1' width='100%'>
+					<tr class='table-dark'>
+						<td align='left'>Data Richiesta</td>
+						<td align='left'>Data CDA</td>
+						<td align='center'>Nr.<br>Azioni</td>
+						<td align='center'>Valore<br>Euro</td>
+						<td align='center'>Deceduto</td>
+						<td align='center'>Data Decesso</td>
+						<td align='center'>Intestaz<br>Eredi</td>
+						<td align='center'>Liquidaz<br>Eredi</td>
+						<td align='left'>Note</td>
+						<td align='left'>Operazione</td>
+						<td align='center'>Anno<br>Liq.</td>
+					</tr>";
+
+			while($dati_d=mysqli_fetch_array($querydati_d)){ 
+			    
+            if (($dati_d['Note_AO08'] == 'X2') OR ($dati_d['Note_AO08'] == 'X3'))
+                {$tdstyle = 'title ="QUOTE ANCORA A CAPITALE" style="background-color:red;" ';}
+            elseif ($dati_d['Note_AO08'] == 'X?')
+                {$tdstyle = 'title ="QUOTE ANCORA A CAPITALE - RICHIESTO RIMBORSO A EREDI" style="background-color:red;" ';}
+            else
+                {$tdstyle = 'title ="QUOTE LIQUIDATE" style="background-color:green;" ';}
+                
+			echo "	<tr>
+						<td align='left'>".$dati_d['Data_Richiesta']."</td>
+						<td align='left'>".$dati_d['CDA']."</td>
+						<td align='center'>".$dati_d['Numero_Azioni']."</td>
+						<td align='right'>".$dati_d['Valore_Nominale']."</td>
+						<td align='center'>".$dati_d['Deceduto']."</td>
+						<td align='center'>".$dati_d['Data_Decesso']."</td>
+						<td align='center'>".$dati_d['Intestazione_a_eredi']."</td>
+						<td align='center'>".$dati_d['Liquidazione_a_eredi']."</td>
+						<td align='left'>
+						<i class='fas fa-search-dollar fa-1x text-gray-300 col-auto' alt='".$dati_d['Pagamento']."' title='".$dati_d['Pagamento']."'></i>
+						".$dati_d['Note_Motivazioni']."</td>
+						<td align='left' ".$tdstyle.">".$dati_d['Data']." ".$dati_d['Note_AO08']."</td>
+						<td align='center'>".$dati_d['Anno_Liquidazione']."</td>
+					</tr>";
+
+			}
+			echo '</table>';
+		?>
+
+  </div>
+ <div class="tab-pane fade" id="pac">
+
+  		<?php
+  		// PAC
+  		//
+			$select_p = "	SELECT *
+						FROM tab_xls_ammissioni
+						WHERE CAG = ".$cag."
+						AND PAC = 'S'
+						";
+
+			//logquery ($select);  
+			//echo $select_p;
+
+			$querydati_p = mysqli_query($connection, $select_p);
+
+			echo "<br>
+				<table align='center' id='lista' border='1' width='100%'>
+					<tr class='table-dark'>
+						<td align='center'>Rata 01</td>
+						<td align='center'>Rata 02</td>
+						<td align='center'>Rata 03</td>
+						<td align='center'>Rata 04</td>
+						<td align='center'>Rata 05</td>
+						<td align='center'>Rata 06</td>
+						<td align='center'>Rata 07</td>
+						<td align='center'>Rata 08</td>
+						<td align='center'>Rata 09</td>
+						<td align='center'>Rata 10</td>
+						<td align='center'>Rata 11</td>
+						<td align='center'>Rata 12</td>
+					</tr>";
+
+			while($dati_p=mysqli_fetch_array($querydati_p)){ 
+			    
+            if    ($dati_p['Rata01'] <> 0)  {$tdstyle_p01 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p01 = '';}
+            if    ($dati_p['Rata02'] <> 0)  {$tdstyle_p02 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p02 = '';}
+            if    ($dati_p['Rata03'] <> 0)  {$tdstyle_p03 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p03 = '';}
+            if    ($dati_p['Rata04'] <> 0)  {$tdstyle_p04 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p04 = '';}
+            if    ($dati_p['Rata05'] <> 0)  {$tdstyle_p05 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p05 = '';}
+            if    ($dati_p['Rata06'] <> 0)  {$tdstyle_p06 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p06 = '';}
+            if    ($dati_p['Rata07'] <> 0)  {$tdstyle_p07 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p07 = '';}
+            if    ($dati_p['Rata08'] <> 0)  {$tdstyle_p08 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p08 = '';}
+            if    ($dati_p['Rata09'] <> 0)  {$tdstyle_p09 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p09 = '';}
+            if    ($dati_p['Rata10'] <> 0)  {$tdstyle_p10 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p10 = '';}
+            if    ($dati_p['Rata11'] <> 0)  {$tdstyle_p11 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p11 = '';}
+            if    ($dati_p['Rata12'] <> 0)  {$tdstyle_p12 = 'style="background-color:green;" ';}
+                                        else{$tdstyle_p12 = '';}
+                
+    		echo "	<tr>
+						<td align='center' ".$tdstyle_p01.">".$dati_p['Rata01']."</td>
+						<td align='center' ".$tdstyle_p02.">".$dati_p['Rata02']."</td>
+						<td align='center' ".$tdstyle_p03.">".$dati_p['Rata03']."</td>
+						<td align='center' ".$tdstyle_p04.">".$dati_p['Rata04']."</td>
+						<td align='center' ".$tdstyle_p05.">".$dati_p['Rata05']."</td>
+						<td align='center' ".$tdstyle_p06.">".$dati_p['Rata06']."</td>
+						<td align='center' ".$tdstyle_p07.">".$dati_p['Rata07']."</td>
+						<td align='center' ".$tdstyle_p08.">".$dati_p['Rata08']."</td>
+						<td align='center' ".$tdstyle_p09.">".$dati_p['Rata09']."</td>
+						<td align='center' ".$tdstyle_p10.">".$dati_p['Rata10']."</td>
+						<td align='center' ".$tdstyle_p11.">".$dati_p['Rata11']."</td>
+						<td align='center' ".$tdstyle_p12.">".$dati_p['Rata12']."</td>
+					</tr>";
+
+			}
+			echo '</table>';
+		?>
+
+  </div>  
+    <div class="tab-pane fade" id="legenda">
+    <!-- LEGENDA -->
+    <br>
+    <table border="0" align="center">
+        <tr>
+            <td valign="top" style="color:#A0B7CE;">X1 (deliberato RECESSO)<br>
+                X2 (deliberato DECESSO)<br>
+                X3 (deliberata ESCLUSIONE)<br>
+            </td>
+            <td valign="top">&nbsp;&nbsp;&nbsp;</td>
+            <td valign="top" style="color:#A0B7CE;">VB (Cessione parziale a Banca)<br>
+                VC (Cessione parziale a Socio)<br>
+            </td>
+            <td valign="top">&nbsp;&nbsp;&nbsp;</td>            
+            <td valign="top" style="color:#A0B7CE;">S2 (socio uscito per DECESSO, per intestazione a eredi)<br>
+                S4 (socio uscito per CESSIONE A SOCIO)<br>
+                SB (socio uscito per CESSIONE A BANCA)<br>
+                SA (socio liquidato per RECESSO)<br>
+                SM (socio liquidato per DECESSO)<br>
+                SC (socio liquidato per ESCLUSIONE / SOFFERENZE)<br>
+            </td>
+        </tr>
+        
+    </table>
+    </div>
+
+<!-- ULTIMO DIV -->  
+</div>		
+
+
+</fieldset>
+
+<!-- <button type="button" onclick="window.print()">Stampa</button> -->
+<br><br><a href="javascript:history.back();" title="Torna alla ricerca"><img src="img/frecciasx.png"></a>

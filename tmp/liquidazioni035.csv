@@ -1,0 +1,41 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Sofferenze;35;PG;316759;ROMEO 1931 SAS;40;1203;24/05/2018;;2019;;;;;;S;;
+Sofferenze;35;PG;321995;FALL.FLORENCE GLOBAL SERVICE S.R.;150;4513;24/05/2018;;2019;;;;;;S;;
+Sofferenze;35;PF;342902;ALESSI ALESSIO;40;1203;05/11/2018;;2019;;;;;;S;;
+Sofferenze;35;PG;337781;FARMAB SRL;40;1203;05/11/2018;;2019;;;;;;S;;
+Sofferenze;35;PG;339988;LOGO SRL;40;1203;08/02/2019;;2020;;;;;;S;;
+Sofferenze;35;PF;355717;ANDREINI CARLOTTA;40;1203;05/03/2019;;2020;;;;;;S;;
+Sofferenze;35;PF;326220;MANETTI GIANNI;40;1203;05/03/2019;;2020;;;;;;S;;
+Sofferenze;35;PG;318314;TECNOEDIL SISTEMI S.R.L.;40;1203;09/07/2019;;2020;;;;;;S;;
+Sofferenze;35;PG;304927;IL NUOVO SEDANO ALLEGRO S.R.L. ;50;1504;04/12/2020;;2021;;;;;;S;;
+Sofferenze;35;PF;330407;BECATTINI ANTONIO;40;1203;08/02/2021;;2022;;;;;;S;;
+Sofferenze;35;PG;342775;NUOVI EVENTI SRL;40;1203;18/05/2021;;2022;;;;;;S;;
+Sofferenze;35;PG;378795;FOOD FACTORY SRL;40;1203;27/07/2021;;2022;;;;;;S;;
+Esclusione;35;PF;1157105;NISTRI RENATO;100;3009;29/12/2020;Rapporti in chiusura (mail Pucci 05/01/21);2022;;;;;S;;;
+Esclusione;35;PF;2040524;LOCASCIO IRMA CRISTINA ;160;4814;05/02/2021;Perdita requisiti (revisione) - Residenza fuori zona;2022;;;;S;;;;
+Esclusione;35;PG;342307;OTTANELLI GIANCARLO S.A.S.  DI OTTANELLI SIMONE;40;1203;14/01/2021;Rapporti chiusi ;2022;;;;;S;;;
+Esclusione;35;PF;393916;BERTI GIULIA;40;1203;27/04/2021;RAC - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;35;PF;398924;CARLESI JACOPO;40;1203;13/04/2021;PEC - Rapporti Chiusi (sostituisce cessione a banca ID 818);2022;;;;;S;;;
+Esclusione;35;PG;347738;MOLTENI DENTAL SRL;100;3009;17/03/2021;PEC - Non sussistono i requisiti recesso - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;35;PF;422060;CARABOT CRISTIANA ;33;992;05/08/2021;A seguito revisione zone di competenza (CLO Filiale) - Italia;2022;;;;S;;;;
+Esclusione;35;PF;342695;CARRARA PIERANTONIO ;40;1203;05/08/2021;A seguito revisione zone di competenza (CLO Filiale) - Italia;2022;;;;S;;;;
+Esclusione;35;PF;406409;DIOTAIUTI FRANCESCO ;40;1203;05/08/2021;A seguito revisione zone di competenza (CLO Filiale) - Italia;2022;;;;S;;;;
+Esclusione;35;PF;301341;FITTANTE GIOVANNI;40;1203;26/06/2021;RAC - Rapporti in chiusura;2022;;;;;S;;;
+Cessione Banca;35;;309212;SANDRELLI MARIA RITA;40;1203;04/12/2018; ;;;;;;;;T;S
+Cessione Banca;35;;309213;GRACIA ROBERTO;40;1203;04/12/2018; ;;;;;;;;T;S
+Cessione Banca;35;;299146;MANCONI FABRIZIA;1560;46940;14/12/2018;PERSONALI ;;;;;;;;P;S
+Cessione Banca;35;;1147438;CARRARESI MARCO;1560;46940;14/12/2018;PERSONALI ;;;;;;;;P;S
+Cessione Banca;35;;341867;DEGASPERI MARIO;17;511;26/04/2019;PERSONALI - DIMINUITO PER CESSIONE A SOCIO DEL 25.01.2021;;;;;;;;T;S
+Cessione Banca;35;PF;310807;CLEMENTI ELISA;50;1504;07/06/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;1143795;MANNELLI CECILIA;520;15646;18/07/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;360745;PUGLIESE WALTER;40;1203;06/08/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;2029027;MORETTI ANNA;40;1203;21/08/2019;;;;;;;;;T;S
+Cessione Banca;35;PG;1141325;CAD MODELLING ERGONOMICS S.R.L. IN LIQUIDAZIONE;500;15045;26/09/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;333674;FINOCCHIARO SIMONE;40;1203;18/11/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;333780;CANALICCHIO MASSIMO;40;1203;04/12/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;1003249;AMOROSI ANDREA;100;3009;11/12/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;311599;SURRENTI CALOGERO;85;2557;24/12/2019;;;;;;;;;T;S
+Cessione Banca;35;PF;352971;PIANI MASSIMILIANO;40;1203;26/02/2020;;;;;;;;;T;S
+Cessione Banca;35;PF;1130809;MAHJOUB SALOUA;250;7522;05/05/2020;;;;;;;;;P;S
+Cessione Banca;35;PF;1155205;DE SILVESTRO MASSIMO;67;2016;04/06/2020;;;;;;;;;P;S
+Cessione Banca;35;PG;312193;Q8 D'ANNUNZIO SNC;40;1203;10/06/2020;;;;;;;;;T;S

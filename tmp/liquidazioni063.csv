@@ -1,0 +1,26 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Liquid.Eredi;63;PF;3038968;GAI ANTONIO;25;752;08/02/2021;;2022;06/02/2020;;S;;;;;
+Liquid.Eredi;63;PF;3250287;GORI LORENO;8;240;23/03/2021;;2022;06/09/2016;;S;;;;;
+Attesa Eredi;63;PF;3043957;BRUNETTI BRUNESCA;8;240;23/03/2021;;2022;21/11/2020;;;;;;;
+Attesa Eredi;63;PF;3259065;BAGLIONE TINDARI;8;240;23/03/2021;;2022;28/06/2015;;;;;;;
+Attesa Eredi;63;PF;3014426;SIGHINOLFI CINZIO;51;1534;06/04/2021;;2022;09/12/2020;;;;;;;
+Sofferenze;63;PF;3033621;PACI LUCA;17;511;30/03/2018;;2019;;;;;;S;;
+Sofferenze;63;PG;3275190;ANTICA VILLA SAN FELICE SRL;85;2557;13/11/2019;;2020;;;;;;S;;
+Sofferenze;63;PF;3268636;BELLUCCI ANDREA;51;1534;09/07/2019;;2020;;;;;;S;;
+Sofferenze;63;PF;3021472;BRUNETTI GIULIANO;17;511;03/09/2019;Coint.BRUNETTI GIULIANO, BRUNETTI DANIELE (3226770);2020;;;;;;S;;
+Sofferenze;63;PG;3285879;MARIANGELA DI BARGHINI MARIANGELA E C S.A.S.;34;1023;03/10/2019;;2020;;;;;;S;;
+Sofferenze;63;PG;3063155;SCARA SRL;17;511;12/12/2019;;2020;;;;;;S;;
+Sofferenze;63;PF;3290949;COLZI STEFANO;40;1203;12/12/2019;;2020;;;;;;S;;
+Sofferenze;63;PG;3291505;GIUMAR DI GIUDICE MARIA & C. S.A.S.;17;511;13/02/2020;;2021;;;;;;S;;
+Sofferenze;63;PF;3271214;VETTORI GABRIELE;1;30;13/02/2020;;2021;;;;;;S;;
+Sofferenze;63;PF;3258270;TADDEI MARIA;40;1203;05/10/2021;;2022;;;;;;S;;
+Esclusione;63;PF;3277289;DAMI SARA;1;30;25/01/2021;Rapporti chiusi ;2022;;;;;S;;;
+Esclusione;63;PF;3291410;MARIANI LORENZO;17;511;02/02/2021;LET - Rapporti chiusi;2022;;;;;S;;;
+Esclusione;63;PG;3195492;PALLADE COSTRUZIONI S.R.L.;17;511;20/01/2020;Società cancellata da Registro Imprese;2022;;;;;S;;;
+Esclusione;63;PF;3195138;FRESCHI MICHELE;17;511;07/06/2021;MAIL - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;63;PF;3061342;PINZAUTI DANIELA;17;511;23/09/2021;LET - Rapporti chiusi ;2022;;;;;S;;;
+Esclusione;63;PF;365146;PAPA ANTONELLA;40;1203;05/10/2021;LET - Rapporti chiusi ;2022;;;;;S;;;
+Cessione Banca;63;PG;3291895;SERENISSIMA S.C.;51;1534;17/09/2019;;;;;;;;;T;S
+Cessione Banca;63;PF;3290504;SANSONI ANDREA;17;511;30/04/2020;;;;;;;;;T;S
+Cessione Banca;63;PF;3056699;VENTURI SIMONA;17;511;23/04/2021;LET - Rapporti ancora aperti;;;;;;;;T;S
+Cessione Banca;63;PF;3292403;CASSERI MARTA;51;1534;11/10/2021;LET - Rapporti ancora aperti;;;;;;;;T;S

@@ -1,0 +1,490 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+?>
+
+<?php
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+?>
+
+<!--
+<style>
+----- SERVE A METTERE UN'IMMAGINE DI SFONDO SULL'INTERA PAGINA -----	
+body {
+  background: url('img/tmp.jpg') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  background-size: cover;
+  -o-background-size: cover;
+}
+</style>
+-->
+
+<!-- 	
+*****************************************************************************
+RIQUADRI OPERATIVI
+*****************************************************************************
+-->
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+          <!-- Content Row 1 -->
+          <div class="row">
+
+            <!-- SOCI -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-info mb-3" style="max-width: 20rem;">
+                <div class="card-header">RICERCHE
+                  <i class="fas fa-search fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                      <form class="form-inline my-2 my-lg-0" action="schedasocio.php" method="POST" onsubmit="return ray.ajax()">
+                      <input class="form-control mr-sm-2" type="text" name="ricerca" id="ricerca" placeholder="Scheda Socio" size="16">
+                      <button class="btn btn-secondary my-2 my-sm-0" type="submit"><i class="fas fa-search-plus fa-1x text-gray-300 col-auto"></i></button>
+                      <small style="color:lightgray;"><i>Puoi inserire il cognome/nome - cag - numero Socio</i></small>
+                      </form>                  
+                  <!-- <p class="card-text">...</p> -->
+                </div>
+              </div>
+            </div>
+
+            <!-- RICERCA TELEFONO -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-light mb-3" style="max-width: 20rem;">
+                <div class="card-header">RICERCHE
+                  <i class="fas fa-search fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                      <form class="form-inline my-2 my-lg-0" action="search_telefono.php" method="GET" onsubmit="return ray.ajax()">
+                      <input class="form-control mr-sm-2" type="text" name="telefono" id="telefono" placeholder="Telefono" size="16">
+                      <button class="btn btn-secondary my-2 my-sm-0" type="submit"><i class="fas fa-search-plus fa-1x text-gray-300 col-auto"></i></button>
+                      <small style="color:lightgray;"><i>Puoi inserire anche il solo telefono senza prefisso</i></small>
+                      </form>
+                  <!-- <p class="card-text">...</p> -->
+              </div>
+              </div>
+            </div>
+
+            <!-- ASSEMBLEA -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">ASSEMBLEA
+                  <i class="fas fa-users fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="assemblea_auth.php" title="Assemblea" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Gestionale & info</h4>
+                  </a>
+                   <!-- <p class="card-text">...</p> -->
+              </div>
+              </div>
+            </div>
+
+            <!-- EVENTI -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-primary mb-3" style="max-width: 20rem;">
+                <div class="card-header">EVENTI
+                  <i class="fas fa-hand-peace fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="filiale_auth.php" title="Clienti e Soci per Filiale (password necessaria)" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;"><!--Prenotazioni--><br></h4>
+                  </a>
+                   <!-- <p class="card-text">...</p> --> 
+              </div>
+              </div>
+            </div>
+  
+            <!-- VUOTO -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-light mb-3" style="max-width: 20rem;">
+                <div class="card-header">&nbsp;<!--VUOTO-->
+                  <!-- <i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i> -->
+                </div>
+                <div class="card-body">
+                 <a href="#" title="#" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;"><!--VUOTO--><br></h4>
+                  </a>
+                  <!-- <p class="card-text">...</p> -->
+              </div>
+              </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-warning  mb-3" style="max-width: 20rem;">
+                <div class="card-header">SUPPORTO
+                  <i class="fas fa-question fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                 <a href="http://10.119.192.46:8080/soci/faq/?qa=hot" title="Domande e Risposte" style="text-decoration: none;" target="_blank">
+                    <h4 class="card-title" style="color:#FFFFFF;">F.A.Q.</h4>
+                  </a>
+                  <!-- <p class="card-text">...</p> -->
+              </div>
+              </div>
+            </div>
+    
+            <!-- STATISTICHE -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-danger mb-3" style="max-width: 20rem;">
+                <div class="card-header">STATISTICHE
+                  <i class="fas fa-chart-pie fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="statistiche.php" title="Statistiche banca" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Dati Generali</h4>
+                  </a>
+                  <!-- <p class="card-text">...</p> -->
+              </div>
+              </div>
+            </div>
+
+            <!-- BDAY -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-success mb-3" style="max-width: 20rem;">
+                <div class="card-header">BDAY
+                  <i class="fas fa-birthday-cake fa-1x text-gray-300 col-auto"></i>
+                </div>
+                <div class="card-body">
+                  <a href="bday.php" title="Birthday" style="text-decoration: none;">
+                    <h4 class="card-title" style="color:#FFFFFF;">Oggi è il compleanno di...</h4>
+                  </a>
+                  <!-- <p class="card-text">...</p> -->
+              </div>
+              </div>
+            </div>
+            <!-- FINE ULTIMO DIV -->
+          </div>
+
+<!-- 	
+*****************************************************************************
+NEWS & AGGIORNAMENTO DATI
+*****************************************************************************
+-->
+<?php
+            // Ultimo Aggiornamento 
+            $select_aggto = " SELECT *
+                              FROM tab_ultimo_caricamento WHERE tipo in ('SIB','XLS')" ;
+            $qry_aggto = mysqli_query($connection, $select_aggto);
+              while($aggto = mysqli_fetch_array($qry_aggto)){ 
+
+                    // Date per semaforo status aggiornamento
+                    $f0 = date("Ymd") ;
+                    $f1 = ( date("Ymd") - 7 );
+                    $f2 = ( date("Ymd") - 15 );
+                    $limite = date("Ymd",strtotime($aggto['caricamento'])); 
+
+                    if ( ($limite <= $f0) AND ($limite > $f1) ) {$semaforo = "<img src='img/ico_pallino_green.png'>";}
+                    if ( ($limite <= $f1) AND ($limite > $f2) ) {$semaforo = "<img src='img/ico_pallino_yellow.png'>";}
+                    if   ($limite <= $f2) {$semaforo = "<img src='img/ico_pallino_red.png'>";}
+
+                    if ($aggto['fonte'] == 'tab_soci_as37') 
+                        {$as37 = $aggto['caricamento']; $as37_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_soci_as75') 
+                        {$as75 = $aggto['caricamento']; $as75_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_volumi') 
+                        {$volumi = $aggto['caricamento']; $volumi_semaforo = $semaforo;}                        
+                    if ($aggto['fonte'] == 'tab_xls_ammissioni')
+                        {$ammissioni = $aggto['caricamento']; $amm_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_xls_cessioni') 
+                        {$cessioni = $aggto['caricamento']; $ces_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_xls_decessi_eredi') 
+                        {$eredi = $aggto['caricamento']; $ere_semaforo = $semaforo;}
+                    if ($aggto['fonte'] == 'tab_xls_recessi_esclusioni_sofferenze') 
+                        {$esclusioni = $aggto['caricamento']; $esc_semaforo = $semaforo;}
+
+                  }
+?>                  
+
+<!-- Content Row -->
+<div class="row align-items-start">
+
+<div class="col-md-9">
+            <!-- News -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+				        <table width="100%" cellspacing="0" cellpadding="0">
+							<tr>
+								<td align="left" width="60%">
+									<h6 class="m-0 font-weight-bold text-light">Ultime novità</h6>
+								</td>
+								<td align="right">
+									<i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i>
+									<a href="news_index.php" style="color:white;">Comunicazioni</a>
+								</td>
+								<td align="right">
+									<i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i>
+									<a href="https://www.chiantibancanews.it/newsletter.php" style="color:white;" target="_blank">Newsletter</a>
+								</td>								
+								<td align="right">
+									<i class="fas fa-paper-plane fa-1x text-gray-300 col-auto"></i>
+									<a href="https://www.chiantibancanews.it/rassegna.php" style="color:white;" target="_blank">Rassegna Stampa</a>
+								</td>
+							</tr>
+						</table> 
+                  
+                </div>
+                <div class="card-body">
+                  <div class="text-center">
+                  </div>
+
+                  <?php 
+					$query = mysqli_query($connection, 
+					"SELECT DATE_FORMAT(datainsert,'%d.%m.%Y %H:%i') as datainsert, newstitolo, newscategoria, newspost
+					 FROM 	tab_news");
+						while($news=mysqli_fetch_array($query)){ 
+		                 echo html_entity_decode($news['newspost']); 
+			            } 
+			        ?>
+
+                </div>
+              </div>
+</div>
+
+<div class="col-md-3">
+            <!-- Conteggio Soci in essere -->
+            	<?php
+                    $select_tot = " SELECT count(*) as qta FROM tab_soci_as37 
+                                    WHERE StatoVAL not in ('E','S','N')" ;
+                    $qry_tot = mysqli_query($connection, $select_tot);
+                    while($tot = mysqli_fetch_array($qry_tot)){ 
+                      $soci_totale = $tot['qta'];
+                    }
+                ?>
+
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-light">Soci in essere nr.&nbsp;<?php echo $soci_totale; ?></h6>
+                </div>
+                <div class="card-body float-sm-left">
+                  <div class="text-center">
+                  </div>
+
+                  <ul class="list-group ">
+
+                <?php
+
+                    $select_cnt = " SELECT count(*) as qta, 
+                                      CASE WHEN TipoControp = 'PERSONA FISICA' THEN 'PF'
+                                           ELSE 'PG'
+                                           END AS TipoControparte
+                                    FROM tab_soci_as37 
+                                    WHERE StatoVAL not in ('E','S','N')
+                                    GROUP BY TipoControparte" ;
+                    $qry_cnt = mysqli_query($connection, $select_cnt);
+                    while($cnt = mysqli_fetch_array($qry_cnt)){ 
+
+                    if ($cnt['TipoControparte'] == 'PF') {$linea = 'success'; $descr = 'Persone Fisiche';}
+                    if ($cnt['TipoControparte'] == 'PG') {$linea = 'info'; $descr = 'Persone Giurdiche';}
+
+                    $perc = $cnt['qta'] / $soci_totale * 100; 
+                    
+            echo $descr.' '.$cnt['qta'].'
+               <div class="progress">
+                    <div class="progress-bar progress-bar-striped bg-'.$linea.'" role="progressbar" style="width: '.$perc.'%" aria-valuenow="'.$perc.'" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div><br>';
+                }
+
+   //echo '<iframe src="stats/pf_pg.php" frameborder="0" scrolling="auto" align="top"></iframe> ';
+
+              ?>
+
+       <small><?php echo $as37_semaforo; ?> <b>Dati SIB AS37</b> : <?php echo $as37; ?><br>
+       		<?php echo $volumi_semaforo; ?> <b>Dati SIB Volumi</b> : <?php echo $volumi; ?><br>
+       		<?php echo $as75_semaforo; ?> <b>Dati SIB AS75</b> : <?php echo $as75; ?></small> 
+
+				</div>
+              </div>
+</div>
+</div>
+
+<!--  
+*****************************************************************************
+CONTATORI VARI
+*****************************************************************************
+-->
+    <?php
+
+                echo '<br>';
+
+
+        // Conteggio Ammissioni
+        $select_amm = " SELECT count(*) as qta, PF_PG FROM tab_xls_ammissioni 
+                        WHERE substr(CDA,-4) in ('2019','2020')
+                        GROUP BY PF_PG
+                          " ;
+        $qry_amm = mysqli_query($connection, $select_amm);
+          while($amm = mysqli_fetch_array($qry_amm)){ 
+            if ($amm['PF_PG'] == 'PF') {$amm_qta_pf = $amm['qta']; }
+            if ($amm['PF_PG'] == 'PG') {$amm_qta_pg = $amm['qta']; }
+          }                    
+
+        // Conteggio Eredi (intestazioni)
+        $select_ere1 = " SELECT count(*) as qta FROM tab_xls_decessi_eredi
+                        WHERE Intestazione_a_eredi = 'S'
+                        AND Note_AO08 not in ('S2','SM')  " ;
+        $qry_ere1 = mysqli_query($connection, $select_ere1);
+          while($ere1 = mysqli_fetch_array($qry_ere1)){ 
+            {$ere1_qta = $ere1['qta']; }
+          }                    
+
+        // Conteggio Eredi (liquidazioni)
+        $select_ere2 = " SELECT count(*) as qta FROM tab_xls_decessi_eredi
+                        WHERE Liquidazione_a_eredi = 'S'
+                        AND Note_AO08 not in ('S2','SM')  " ;
+        $qry_ere2 = mysqli_query($connection, $select_ere2);
+          while($ere2 = mysqli_fetch_array($qry_ere2)){ 
+            {$ere2_qta = $ere2['qta']; }
+          }                    
+
+        // Conteggio Esclusioni 
+        $select_esc1 = " SELECT count(*) as qta FROM tab_xls_recessi_esclusioni_sofferenze
+                        WHERE Escluso_art_14 = 'S'
+                        AND Note_AO08 not in ('S4','SC','SB')  " ;
+        $qry_esc1 = mysqli_query($connection, $select_esc1);
+          while($esc1 = mysqli_fetch_array($qry_esc1)){ 
+            {$esc1_qta = $esc1['qta']; }
+          }                    
+
+        // Conteggio Esclusioni (Sofferenze)
+        $select_esc2 = " SELECT count(*) as qta FROM tab_xls_recessi_esclusioni_sofferenze
+                        WHERE Escluso_x_Passaggio_a_Sofferenze = 'S'
+                        AND Note_AO08 not in ('S4','SC','SB')  " ;
+        $qry_esc2 = mysqli_query($connection, $select_esc2);
+          while($esc2 = mysqli_fetch_array($qry_esc2)){ 
+            {$esc2_qta = $esc2['qta']; }
+          }                    
+           
+        // Conteggio Cessioni a Banca 
+        $select_ces1 = " SELECT count(*) as qta FROM tab_xls_cessioni
+                        WHERE Cessione_a_Banca = 'S'
+                        AND Note_AO08 not in ('VC/S4','VB','VC','S4','SB','SC','SM')  " ;
+        $qry_ces1 = mysqli_query($connection, $select_ces1);
+          while($ces1 = mysqli_fetch_array($qry_ces1)){ 
+            {$ces1_qta = $ces1['qta']; }
+          }                    
+
+        // Conteggio Cessioni a Socio
+        $select_ces2 = " SELECT count(*) as qta FROM tab_xls_cessioni
+                        WHERE Cessione_a_Socio = 'S'
+                        AND Note_AO08 not in ('VC/S4','VB','VC','S4','SB','SC','SM')  " ;
+        $qry_ces2 = mysqli_query($connection, $select_ces2);
+          while($ces2 = mysqli_fetch_array($qry_ces2)){ 
+            {$ces2_qta = $ces2['qta']; }
+          }    
+
+     ?>
+
+<!-- Content Row -->
+<div class="row align-items-start">
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light">Ammissioni</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Richieste da PF <small>dal 01.01.2019</small>
+            <span class="badge badge-primary badge-pill"><?php echo $amm_qta_pf; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Richieste da PG <small>dal 01.01.2019</small>
+            <span class="badge badge-primary badge-pill"><?php echo $amm_qta_pg; ?></span>
+        </li>
+      <span class="badge badge-dark font-weight-normal text-light">
+          <?php echo $amm_semaforo; ?> Dati aggiornati al <?php echo $ammissioni; ?></span>
+      </ul>
+    </div>  
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light">Eredi</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Intestazioni a eredi da eseguire
+            <span class="badge badge-primary badge-pill"><?php echo $ere1_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Liquidazioni a eredi da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $ere2_qta; ?></span>
+        </li>
+      <span class="badge badge-dark font-weight-normal text-light">
+          <?php echo $ere_semaforo; ?> Dati aggiornati al <?php echo $eredi; ?></span>
+      </ul>
+    </div>  
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light">Esclusioni</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Esclusioni da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $esc1_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Sofferenze da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $esc2_qta; ?></span>
+        </li>
+      <span class="badge badge-dark font-weight-normal text-light">
+          <?php echo $esc_semaforo; ?> Dati aggiornati al <?php echo $esclusioni; ?></span>
+      </ul>
+    </div>  
+
+    <div class="col-md-3">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-light">Cessioni</h6>
+      </div>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Cessioni a Banca da liquidare
+            <span class="badge badge-primary badge-pill"><?php echo $ces1_qta; ?></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            Cessioni a Socio da eseguire
+            <span class="badge badge-primary badge-pill"><?php echo $ces2_qta; ?></span>
+        </li>
+      <span class="badge badge-dark font-weight-normal text-light">
+          <?php echo $ces_semaforo; ?> Dati aggiornati al <?php echo $cessioni; ?></span>
+      </ul>
+    </div>   
+
+</div>	
+
+<!-- 	
+*****************************************************************************
+FOOTER
+*****************************************************************************
+-->
+<br><br>
+<footer class="text-muted ">
+  <div class="copyright text-center my-auto">
+
+    <span class='mr-2 d-none d-lg-inline text-gray-600 small'>
+    </span>
+  
+  </div>
+</footer>
+
+<!-- End of Footer -->

@@ -1,0 +1,348 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+ini_set('max_execution_time', 0); 
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+
+if (get_browser_name($_SERVER['HTTP_USER_AGENT']) == "Internet Explorer")
+	{$imgext = "jpg";}
+else
+	{$imgext = "png";}
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+
+if  (empty($_POST['ricerca'])) 
+	{
+
+echo "<center>
+		<fieldset style='width:600px;text-align:left;'>
+		<legend><i class='fas fa-search fa-1x text-gray-300 col-auto'></i> <b>Ricerca Socio ChiantiBanca</legend>";
+
+echo '<table border="0" align="center" cellpadding="0" cellspacing="0" width="100%" >
+	<tr>
+		<td valign="top" width="75%"><br>
+			 <form action="schedasocio.php" method="POST">
+					<input type="text" class="form-control" name="ricerca" id="ricerca" size="40">
+					<small style="color:white;"><i>Puoi inserire il cognome/nome - cag - numero Socio - telefono</i></small>
+			<br><br>
+		</td>
+		<td valign="top" align="center" width="25%"><br>
+					<button type="submit" class="btn btn-success mb-2">RICERCA</button><br>
+			</form>
+		</td>
+	</tr>	
+	</table>';
+
+echo '</fieldset></center>';
+
+
+}
+
+else
+
+{
+?>
+
+<!-- Page level plugins -->
+  <script src="js/jquery.dataTables.min.js"></script>
+  <script src="js/dataTables.bootstrap4.min.js"></script>
+  <script src="js/dataTables.buttons.min.js"></script>
+  <script src="js/buttons.print.min.js"></script>
+
+  <!-- Page level custom scripts -->
+  <script>
+  // Call the dataTables jQuery plugin
+	$(document).ready(function() {
+	    $('#dataTable').DataTable( {
+	    	/*
+	    	dom: 'Bfrtip'
+          	,buttons: [{
+                extend: 'print', text: '<i class="fas fa-file-csv fa-2x btn-primary"></i>', 
+                className: 'btn btn-dark',
+                messageTop: 'Documento ad uso interno - riservato ChiantiBanca',
+                messageBottom: 'Documento ad uso interno - riservato ChiantiBanca',
+                footer: 'Documento ad uso interno - riservato ChiantiBanca',
+                customize: function ( win ) {
+                    $(win.document.body)
+                        .css( 'font-size', '9pt' )
+                        .prepend(
+                            '<img src="http://10.119.192.46:8080/soci/img/logo_chiantibanca.png" style="position:absolute; top:0; left:0;opacity:0.2" />'
+                        );
+ 
+                    $(win.document.body).find( 'Table' )
+                        .addClass( 'compact' )
+                        .css( 'font-size', 'inherit' );
+                }
+            },'pageLength']
+	    	, */
+	    	lengthMenu: [ [ 10, 25, 50, 75, 100, 500, 1000 ], 
+	    				  ['10 righe', '25 righe', '50 righe', '75 righe', '100 righe', '500 righe', '1000 righe'] ]
+	    	,oLanguage: {"sLengthMenu": "Mostra _MENU_ ", "sSearch": "Cerca nella lista:"}
+            ,order: [[ 3, "asc" ]]
+          	,deferRender: true
+    	} );
+
+	});
+
+	</script>   		
+
+<div id="load" style="display:none;">Loading... Please wait</div>
+
+<?php
+
+$adesso = date('d/m');
+
+if (empty($_POST['filiale'])) 
+{$condizionefiliale = "WHERE 
+			(( CONCAT(int1Socio,' ',int2Socio) LIKE '%".$_POST['ricerca']."%' OR int1Delegato LIKE '%".$_POST['ricerca']."%' OR telefono LIKE '%".$_POST['ricerca']."%' OR Prot LIKE '%".$_POST['ricerca']."%' OR CAG LIKE '%".$_POST['ricerca']."%' ))";}
+else 
+{$condizionefiliale = " WHERE codFil = ".$_POST['filiale']." AND statoVal not in ('E','S','N') ";}
+
+// ********************************************************
+// DATI GENERALI
+// ********************************************************
+$select = "	SELECT 	CONCAT(int1Socio,' ',int2Socio) AS Nominativo, DataNasc as DataNascita, Prot, CAG, 
+					DataEntrata AS sociodal, codFil as Filiale, Stato, statoVal, nAzTot, telefono, int1Delegato, sessoVAL, statoVAL
+			FROM tab_soci_as37
+			".$condizionefiliale."
+			group by CONCAT(int1Socio,' ',int2Socio), DataNasc, Prot, CAG, codFil
+			ORDER BY 1";
+
+logquery ($select);
+//echo $select;
+$querydati = mysqli_query($connection, $select);
+
+echo '
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- DataTales Example -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h4 class="m-2 font-weight-bold text-success">Soci ChiantiBanca</h4>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+		<thead>
+			<tr class="table-primary">
+				<th style="text-align:left; font-size:13px;">Nr.Socio</th>
+				<th style="text-align:left; font-size:13px;">Filiale</th>
+				<th style="text-align:left; font-size:13px;">CAG</th>
+				<th style="text-align:left; font-size:13px;">Nominativo</th>
+				<th style="text-align:center; font-size:13px;">Data Nascita</th>
+				<th style="text-align:center; font-size:13px;">Età</th>
+				<th style="text-align:center; font-size:13px;">Socio dal</th>
+				<th style="text-align:center; font-size:13px;">Telefono</th>
+				<th style="text-align:center; font-size:13px;">Num.Az.</th>
+				<th style="text-align:center; font-size:13px;">Stato</th>
+				<th style="text-align:center; font-size:13px;">Moduli</th>
+				<th style="text-align:center; font-size:13px;">Mutua</th>
+			</tr>
+		</thead>
+		<tbody>
+';	
+
+	// ------------------------
+	// Creo file CSV
+	// ------------------------
+	if (empty($_POST['filiale'])) 
+		{$codfiliale = "";}
+	else 
+		{$codfiliale = $_POST['filiale'];}
+	$contenutofile = '';
+    $myfile = fopen("tmp/listasoci".$codfiliale.".csv", "w");
+    $contenutofile .= "Socio;Filiale;CAG;Nominativo;DataNascita;Eta;SocioDal;NuMTelefono;NumAzioni;Stato;SocioMutua\n";
+
+
+while($datisocio=mysqli_fetch_array($querydati)){ 
+
+			// ********************************************************
+			// RICERCA LA DATA EFFETTIVA DI INGRESSO SE EX PISTOIA
+			// ********************************************************
+			$dataEntrata_origine = '';
+			$select_storico = "	SELECT dataEntrata_origine
+						FROM tab_storico_pistoia
+						WHERE prot = ".$datisocio['Prot'];
+			$querydati_storico = mysqli_query($connection, $select_storico);
+			while($dati_storico=mysqli_fetch_array($querydati_storico)){ 
+				$dataEntrata_origine = '<br><small>Orig. '.$dati_storico['dataEntrata_origine'].'</small>';
+				$dataEntrata_origine2 = $dati_storico['dataEntrata_origine'];
+				}
+
+			// ********************************************************
+			// RICERCA SE SONO PRESENTI CESSIONI
+			// ********************************************************
+			$select_c_c = "	SELECT count(*) as qta
+						FROM tab_xls_cessioni
+						WHERE CAG = ".$datisocio['CAG']." 
+						AND Note_AO08 not in ('S5','S4','SA','SB','SC','SM','VB','VC') ";
+			$querydati_c_c = mysqli_query($connection, $select_c_c);
+			while($dati_c_c=mysqli_fetch_array($querydati_c_c)){ 
+				if ($dati_c_c['qta'] == 0) 
+					{$count_c = '';} 
+				else 
+					{$count_c = "&nbsp;<img src='img/ico_cessioni.png' width='12' title='Presenti ".$dati_c_c['qta']." richieste di Cessione a Banca')";}
+			}	
+
+
+			// ********************************************************
+			// RICERCA SE IL SOCIO E' A SOFFERENZA
+			// ********************************************************
+			$select_c_s = "	SELECT count(*) as qta
+						FROM tab_xls_recessi_esclusioni_sofferenze
+						WHERE CAG = ".$datisocio['CAG']." 
+						AND Escluso_x_Passaggio_a_Sofferenze = 'S'
+						AND Note_AO08 not in ('S5','S4','SA','SB','SC','SM','VB','VC') ";
+			$querydati_c_s = mysqli_query($connection, $select_c_s);
+			while($dati_c_s=mysqli_fetch_array($querydati_c_s)){ 
+				if ($dati_c_s['qta'] == 0) 
+					{$count_s = '';} 
+				else 
+					{$count_s = "&nbsp;<img src='img/ico_sofferenze.png' width='12' title='Posizione esclusa per Sofferenza')";}
+			}	
+			
+			// ********************************************************
+			// RICERCA SE IL SOCIO E' ANCHE SOCIO MUTUA
+			// ********************************************************
+			$select_mutua 	  = "	SELECT * FROM tab_mutua_elencosoci
+									WHERE cag = ".$datisocio['CAG'];
+			logquery ($select_mutua);  
+			$querydati_mutua = mysqli_query($connection, $select_mutua);
+				if(mysqli_num_rows($querydati_mutua) > 0)
+				    while($datisociomutua = mysqli_fetch_array($querydati_mutua))
+				    {
+				       $esistenzasociomutua = 
+					 	"<a href='mutua_schedasocio.php?cag=".$datisociomutua['cag']."' title='Apri Scheda Socio Mutua'>
+					 	    <i class='fas fa-check fa-2x col-auto' style='color:#9FE2BF;'></i></a>
+					 	 
+					 	 <a href='modulistica_mutua.php?prot=".$datisocio['Prot']."&cag=".$datisocio['CAG']."&socio=".urlencode(stripslashes($datisocio['Nominativo']))."&idsocio=".$datisocio['Prot']."' title='Modelli precompilati MUTUA ".$datisocio['Nominativo']."'><i class='fas fa-file-signature fa-2x col-auto' style='color:#9FE2BF;'></i></a>";
+					   $modulimutua = 'si';
+				    }
+				else
+				{
+				    $esistenzasociomutua = '';
+				    $modulimutua = 'no';
+				}
+
+			// ********************************************************
+			// RICERCA DEL NOME DELLA FILIALE
+			// ********************************************************
+			$select_filiale	  = "	SELECT * FROM tab_psw
+									WHERE filiale = ".$datisocio['Filiale'];
+			logquery ($select_filiale);  
+			$querydati_filiale = mysqli_query($connection, $select_filiale);
+				if(mysqli_num_rows($querydati_filiale) > 0)
+				    while($datifiliale = mysqli_fetch_array($querydati_filiale))
+				    {
+				        $nomefiliale = $datifiliale['desc_filiale'];
+				    }
+				else
+				{
+				    $nomefiliale = '';
+				}
+
+
+    // Età del socio
+    $eta = ( date("Y") - substr($datisocio['DataNascita'],-4) ); 
+
+    // Controllo se oggi è il suo compleanno, se SI metto l'icona della torta
+	if (substr($datisocio['DataNascita'],0,5) == $adesso) 
+		{$bday = '<i class="fas fa-birthday-cake fa-1x text-gray-300 col-auto"  style="color:orange;"></i>';}
+	else
+		{$bday = '';}
+
+    // Controllo se oggi è il suo compliSocio, ovvero il compleanno dalla data di ingresso...se SI metto l'icona della torta
+	if ($dataEntrata_origine == "") { $dataEntrata = $datisocio['sociodal']; } else { $dataEntrata = $dataEntrata_origine2; }
+	
+	if (substr($dataEntrata,0,5) == $adesso) 
+		{$complisocio = '<i class="fas fa-birthday-cake fa-1x col-auto" style="color:orange;" title="CompliSocio"></i>';}
+	else
+		{$complisocio = '';}
+
+    // Pallino colorato per avvalorare lo status
+	if ($datisocio['statoVal'] == 'E') 
+		{$pallino = '<img src="img/ico_pallino_red.png" title="ESTINTO">';
+		$linksocio = "<a class='text-success' href='sqldati_schedasocio.php?id=".$datisocio['Prot']."'>".$datisocio['Nominativo']."</a>";} 
+	elseif ($datisocio['statoVal'] == 'S') {$pallino = '<img src="img/ico_pallino_white.png" title="USCITO (per Recesso, Decesso o Esclusione)">';
+		$linksocio = "<a class='text-success' href='sqldati_schedasocio.php?id=".$datisocio['Prot']."'>".$datisocio['Nominativo']."</a>";} 
+	elseif ($datisocio['statoVal'] == 'N') {$pallino = '<img src="img/ico_pallino_yellow.png" title="AMMESSO con quote non ancora versate">';
+		$linksocio = $datisocio['Nominativo'];} 
+	else {$pallino = '<img src="img/ico_pallino_green.png" title="In essere">';
+			$linksocio = "<a class='text-success' href='sqldati_schedasocio.php?id=".$datisocio['Prot']."'>".$datisocio['Nominativo']."</a>";} 
+
+    //echo var_dump($datisocio['int1Delegato']) ;
+    if (empty($datisocio['int1Delegato'])) 
+        {$rappresentante = '';}
+        else 
+        {$rappresentante = '<br><small style="color:gray;">'.$datisocio['int1Delegato'].'</small>'; }
+    
+        if ($datisocio['sessoVAL'] == 'M') {$icosesso = '<img src="img/ico_man.png" height="20" title="PF">&nbsp;';}
+        elseif ($datisocio['sessoVAL'] == 'F') {$icosesso = '<img src="img/ico_woman.png" height="20" title="PF">&nbsp;';}
+        else {$icosesso = '<img src="img/ico_azienda.png" height="20" title="PG">&nbsp;';}
+        
+	echo "	  <tr class='table-secondary'>   
+				<td style='text-align:left;'>".$datisocio['Prot']."</td>
+				<td style='text-align:left;' title='".$nomefiliale."'>".$datisocio['Filiale']."</td>
+				<td style='text-align:left;'>".$datisocio['CAG']."</td>
+				<td style='text-align:left;'>".$icosesso." ".$linksocio.$rappresentante."</td>
+				<td style='text-align:center;'>".$datisocio['DataNascita']." ".$bday."</td>
+			    <td style='text-align:center;'>".$eta."</td>
+				<td style='text-align:center;'>".$datisocio['sociodal']." ".$complisocio.$dataEntrata_origine."</td>
+				<td style='text-align:center;'>".$datisocio['telefono']."&nbsp;</td>
+				<td style='text-align:center;'>".number_format($datisocio['nAzTot'],0,',','.')."&nbsp;</td>
+				<td style='text-align:center;'>".$pallino.$count_c.$count_s."</td>";
+
+if ($datisocio['statoVAL'] != 'E'){
+	echo '	<td style="text-align:center; font-size:11px; text-decoration: none;"><a href="modulistica.php?prot='.$datisocio['Prot'].'&cag='.$datisocio['CAG'].'&socio='.urlencode(stripslashes($datisocio['Nominativo'])).'&idsocio='.$datisocio['Prot'].'&mutua='.'"><i class="fas fa-file-signature fa-2x text-gray-300 col-auto" title="Modelli precompilati '.$datisocio['Nominativo'].'"></i></a></td>';
+} else { 
+    echo '	<td style="text-align:center; font-size:11px; text-decoration: none;"></td>';
+}    
+	echo '	<td style="text-align:center;font-size:11px; text-decoration: none;">'.$esistenzasociomutua.'</td>';
+	 		  
+	echo '  </tr>'; 
+
+
+	// SCRIVO IL CSV
+    $contenutofile .= $datisocio['Prot'].";".$datisocio['Filiale'].";".$datisocio['CAG'].";".$datisocio['Nominativo'].";".$datisocio['DataNascita'].";".$eta.";".$datisocio['sociodal'].";".$datisocio['telefono'].";".number_format($datisocio['nAzTot'],0,',','.').";".$datisocio['statoVAL'].";".$modulimutua."\n";
+
+}
+
+	// CHIUDO CSV
+    fwrite($myfile, $contenutofile);
+    fclose($myfile);
+
+echo '		</tbody>
+	</table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- /.container-fluid -->';
+
+}
+
+    echo "";
+
+?>
+
+
+<center><a href="tmp/listasoci<?php echo $codfiliale;?>.csv"><img src="img/google_docs.png"></a>&nbsp;<a href="javascript:history.back();" title="Torna alla ricerca"><img src="img/frecciasx.png"></center>

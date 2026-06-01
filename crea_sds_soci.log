@@ -1,0 +1,12 @@
+
+E:\www\soci>php crea_sds_soci.php 
+
+<html>
+        <head>
+        <title>Raccolta Dati Soci</title>
+        </head>
+
+        <body><br><br>
+        
+Warning: odbc_connect(): SQL error: Impossibile caricare il driver specificato. Errore di sistema  5: Accesso negato. (SdsODBC, C:\Users\Administrator\Desktop\DBQuery 2.0_tools_V2.01\Driver\Windows\ODBC64\SdsODBC.dll)., SQL state IM003 in SQLConnect in E:\www\soci\crea_sds_soci.php on line 28
+0

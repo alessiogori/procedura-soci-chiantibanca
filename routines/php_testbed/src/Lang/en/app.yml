@@ -1,0 +1,60 @@
+code:
+    line: Line :line
+    echo: Prints
+    echo-scalar: Prints :value
+    assign: The variable :var receives the value :value
+    assign-op: The variable :var receives :value
+    scalar: the value :value
+    array: the set of values :value
+    array-op: the set of values :value resultant of the operation :expr
+    const: The constant :const receives the value :value
+    binary-op: the value :value resultant of the operation :expr
+    binary-op-var: the value :value resultant of the operation :expr where :where
+    do-while-enter: --- Start the loop DO-WHILE ---
+    do-while-exit: --- Exit the loop DO-WHILE ---
+    while-enter: --- Start the loop WHILE ---
+    while-exit: --- Exit the loop WHILE ---
+    if-enter: --- Start the conditional IF ---
+    if-exit: --- Exit the conditional IF ---
+    if-cond: The condition returns
+    else-cond: No conditions satifies, execute the else block
+    for-enter: --- Start the loop FOR ---
+    for-exit: --- Exit the loop FOR ---
+    foreach-enter: --- Start the loop FOREACH ---
+    foreach-exit: --- Exit the loop FOREACH ---
+    loop-cond: The loop condition returns
+    post-inc: The variable :var has its value incremented to :value
+    post-dec: The variable :var has its value decremented to :value
+    switch-cond: Starts to test switch
+    switch-case-success: Enter the case with value :value because this is the value of :cond
+    switch-case-fail: Rejects the case with value :value because this is not the value of :cond
+    switch-case-default: Enters the default case
+    switch-enter: --- Enter the conditional SWITCH ---
+    switch-exit: --- Exit the conditional SWITCH ---
+    switch-case-enter: --- Enter the switch CASE ---
+    switch-case-exit: --- Exit the switch CASE ---
+    break: Performs request to stop actual block execution
+    foreach-next-key: The variable :var receives the next index from :origin, with the value :value
+    foreach-next-item: The variable :var receives the next item from :origin, with the value :value
+    throw: Throws a exception, interrupts program execution
+    try-enter: --- Enter block TRY ---
+    try-exit: --- Exit block TRY ---
+    try-catch-enter: --- Enter block CATCH ---
+    try-catch-exit: --- Exit block CATCH ---
+    try-finally-enter: --- Enter block  FINALLY ---
+    try-finally-exit: --- Exit block FINALLY ---
+    try-catch-check-ok: The exception thrown :throw is compatible with the treatment for :catch
+    try-catch-check-fail: The exception thrown :throw is NOT compatible with the treatment for :catch
+    global: Initialize the global variable :var
+exceptions:
+    script-not-found: Script :script not found
+    node-not-implemented: Resolution of :node not implemented yet
+messages:
+    start: Script started
+    end: Script finished
+legend:
+    array-key-position: Key/Position
+    array-value: Value
+    array-empty: empty
+config:
+    timestamp: m/d/Y H:i:s.u

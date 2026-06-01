@@ -1,0 +1,888 @@
+<?php
+//////////////////////////////////////////////////////////////////
+// SITUAZIONE SOCI
+// Viene usato l'utente ODBCUSER01 creato per SOCI
+// Author: Alessio Fedi - 28.10.2022
+//////////////////////////////////////////////////////////////////
+// Nome Script
+$NOME_SCRIPT = 'SITUAZIONE';
+$TITOLO = 'Situazione Soci';
+
+// Execution Time = 0 - No Limit
+ini_set('max_execution_time', '0');
+
+// Includo i dati di connessione
+include("../config/_config.php");
+include("../config/_functions.php");
+
+// including FusionCharts PHP wrapper
+include("../graph/fusioncharts.php"); 
+
+echo '<html>
+        <head>
+        <script type="text/javascript" src="../js/fusioncharts/fusioncharts.js"></script>
+        <script type="text/javascript" src="../js/fusioncharts/themes/fusioncharts.theme.candy.js"></script>
+        <title>'.$TITOLO.'</title>
+        </head>
+        <style type="text/css">
+          @import "../css/bootstrap.css";
+          @import "../css/bootstrap.min.css";
+        </style> 
+
+        <body><br><br>
+        ';
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Connessione all'ODBC SADAS
+$connect = odbc_connect('SADAS', NULL, NULL) or die ('0');
+
+// FINE SEZIONE DA NON MODIFICARE
+// --------------------------------------------------------------------
+$adesso = date("d.m.Y");
+
+
+if (!isset($_GET['datain']) OR empty($_GET['datain']) ) 
+      {
+            $_GET['datain'] = '01/01/2023';
+      }
+
+if (!isset($_GET['dataout']) OR empty($_GET['dataout']) ) 
+      {
+
+            $_GET['dataout'] = date("d/m/Y", strtotime("-1 day"));            // 1 giorno indietro perchè SADAS è sempre a ieri sera !!
+      }
+
+// Controllo se la richiesta arriva dai SOCI
+if (!isset($_GET['filiale']))
+    {$condizionefiliale = '';
+     $condizionefiliale2 = '';
+     $titolofiliale = '';
+     $filiale = '';
+     $area = '';
+     $rif = '';
+    }
+    else
+    {
+  // da un FILIALE
+     if (!isset($_GET['area']) OR ($_GET['area']) == "")   
+     {    
+     $condizionefiliale = ' AND ANAG_NAG.FILIALE_CAPOFILA in ('.$_GET['filiale'].')';
+     $condizionefiliale2 = ' AND Filiale in ('.$_GET['filiale'].')';
+     $titolofiliale = ' Filiale '.$_GET['filiale'];  
+     $filiale = $_GET['filiale'];
+     $rif = 'Filiale';
+     }
+     else
+  // da una AREA   
+     {    
+     $condizionefiliale = ' AND ANAG_NAG.FILIALE_CAPOFILA in ('.$_GET['filiale'].')';
+     $condizionefiliale2 = ' AND Filiale in ('.$_GET['filiale'].')';
+     $titolofiliale = ' Area '.$_GET['area'];  
+     $filiale = $_GET['area'];
+     $rif = 'Area';
+     }
+    }
+
+echo '
+      <div class="alert alert-dismissible alert-warning">
+            <h2 class="alert-heading">Situazione Soci</h2>
+            <p class="mb-0 justify-content-between align-items-left">'.$rif.' '.$filiale.' - Dal '.$_GET['datain'].' al '.$_GET['dataout'].'</p>
+            <p class="mb-0 justify-content-between align-items-left">Parametri: ?datain=gg/mm/aaaa (eventuale &dataout=gg/mm/aaaa)</p>
+      </div>
+';
+
+// ----------------------------------------------------------------------------
+// CAPITALE SOCIALE E NUMERO AZIONI - INIZIO/INCREMENTO/DECREMENTO/FINE PERIODO
+// ----------------------------------------------------------------------------
+$select_Capitale =   "        SELECT 'A1 - Capitale Sociale alla data iniziale' as Tipo, '".$_GET['datain']."' as Periodo, sum(cert.NAZIONI * 30.09) as CapitaleSociale, sum(cert.NAZIONI) as NumeroAzioni
+                              FROM SOCI_CERTIFICATI cert, SOCI_movimenti MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                              Where mov.idcertificato = cert.idcertificato
+                              AND mov.idsocio = soci.idsocio
+                              AND soci.nag = anag.nag
+                              AND cert.DATA_ACQUISTO <= '".$_GET['datain']."'
+                              AND (cert.DATA_ANNULLAMENTO = '00/00/0000' OR
+                                     cert.DATA_ANNULLAMENTO > '".$_GET['datain']."')
+                              AND (cert.DATA_VENDITA = '00/00/0000' OR cert.DATA_VENDITA > '".$_GET['datain']."')
+                              AND mov.ctipomov not in
+                                     ('QA','QR','AR', 'AQ', 'AS', 'CQ', 'DE', 'ID', 'RQ', 'TR','CO','CU','DO','FU','SU','AN','RS','VE','CA','UC')
+                              ".$condizionefiliale."
+                              
+                              UNION
+                              
+                              SELECT 'A2 - Capitale Sociale incremento' as Tipo, '".$_GET['datain']."' as Periodo, sum(cert.NAZIONI * 30.09) as CapitaleSociale, sum(cert.NAZIONI) as NumeroAzioni
+                              FROM SOCI_CERTIFICATI cert, SOCI_movimenti MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                              Where mov.idcertificato = cert.idcertificato
+                              AND mov.idsocio = soci.idsocio
+                              AND soci.nag = anag.nag
+                              AND (cert.DATA_ACQUISTO >= '".$_GET['datain']."' AND
+                                     cert.DATA_ACQUISTO <= '".$_GET['dataout']."')
+                              AND mov.ctipomov not in
+                                     ('QA','QR','AR', 'AQ', 'AS', 'CQ', 'DE', 'ID', 'RQ', 'TR','CO','CU','DO','FU','SU', 'AN','RS','VE','CA','UC')
+                              ".$condizionefiliale."
+                              
+                              UNION
+
+                              SELECT 'A3 - Capitale Sociale decremento' as Tipo, '".$_GET['datain']."' as Periodo, sum(cert.NAZIONI * 30.09) as CapitaleSociale, sum(cert.NAZIONI) as NumeroAzioni
+                              FROM SOCI_CERTIFICATI cert, SOCI_movimenti MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                              Where mov.idcertificato = cert.idcertificato
+                              AND mov.idsocio = soci.idsocio
+                              AND soci.nag = anag.nag
+                              AND ((cert.DATA_ANNULLAMENTO >= '".$_GET['datain']."' AND
+                                       cert.DATA_ANNULLAMENTO <= '".$_GET['dataout']."') OR
+                                       (cert.DATA_VENDITA >= '".$_GET['datain']."' AND
+                                       cert.DATA_VENDITA <= '".$_GET['dataout']."'))
+                              AND mov.ctipomov not in
+                                       ('QA','QR','AR', 'AQ', 'AS', 'CQ', 'DE', 'ID', 'RQ', 'TR','CO','CU','DO','FU','SU', 'AN','RS','VE','CA','UC')  
+                              ".$condizionefiliale."
+                              
+                              UNION
+
+                              SELECT 'A4 - Capitale Sociale alla data finale' as Tipo, '".$_GET['dataout']."' as Periodo, sum(cert.NAZIONI * 30.09) as CapitaleSociale, sum(cert.NAZIONI) as NumeroAzioni
+                              FROM SOCI_CERTIFICATI cert, SOCI_movimenti MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                              Where mov.idcertificato = cert.idcertificato
+                              AND mov.idsocio = soci.idsocio
+                              AND soci.nag = anag.nag
+                              AND (cert.DATA_ACQUISTO <= '".$_GET['dataout']."')
+                              AND (cert.DATA_ANNULLAMENTO = '00/00/0000' OR
+                                     cert.DATA_ANNULLAMENTO > '".$_GET['dataout']."')
+                              AND (cert.DATA_VENDITA = '00/00/0000' OR cert.DATA_VENDITA > '".$_GET['dataout']."')
+                              AND mov.ctipomov not in
+                                     ('QA','QR','AR', 'AQ', 'AS', 'CQ', 'DE', 'ID', 'RQ', 'TR','CO','CU','DO','FU','SU','AN','RS','VE','CA','UC')
+                              ".$condizionefiliale."                                     
+                              ";
+             //echo $select_Capitale;
+// ---------------------------------------------------------
+// SOVRAPPREZZO - INIZIO/INCREMENTO/DECREMENTO/FINE PERIODO
+// ---------------------------------------------------------
+$select_Sovrapprezzo    = "   SELECT 'B1 - Sovrapprezzo alla data iniziale' as Tipo, '".$_GET['datain']."' as Periodo, sum(mov.isovrapprezzo) as Valore
+                                    FROM SOCI_MOVIMENTI mov, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                                    Where mov.DATA_MOVIMENTO <= '".$_GET['datain']."'
+                                    AND mov.idsocio = soci.idsocio
+                                    AND soci.nag = anag.nag
+                                    ".$condizionefiliale."
+
+                              UNION
+
+                              SELECT 'B2 - Sovrapprezzo incremento' as Tipo, '".$_GET['datain']."' as Periodo, SUM(MOV.ISOVRAPPREZZO) as Valore
+                                    FROM SOCI_MOVIMENTI MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                                    Where MOV.ISOVRAPPREZZO > 0
+                                    AND (mov.DATA_MOVIMENTO >= '".$_GET['datain']."' AND
+                                           mov.DATA_MOVIMENTO <= '".$_GET['dataout']."')
+                                    AND mov.idsocio = soci.idsocio
+                                    AND soci.nag = anag.nag
+                                    ".$condizionefiliale."
+                              
+                              UNION
+
+                              SELECT 'B3 - Sovrapprezzo decremento' as Tipo, '".$_GET['datain']."' as Periodo, SUM(MOV.ISOVRAPPREZZO) as Valore
+                                    FROM SOCI_MOVIMENTI MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                                    Where MOV.ISOVRAPPREZZO < 0
+                                    AND (mov.DATA_MOVIMENTO >= '".$_GET['datain']."' AND
+                                     mov.DATA_MOVIMENTO <= '".$_GET['dataout']."')
+                                    AND mov.idsocio = soci.idsocio
+                                    AND soci.nag = anag.nag
+                                    ".$condizionefiliale."
+
+                              UNION
+
+                              SELECT 'B4 - Sovrapprezzo alla data finale' as Tipo, '".$_GET['dataout']."' as Periodo, SUM(MOV.ISOVRAPPREZZO) as Valore
+                                    FROM SOCI_MOVIMENTI MOV, SOCI_ANAGRAFICA soci, ANAG_NAG anag
+                                    Where mov.DATA_MOVIMENTO <= '".$_GET['dataout']."'
+                                    AND mov.idsocio = soci.idsocio
+                                    AND soci.nag = anag.nag
+                                    ".$condizionefiliale."
+                              ";
+
+// ----------------------------------------------------------
+// QUANTITA' SOCI - INIZIO/INCREMENTO/DECREMENTO/FINE PERIODO
+// ----------------------------------------------------------
+$select_Soci =         "      SELECT 'C1 - Soci alla data iniziale' as Tipo, '".$_GET['datain']."' as Periodo, count(*) as qta
+                                    FROM SOCI_ANAGRAFICA, ANAG_NAG
+                                    WHERE SOCI_ANAGRAFICA.NAG = ANAG_NAG.NAG
+                                    AND DATA_ENTRATA <= '".$_GET['datain']."'
+                                    AND (DATA_USCITA = '00/00/0000'
+                                          OR DATA_USCITA > '".$_GET['datain']."')
+                                    ".$condizionefiliale."
+
+                              UNION
+
+                              SELECT 'C2 - Soci incrementati' as Tipo, '".$_GET['datain']."' as Periodo, count(*) as qta
+                                    FROM SOCI_ANAGRAFICA, ANAG_NAG
+                                    WHERE SOCI_ANAGRAFICA.NAG = ANAG_NAG.NAG
+                                    AND DATA_ENTRATA >= '".$_GET['datain']."'
+                                    AND DATA_ENTRATA <= '".$_GET['dataout']."'
+                                    ".$condizionefiliale."
+                              
+                              UNION
+
+                              SELECT 'C3 - Soci decrementati' as Tipo, '".$_GET['datain']."' as Periodo, count(*) as qta
+                                    FROM SOCI_ANAGRAFICA, ANAG_NAG
+                                    WHERE SOCI_ANAGRAFICA.NAG = ANAG_NAG.NAG
+                                    AND DATA_USCITA >= '".$_GET['datain']."'
+                                    AND DATA_USCITA <= '".$_GET['dataout']."'
+                                    ".$condizionefiliale."
+
+                              UNION
+
+                              SELECT 'C4 - Soci alla data finale' as Tipo, '".$_GET['dataout']."' as Periodo, count(*) as qta
+                                    FROM SOCI_ANAGRAFICA, ANAG_NAG
+                                    WHERE SOCI_ANAGRAFICA.NAG = ANAG_NAG.NAG
+                                    AND DATA_ENTRATA <= '".$_GET['dataout']."'
+                                    AND (DATA_USCITA = '00/00/0000'
+                                          OR DATA_USCITA > '".$_GET['dataout']."')
+                                    ".$condizionefiliale."
+                              ";
+
+//echo $select_Soci;
+// -----------------------------------------------------------------
+// Estrazione dei valori dalle singole Select
+// -----------------------------------------------------------------
+
+echo '<table border="0" align="center">
+        <tr>
+            <td>';
+
+
+      // CAPITALE SOCIALE
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-success">
+                <td align="left"><small>CAPITALE SOCIALE</td>
+                <td align="center"><small>Periodo</td>
+                <td align="right"><small>Valore Capitale</td>
+                <td align="right"><small>Numero Azioni</td>
+              </tr>';
+
+      $result_Capitale = odbc_exec($connect, $select_Capitale);
+      while($dati_Capitale = odbc_fetch_object($result_Capitale)) {
+
+            if ($dati_Capitale->TIPO == 'A1 - Capitale Sociale alla data iniziale')     {$valore_inizio = $dati_Capitale->CAPITALESOCIALE;      $azioni_inizio = $dati_Capitale->NUMEROAZIONI;  }
+            if ($dati_Capitale->TIPO == 'A4 - Capitale Sociale alla data finale')       {$valore_fine   = $dati_Capitale->CAPITALESOCIALE;      $azioni_fine   = $dati_Capitale->NUMEROAZIONI;  }
+
+                echo "<tr>
+                        <td><small>".$dati_Capitale->TIPO."</td>
+                        <td align='center'><small>".$dati_Capitale->PERIODO."</td>
+                        <td align='right'><small>".number_format($dati_Capitale->CAPITALESOCIALE,0,',','.')."</td>
+                        <td align='right'><small>".number_format($dati_Capitale->NUMEROAZIONI,0,',','.')."</td>
+                      </tr>
+                    ";
+
+      }
+            if (($valore_fine - $valore_inizio) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+            if (($azioni_fine - $azioni_inizio) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:red;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td><small></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format(($valore_fine - $valore_inizio),0,',','.')."</b></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format(($azioni_fine - $azioni_inizio),0,',','.')."</b></td>
+                      </tr>
+                      </table>";      
+
+echo '</td>
+      <td>&nbsp;&nbsp;</td>
+      <td>';
+
+      // SOVRAPPREZZO SOCI
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-success">
+                <td align="left"><small>SOVRAPPREZZO</td>
+                <td align="center"><small>Periodo</td>
+                <td align="right"><small>Valore Sovrapprezzo</td>
+              </tr>';
+
+      $result_Sovrapprezzo = odbc_exec($connect, $select_Sovrapprezzo);
+      while($dati_Sovrapprezzo = odbc_fetch_object($result_Sovrapprezzo)) {
+
+            if ($dati_Sovrapprezzo->TIPO == 'B1 - Sovrapprezzo alla data iniziale')     {$valore_inizio = $dati_Sovrapprezzo->VALORE;}
+            if ($dati_Sovrapprezzo->TIPO == 'B4 - Sovrapprezzo alla data finale')       {$valore_fine   = $dati_Sovrapprezzo->VALORE;}
+
+                echo "<tr>
+                        <td><small>".$dati_Sovrapprezzo->TIPO."</td>
+                        <td align='center'><small>".$dati_Sovrapprezzo->PERIODO."</td>
+                        <td align='right'><small>".number_format($dati_Sovrapprezzo->VALORE,0,',','.')."</td>
+                      </tr>
+                    ";
+
+      }
+            if (($valore_fine - $valore_inizio) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:red;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td><small></td>
+                        <td align='right'><small><b ".$plusminus.' '.number_format(($valore_fine - $valore_inizio),0,',','.')."</b></td>
+                      </tr>
+                      </table>";        
+
+echo '</td>
+      <td>&nbsp;&nbsp;</td>
+      <td>';
+
+      // QUANTITA' SOCI
+      // -----------------------------------------------------------------
+      echo ' <table class="table table-bordered table-hover" id="dataTable" width="90%" cellspacing="0">
+              <tr class="table-success">
+                <td align="left"><small>NUMERO DI SOCI</td>
+                <td align="center"><small>Periodo</td>
+                <td align="right"><small>Quantità</td>
+              </tr>';
+
+      $result_Soci = odbc_exec($connect, $select_Soci);
+      while($dati_Soci = odbc_fetch_object($result_Soci)) {
+
+            if ($dati_Soci->TIPO == 'C1 - Soci alla data iniziale')     {$soci_inizio = $dati_Soci->QTA;}
+            if ($dati_Soci->TIPO == 'C4 - Soci alla data finale')       {$soci_fine   = $dati_Soci->QTA;}
+
+                echo "<tr>
+                        <td><small>".$dati_Soci->TIPO."</td>
+                        <td align='center'><small>".$dati_Soci->PERIODO."</td>
+                        <td align='right'><small>".number_format($dati_Soci->QTA,0,',','.')."</td>
+                      </tr>
+                    ";
+
+      }
+            if (($soci_fine - $soci_inizio) > 0) {$plusminus = ' style="color:lightgreen;"> &#43;'; } else {$plusminus = ' style="color:lightred;"> &#8722;'; }
+
+                echo "<tr class='table-secondary'>
+                        <td><small></td>
+                        <td><small></td>
+                        <td align='right'><small><b ".$plusminus.' '.($soci_fine - $soci_inizio)."</b></td>
+                      </tr>
+                      </table>";        
+
+
+echo '</td>
+      </tr>
+      </table>';
+
+
+// Close ODBC
+odbc_close($connect);
+
+
+// ----------------------------------------------------
+// REPORT AMMISSIONI USCITE
+// ----------------------------------------------------
+
+// ----------------------------------------------------
+// FusionChart - Controllo tema e colorazione
+// ----------------------------------------------------
+//if ($_SERVER["HTTP_REFERER"] == 'http://10.197.139.22:8080/soci/stats/repcda_prospetto_consiglio.php')
+if ($_GET['f'] == 999)
+    {
+        $tema = 'fusion';
+        $valueFontColor = '#222222';
+        $bgcolor = '#FFFFFF';
+    }   
+else  {
+        $tema = 'candy';
+        $valueFontColor = '#FFFFFF';
+        $bgcolor = '#222222';
+    } 
+
+/*
+echo '
+    <div class="alert alert-dismissible alert-warning">
+        <h2 class="alert-heading">Nuove Ammissioni Soci</h2>
+            <p class="mb-0 justify-content-between align-items-left">'.$rif.' '.$filiale.' - Dal '.$_GET['datain'].' al '.$_GET['dataout'].'</p>
+            <p class="mb-0 justify-content-between align-items-left">Parametri: ?datain=gg/mm/aaaa (eventuale &dataout=gg/mm/aaaa)</p>
+    </div>
+';
+*/
+
+$dbhandle = new mysqli($host, $db_user, $db_psw, $db_name);
+ 
+if ($dbhandle -> connect_error) {
+    exit("There was an error with your connection: ".$dbhandle -> connect_error);
+}
+
+// -------------------------------------------------------------------------------
+// CREAZIONE VISTA TEMPORANEA
+// -------------------------------------------------------------------------------
+$truncateview = mysqli_query($dbhandle,"DROP VIEW TMP_SOCI_INOUT") or die(mysqli_error($dbhandle));;
+$createview = "
+                    CREATE VIEW TMP_SOCI_INOUT AS
+                    SELECT '".$_GET['datain']."' as Periodo, Area, soci.FILIALE_CAPOFILA as Filiale, desc_filiale as NomeFiliale, count(*) as 'Soci_inizio',  '' as  'Incremento', '' as 'Decremento', '' as 'Soci_fine'
+                    FROM
+                        SDS_SOCI soci, tab_psw area
+                    WHERE
+                        soci.FILIALE_CAPOFILA = cast(area.filiale as unsigned)
+                    AND
+                        str_to_date(DATA_ENTRATA,'%d/%m/%Y') <=  str_to_date('".$_GET['datain']."','%d/%m/%Y')  
+                    AND
+                        ( DATA_USCITA =  '0'  
+                    OR
+                        str_to_date(DATA_USCITA,'%d/%m/%Y') >  str_to_date('".$_GET['datain']."','%d/%m/%Y')  )
+                    GROUP BY Area, Filiale
+                        
+                    UNION
+
+                    SELECT '".$_GET['datain']."' as Periodo, Area, soci.FILIALE_CAPOFILA as Filiale, desc_filiale as NomeFiliale, '' as 'Soci_inizio',  count(*) as  'Incremento', '' as 'Decremento', '' as 'Soci_fine'
+                    FROM
+                        SDS_SOCI soci, tab_psw area
+                    WHERE
+                        soci.FILIALE_CAPOFILA = cast(area.filiale as unsigned)
+                    AND
+                        str_to_date(DATA_ENTRATA,'%d/%m/%Y') >=  str_to_date('".$_GET['datain']."','%d/%m/%Y')  
+                    AND
+                        DATA_ENTRATA <= str_to_date('".$_GET['dataout']."','%d/%m/%Y')  
+                    GROUP BY Area, Filiale
+                        
+                    UNION
+
+                    SELECT '".$_GET['datain']."' as Periodo, Area, soci.FILIALE_CAPOFILA as Filiale, desc_filiale as NomeFiliale, '' as 'Soci_inizio',  '' as  'Incremento', count(*) as 'Decremento', '' as 'Soci_fine'
+                    FROM
+                        SDS_SOCI soci, tab_psw area
+                    WHERE
+                        soci.FILIALE_CAPOFILA = cast(area.filiale as unsigned)
+                    AND
+                     str_to_date(DATA_USCITA,'%d/%m/%Y') >= str_to_date('".$_GET['datain']."','%d/%m/%Y') 
+                    AND
+                         DATA_USCITA <= str_to_date('".$_GET['dataout']."','%d/%m/%Y')  
+                    GROUP BY Area, Filiale
+
+                    UNION
+
+                    SELECT '".$_GET['dataout']."' as Periodo, Area, soci.FILIALE_CAPOFILA as Filiale, desc_filiale as NomeFiliale, '' as 'Soci_inizio',  '' as  'Incremento', '' as 'Decremento', count(*)  as 'Soci_fine'
+                    FROM
+                        SDS_SOCI soci, tab_psw area
+                    WHERE
+                        soci.FILIALE_CAPOFILA = cast(area.filiale as unsigned)
+                    AND
+                        DATA_ENTRATA <= str_to_date('".$_GET['dataout']."','%d/%m/%Y')  
+                    AND (DATA_USCITA =  '0' OR
+                         DATA_USCITA > str_to_date('".$_GET['dataout']."','%d/%m/%Y')  )
+                    GROUP BY Periodo, Area, Filiale
+                    ORDER BY 1  
+            ";            
+
+// echo $createview;
+mysqli_query($dbhandle,$createview) or die(mysqli_error($dbhandle));;
+
+// -------------------------------------------------------------------------------
+// AMMISSIONI TOTALI
+// -------------------------------------------------------------------------------
+$strQuery2 = "  SELECT cast(Filiale as unsigned) as Filiale, NomeFiliale,
+            sum(Incremento) as qta_entrati, 
+            sum(Decremento) as qta_usciti
+            FROM tmp_soci_inout
+            WHERE Periodo >= '".$_GET['datain']."'
+            AND Filiale < 900
+            ".$condizionefiliale2."
+            GROUP BY Filiale
+            ORDER BY 1 ASC
+                ";
+
+$result2 = $dbhandle->query($strQuery2) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+  if ($result2) {
+            
+    $arrData2 = array(
+        "chart" => array(
+            "caption"=> "Ammissioni e Uscite per Filiale dal ".$_GET['datain'],
+            "captionFont" => "Arial",
+            "captionFontSize" => "24",
+            //"captionFontColor" => "#000000",
+            "subcaptionFontSize" => "20",
+            "xAxisname"=> "Filiale",
+            "yAxisName"=> "Quantità",
+            //"numberPrefix"=> "€ ",
+            "plotFillAlpha"=> "80",
+              "showValues"=> "1",
+              "placeValuesInside"=> "1",
+              "usePlotGradientColor"=> "0",
+              //"rotateValues"=> "1",
+              //"valueFontColor"=> "#FFFFFF",
+              "showHoverEffect"=> "1",
+            "rotateValues"=> "1",
+            "showXAxisLine"=> "1",
+            "xAxisLineThickness"=> "1",
+            "xAxisLineColor"=> "#999999",
+            "showAlternateHGridColor"=> "0",
+            "legendBgAlpha"=> "0",
+            "legendBorderAlpha"=> "0",
+            "legendShadow"=> "0",
+            "legendItemFontSize"=> "12",
+            //"legendItemFontColor"=> "#222222",
+            "legendItemFontColor"=> "#666666",
+            "theme"=> "candy",
+            "bgColor" => "#222222",
+            //"bgAlpha" => "10",
+            "labelFont" => "Arial",  
+            "labelFontSize" => "12" ,   
+            //"labelFontColor" => "#000000",
+            "rotateLabels" => "1",
+            "valueFontBold" => "0",
+            "rotateValues" => "0",
+            "valueFont" => "Arial",
+            //"valueFontColor" => "#000000",
+            "valueFontColor" => "#FFFFFF",
+            "valueFontSize" => "12"
+            )
+            );
+
+            // creating array for categories object
+            $categoryArray=array();
+            $dataseries1=array();
+            $dataseries2=array();
+            
+            // pushing category array values
+            while($rowResult2 = mysqli_fetch_array($result2)) {              
+                    array_push($categoryArray, array(
+                      "label" => $rowResult2["Filiale"].' '.$rowResult2["NomeFiliale"]
+                    )
+                );
+
+                array_push($dataseries1, array(
+                    "value" => $rowResult2["qta_entrati"]
+                    //"value" => number_format($row["qta_Pulita"], 0, ',', '.')
+                    ) 
+                );
+            
+                array_push($dataseries2, array(
+                    "value" => $rowResult2["qta_usciti"]
+                    //"value" => number_format($row["qta_Passaggio"], 0, ',', '.')
+                    )
+                );
+    
+            }
+            
+        $arrData2["categories"]=array(array("category"=>$categoryArray));
+
+            // creating dataset object
+            $arrData2["dataset"] = array(array("seriesName"=> "Soci Entrati", "data"=>$dataseries1), array("seriesName"=> "Soci Usciti", "data"=>$dataseries2));
+
+      $jsonEncodedData = json_encode($arrData2);
+      // chart object
+      $msChart = new FusionCharts("msline", "myChart2" , "100%", "400", "amm2", "json", $jsonEncodedData);
+      $msChart->render();
+             
+   }
+
+// -------------------------------------------------------------------------------
+// TREND PER MESE/ANNO - QUANTITA'
+// -------------------------------------------------------------------------------
+$trend = "  SELECT AnnoMeseRichiesta,
+            sum(qta_entrati) as qta_entrati, 
+            sum(qta_usciti) as qta_usciti
+            FROM view_ammissioni_uscite
+            WHERE AnnoMeseRichiesta >= 202001
+            GROUP BY AnnoMeseRichiesta
+            ORDER BY 1 ASC
+                ";
+
+$result_trend = $dbhandle->query($trend) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+  if ($result_trend) {
+            
+    $arrDataTrend = array(
+        "chart" => array(
+            "caption"=> "Ammissioni e Uscite per mese/anno (storico Banca da 2020)",
+            "captionFont" => "Arial",
+            "captionFontSize" => "24",
+            //"captionFontColor" => "#000000",
+            "subcaptionFontSize" => "20",
+            "xAxisname"=> "Anno/Mese",
+            "yAxisName"=> "Quantità",
+            //"numberPrefix"=> "€ ",
+            "plotFillAlpha"=> "80",
+              "showValues"=> "1",
+              "placeValuesInside"=> "1",
+              "usePlotGradientColor"=> "0",
+              //"rotateValues"=> "1",
+              //"valueFontColor"=> "#FFFFFF",
+              "showHoverEffect"=> "1",
+            "rotateValues"=> "1",
+            "showXAxisLine"=> "1",
+            "xAxisLineThickness"=> "1",
+            "xAxisLineColor"=> "#999999",
+            "showAlternateHGridColor"=> "0",
+            "legendBgAlpha"=> "0",
+            "legendBorderAlpha"=> "0",
+            "legendShadow"=> "0",
+            "legendItemFontSize"=> "12",
+            //"legendItemFontColor"=> "#222222",
+            "legendItemFontColor"=> "#666666",
+            "theme"=> "".$tema."",
+            "bgColor" => "".$bgcolor."",
+            //"bgAlpha" => "10",
+            "labelFont" => "Arial",  
+            "labelFontSize" => "12" ,   
+            //"labelFontColor" => "#000000",
+            "rotateLabels" => "1",
+            "valueFontBold" => "0",
+            "rotateValues" => "0",
+            "valueFont" => "Arial",
+            //"valueFontColor" => "#000000",
+            "valueFontColor" => "".$valueFontColor."",
+            "valueFontSize" => "12"
+            )
+            );
+
+            // creating array for categories object
+            $categoryArray=array();
+            $dataseries1=array();
+            $dataseries2=array();
+            
+            // pushing category array values
+            while($rowTrend = mysqli_fetch_array($result_trend)) {              
+                    array_push($categoryArray, array(
+                      "label" => $rowTrend["AnnoMeseRichiesta"]
+                    )
+                );
+
+                array_push($dataseries1, array(
+                    "value" => $rowTrend["qta_entrati"]
+                    //"value" => number_format($row["qta_Pulita"], 0, ',', '.')
+                    ) 
+                );
+            
+                array_push($dataseries2, array(
+                    "value" => $rowTrend["qta_usciti"]
+                    //"value" => number_format($row["qta_Passaggio"], 0, ',', '.')
+                    )
+                );
+    
+            }
+            
+        $arrDataTrend["categories"]=array(array("category"=>$categoryArray));
+
+            // creating dataset object
+            $arrDataTrend["dataset"] = array(array("seriesName"=> "Soci Entrati", "data"=>$dataseries1), array("seriesName"=> "Soci Usciti", "data"=>$dataseries2));
+
+      $jsonEncodedData = json_encode($arrDataTrend);
+      // chart object
+      $msChart = new FusionCharts("msline", "myChart3" , "100%", "400", "amm3", "json", $jsonEncodedData);
+      $msChart->render();
+             
+   }
+
+// -------------------------------------------------------------------------------
+// MEDIA PER ANNO
+// -------------------------------------------------------------------------------
+$media = "  SELECT '2020' as AnnoMeseRichiesta, max(substr(AnnoMeseRichiesta,5,2)) as MesiCount,
+            round(sum(qta_entrati)/max(substr(AnnoMeseRichiesta,5,2))) as media_qta_entrati, 
+            round(sum(qta_usciti)/max(substr(AnnoMeseRichiesta,5,2))) as media_qta_usciti,
+            (round(sum(qta_entrati)/max(substr(AnnoMeseRichiesta,5,2))) - 
+             round(sum(qta_usciti)/max(substr(AnnoMeseRichiesta,5,2))) ) as Diff
+            FROM view_ammissioni_uscite
+            WHERE substr(AnnoMeseRichiesta,1,4) = 2020
+            GROUP BY substr(AnnoMeseRichiesta,1,4)
+            UNION
+            SELECT '2021' as AnnoMeseRichiesta, max(substr(AnnoMeseRichiesta,5,2)) as MesiCount,
+            round(sum(qta_entrati)/max(substr(AnnoMeseRichiesta,5,2))) as media_qta_entrati, 
+            round(sum(qta_usciti)/max(substr(AnnoMeseRichiesta,5,2))) as media_qta_usciti,
+            (round(sum(qta_entrati)/max(substr(AnnoMeseRichiesta,5,2))) - 
+             round(sum(qta_usciti)/max(substr(AnnoMeseRichiesta,5,2))) ) as Diff
+            FROM view_ammissioni_uscite
+            WHERE substr(AnnoMeseRichiesta,1,4) = 2021
+            GROUP BY substr(AnnoMeseRichiesta,1,4)
+            UNION
+            SELECT '2022' as AnnoMeseRichiesta, max(substr(AnnoMeseRichiesta,5,2)) as MesiCount,
+            round(sum(qta_entrati)/max(substr(AnnoMeseRichiesta,5,2))) as media_qta_entrati, 
+            round(sum(qta_usciti)/max(substr(AnnoMeseRichiesta,5,2))) as media_qta_usciti,
+            (round(sum(qta_entrati)/max(substr(AnnoMeseRichiesta,5,2))) - 
+             round(sum(qta_usciti)/max(substr(AnnoMeseRichiesta,5,2))) ) as Diff
+            FROM view_ammissioni_uscite
+            WHERE substr(AnnoMeseRichiesta,1,4) = 2022
+            GROUP BY substr(AnnoMeseRichiesta,1,4)
+            ORDER BY 1 ASC
+                ";
+
+
+$result_media = $dbhandle->query($media) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_media = '<table class="table table-bordered table-hover" border="1" width="20%" valign="top" align="center">
+        <tr class="table-primary">
+          <td colspan="5" align="center">MEDIA BANCA</td>
+        </tr>
+        <tr class="table-secondary">
+          <td>Anno</td>
+          <td align="right">Qtà Mesi</td>
+          <td align="right">Media Entrati</td>
+          <td align="right">Media Usciti</td>
+          <td align="right">&#177;</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_media = mysqli_fetch_array($result_media)) {
+
+    if (number_format($row_media['Diff'],0,',','.') < 0 ) {$colore = ' style="color:red;"' ;} else {$colore = ' style="color:green;"';}
+
+    $tab_media .= "<tr>
+            <td>".$row_media['AnnoMeseRichiesta']."</td>
+            <td align='right'>".number_format($row_media['MesiCount'],0,',','.')."</td>
+            <td align='right'>".number_format($row_media['media_qta_entrati'],0,',','.')."</td>
+            <td align='right'>".number_format($row_media['media_qta_usciti'],0,',','.')."</td>
+            <td align='right' ".$colore.">".number_format($row_media['Diff'],0,',','.')."</td>
+          </tr>
+        ";
+  }
+
+$tab_media .= '</table>';
+
+// -------------------------------------------------------------------------------
+// DETTAGLIO AREE
+// -------------------------------------------------------------------------------
+$dett_aree = "  SELECT Area, 
+                round(sum(Soci_inizio)) as SociInizio, 
+                round(sum(Incremento))  as Incremento,
+                round(sum(Decremento))  as Decremento,
+                round(sum(Soci_fine))  as SociFine,
+                (round(sum(Soci_fine)) - 
+                 round(sum(Soci_inizio))) as Diff
+                FROM tmp_soci_inout
+                WHERE Periodo >= '".$_GET['datain']."' AND Periodo <= '".$_GET['dataout']."'
+                ".$condizionefiliale2."
+                GROUP BY Area WITH ROLLUP
+                ";
+// echo $dett_aree;
+$result_dett_aree = $dbhandle->query($dett_aree) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dett_aree = '<table class="table table-bordered table-hover" border="1" width="40%" valign="top" align="center">
+        <tr class="table-primary">
+          <td colspan="6" align="center">SITUAZIONE AREA</td>
+        </tr>
+        <tr class="table-secondary">
+          <td>Area</td>
+          <td align="right">Soci iniziali</td>
+          <td align="right">Incremento</td>
+          <td align="right">Decremento</td>
+          <td align="right">Soci finali</td>
+          <td align="right">&#177;</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_dett_aree = mysqli_fetch_array($result_dett_aree)) {
+
+    if ($row_dett_aree['Diff'] < 0 ) {$colore = ' style="color:red;"' ;} else {$colore = ' style="color:green;"';}
+
+    $tab_dett_aree .= "<tr>
+            <td>".$row_dett_aree['Area']."</td>
+            <td align='right'>".number_format($row_dett_aree['SociInizio'],0,',','.')."</td>
+            <td align='right'>".number_format($row_dett_aree['Incremento'],0,',','.')."</td>
+            <td align='right'>".number_format($row_dett_aree['Decremento'],0,',','.')."</td>
+            <td align='right'>".number_format($row_dett_aree['SociFine'],0,',','.')."</td>
+            <td align='right' ".$colore.">".number_format($row_dett_aree['Diff'],0,',','.')."</td>
+          </tr>
+        ";
+  }
+
+$tab_dett_aree .= '</table>';     
+
+// -------------------------------------------------------------------------------
+// DETTAGLIO FILIALI
+// -------------------------------------------------------------------------------
+$dett_fil = "   SELECT Area, Filiale, NomeFiliale, 
+                round(sum(Soci_inizio)) as SociInizio, 
+                round(sum(Incremento))  as Incremento,
+                round(sum(Decremento))  as Decremento,
+                round(sum(Soci_fine))  as SociFine,
+                (round(sum(Soci_fine)) - 
+                 round(sum(Soci_inizio))) as Diff
+                FROM tmp_soci_inout
+                WHERE Periodo >= '".$_GET['datain']."' AND Periodo <= '".$_GET['dataout']."' 
+                ".$condizionefiliale2."
+                GROUP BY Area, Filiale, NomeFiliale  
+                ";
+
+$result_dett_fil = $dbhandle->query($dett_fil) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dett_fil = '<table  class="table table-bordered table-hover" border="1" width="50%" valign="top" align="center">
+        <tr class="table-primary">
+          <td colspan="8" align="center">SITUAZIONE FILIALE</td>
+        </tr>
+        <tr class="table-secondary">
+          <td>Area</td>
+          <td>Filiale</td>
+          <td>Nome Filiale</td>
+          <td align="right">Soci iniziali</td>
+          <td align="right">Incremento</td>
+          <td align="right">Decremento</td>
+          <td align="right">Soci finali</td>
+          <td align="right">&#177;</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_dett_fil = mysqli_fetch_array($result_dett_fil)) {
+
+    if (number_format($row_dett_fil['Diff'],0,',','.') < 0 ) {$colore = ' style="color:red;"' ;} else {$colore = ' style="color:green;"';}
+
+    $tab_dett_fil .= "<tr>
+            <td>".$row_dett_fil['Area']."</td>
+            <td>".$row_dett_fil['Filiale']."</td>
+            <td>".$row_dett_fil['NomeFiliale']."</td>
+            <td align='right'>".number_format($row_dett_fil['SociInizio'],0,',','.')."</td>
+            <td align='right'>".number_format($row_dett_fil['Incremento'],0,',','.')."</td>
+            <td align='right'>".number_format($row_dett_fil['Decremento'],0,',','.')."</td>
+            <td align='right'>".number_format($row_dett_fil['SociFine'],0,',','.')."</td>
+            <td align='right' ".$colore.">".number_format($row_dett_fil['Diff'],0,',','.')."</td>
+          </tr>
+        ";
+  }
+
+$tab_dett_fil .= '</table>';     
+
+
+// -------------------------------------------------------------------------------
+// COSTRUZIONE LAYOUT
+// -------------------------------------------------------------------------------
+
+echo '
+<table border="0" align="center" width="65%">
+';
+
+if ($rif == 'Filiale') 
+{
+  echo '       
+       <tr>     
+       <td colspan="3"><div id="amm3"><!-- Fusion Charts will also be rendered here--></div></td>
+  </tr>
+  '; 
+}
+elseif ( ($rif == 'Area') OR ($rif == '') )
+{
+  echo '       
+  <tr>     
+       <td colspan="3"><div id="amm2"><!-- Fusion Charts will also be rendered here--></div></td>
+  </tr>
+  <tr>     
+       <td colspan="3"><div id="amm3"><!-- Fusion Charts will also be rendered here--></div></td>
+  </tr>
+  <tr>     
+       <td valign="top">'.$tab_media.'</td>
+       <td valign="top">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+       <td valign="top">'.$tab_dett_aree.'</td>
+  </tr>
+  ';     
+}
+
+echo '  
+  <tr>     
+       <td valign="top" colspan="3"><br>'.$tab_dett_fil.'</td>
+  </tr>
+</table>
+<br>
+';
+//<!-- <center><h4>Aggiungere link per elenco</h4></center> -->
+
+// closing database connection      
+$dbhandle->close();             
+?>
+
+<br><center>
+            <a href="../lista_ammissioni.php?filiale=<?php echo $filiale; ?>" style="text-color:white;" target="_blank">Visualizza lista dettaglio Ammissioni</a>
+            </center>
+
+    <center>
+        <br><br>
+        <a href="javascript:history.back();" title="Torna alla ricerca"><img src="../img/frecciasx.png">
+    </center>
+
+</body>
+</html>
+
+

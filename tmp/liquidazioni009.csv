@@ -1,0 +1,12 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Attesa Eredi;9;PF;253880;MASI FRANCO;70;2106;12/04/2021;;2022;10/04/2021;;;;;;;
+Attesa Eredi;9;PF;253881;PASQUALETTI ALESSANDRO;40;1203;04/06/2021;;2022;31/05/2021;;;;;;;
+Sofferenze;9;PF;257874;GIANNINI GIANNI;50;1504;05/03/2019;;2020;;;;;;S;;
+Sofferenze;9;PF;149355;PIACENTI MARCO ;100;3009;28/03/2019;;2020;;;;;;S;;
+Sofferenze;9;PG;214989;SAVONE SALVATORE SNC;52;1564;11/03/2020;;2021;;;;;;S;;
+Esclusione;9;PF;256260;FULIGNATI GIANNI;100;3009;25/01/2021;Non sussistono i requisiti - rapporti CHIUSI;2022;;;;;S;;;
+Esclusione;9;PF;203923;PANATI ADRIANO;40;1203;18/03/2021;LET - Non sussistono i requisiti recesso - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;9;PF;331050;POLI FEDERICA;50;1504;12/07/2021;LET - Rapporti Chiusi;2022;;;;;S;;;
+Cessione Banca;9;PF;321067;TADDEI MORENO;50;1504;04/06/2020;;;;;;;;;T;S
+Cessione Banca;9;PF;288145;DRIDI LATIFA;40;1203;31/08/2020;;;;;;;;;T;S
+Cessione Banca;9;PF;206270;PITARRESI SALVATORE;40;1203;31/08/2020;;;;;;;;;T;S

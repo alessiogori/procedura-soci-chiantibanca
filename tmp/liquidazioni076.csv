@@ -1,0 +1,15 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Attesa Eredi;76;PF;4029897;COPPINI SERGIO;28;842;05/04/2022;;2023;21/03/2022;;;;;;;
+Sofferenze;76;PG;4107781;M.M.Q. FREETIME SRL IN LIQUIDAZIO;38;1143;24/05/2018;;2019;;;;;;S;;
+Sofferenze;76;PG;4123354;CREATIONS SRL;28;842;28/03/2019;;2020;;;;;;S;;
+Sofferenze;76;PF;4110747;LUNARDI DARIO;19;571;09/07/2019;;2020;;;;;;S;;
+Sofferenze;76;PG;3268979;TEXALPA SRL IN LIQUIDAZIONE;38;1143;18/05/2021;;2022;;;;;;S;;
+Sofferenze;76;PG;4093510;MATERASSI BECA DI BIAGI CRISTINA E;19;571;18/05/2021;;2022;;;;;;S;;
+Sofferenze;76;PG;4103054;IL BRIGANTE DI VISCILLO JONATHAN &;19;571;10/03/2022;Delibera CE 10.03.2022;2023;;;;;;S;;
+Esclusione;76;PG;4099848;PROFESSIONALMOTOR SRL;19;571;10/12/2020;Non sussistono i requisiti - rapporti CHIUSI;2022;;;;;S;;;
+Esclusione;76;PG;4055173;BELGIOCO SAS;28;842;11/02/2021;Chiusura iniziativa Banca per Antiriciclaggio (CDA 15.05.20);2022;;;;;S;;;
+Esclusione;76;PF;4122949;LUCARELLI MACEDONIO RINALDO;40;1203;09/12/2021;PEC - Rapporti in chiusura;2022;;;;;S;;;
+Esclusione;76;PF;4122584;FRIZZI LUCREZIA VITTORIA;40;1203;19/01/2022;PEC - Rapporti chiusi;2023;;;;;S;;;
+Cessione Banca;76;PF;4101208;SALVADORI LORETTA;40;1203;09/06/2020;Rapporti ancora aperti;;;;;;;;T;S
+Cessione Banca;76;PF;4110648;MENDICINO TOMMASO;136;4092;19/10/2020;;;;;;;;;P;S
+Cessione Banca;76;PF;2013419;CASINI FABRIZIO;28;842;19/10/2021;RAC - Rapporti ancora aperti;;;;;;;;T;S

@@ -1,0 +1,293 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+// Mi connetto al database
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+// Head e CSS
+include("css/main.php");
+include("css/menu.php");
+
+// Calcolo la variabile data-ora per generare la password al link di Edit Password FiIliali
+// $urlpsw = date('YmdH');
+
+/*
+// **** se l'utente arriva dalla Scheda Socio
+if ((strpos($_SERVER['HTTP_REFERER'], 'sqldati_schedasocio.php')) OR 
+	(strpos($_SERVER['HTTP_REFERER'], 'schedasocio.php')))
+{
+*/
+
+if (!isset($_POST['psw']))
+	{
+    // Leggo i valori dei fondi
+    // *****************************************************************************
+    $select = "	select DATE_FORMAT(aggiornamento, '%d/%m/%Y') as aggiornamento, valore, plafond, capitale from tab_valorefondo";
+    $querydati = mysqli_query($connection, $select);	    
+    while($datifondo=mysqli_fetch_array($querydati)){ 	    
+	    $data_aggto   	= $datifondo['aggiornamento'];
+	    $fondo_valore 	= $datifondo['valore'];
+	    $plafond_valore = $datifondo['plafond'];
+	    $capitale_valore= $datifondo['capitale'];
+    }
+    
+	echo '<center><h2><span style="color:gray;"><i>AREA RISERVATA UFFICIO SOCI</i></span></h2>	
+					Inserisci la password per accedere al calcolo dati Cessione</center>';
+
+	echo '<br><br>
+    <form class="form-inline" action="admin_cessioni.php" method="POST" onsubmit="return ray.ajax()">
+
+	 <table border="0" align="center" width="20%">
+	 <tr>
+	    <td align="center" colspan="2">
+		    <input type="password" class="form-control" name="psw" id="psw" placeholder="Password" size=10>
+		    <input type="hidden" class="form-control" name="nominativo" id="nominativo" value="'.$_GET['nominativo'].'">
+		    <input type="hidden" class="form-control" name="id" id="id" value="'.$_GET['id'].'">
+		    <input type="hidden" class="form-control" name="id2" id="id" value="'.$_GET['id2'].'">
+		    <input type="hidden" class="form-control" name="dr" id="dr" value="'.$_GET['dr'].'">
+		    <input type="hidden" class="form-control" name="vn" id="vn" value="'.$_GET['vn'].'">
+		    <input type="hidden" class="form-control" name="fondo" id="fondo" value="'.$fondo_valore.'">
+		    <input type="hidden" class="form-control" name="plafond" id="plafond" value="'.$plafond_valore.'">
+		    <input type="hidden" class="form-control" name="capitale" id="capitale" value="'.$capitale_valore.'">
+        </td>
+	</tr>
+	<tr>
+	    <td align="center" colspan="2">
+		  <button type="submit" class="btn btn-success mb-2">ACCEDI</button>
+        </td>
+	</tr>
+	</table>
+
+    </form>
+	';
+
+	}
+
+elseif 
+
+	($_POST['psw'] == "cicalo")
+	{
+
+$fondo = 400000 - $_POST['fondo'];			
+$plafond = $_POST['plafond'];		
+$capitale = $_POST['capitale'];		
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+
+// Calcolo data di partenza
+// *****************************************************************************
+$date = new DateTime(); 			// empty for now or pass any date string as param
+$date->modify('- 12 months');		// 12 mesi indietro da oggi
+$AnnoMesedipartenzaMedia = $date->format('Ym');		// formato output AAAAMM
+
+// Estrazione dati della posizione in Cessione
+// *****************************************************************************
+$select = "	select count(*) as qta, sum(Valore_Nominale) as importo from tab_xls_cessionibanca
+			where Rimborsato <> 'S' 
+			and id2 between 
+			(select min(id2) from tab_xls_cessionibanca
+			 where  Rimborsato <> 'S' )
+			 and (".$_POST['id2']."-1)";
+//echo $select;
+logquery ($select);
+$querydati = mysqli_query($connection, $select);
+
+echo "<center><fieldset style='width:900px;text-align:left;'><br>";
+echo '<div class="p-1 mb-2 text-left h5 bg-light text-white">Conteggio relativo alla cessione del Socio</div>';
+echo '<table width="100%" border="1" cellspacing="1" cellpadding="1" style="background-color:#222222;">';
+
+// colorazione righe
+$evidenza  = ' style="background-color:#16903C;" ';
+$evidenzab = ' style="background-color:#16903C;font-weight:bold;" ';
+
+	while($datisocio=mysqli_fetch_array($querydati)){ 
+
+	echo '<tr><td colspan="2"><h4>' .$_POST['nominativo'].'</h4></td></tr>';
+	echo '<tr><td>ID2:</td><td>' .$_POST['id2'].'</td></tr>';
+	echo '<tr><td>Data Richiesta:</td><td>' .$_POST['dr'].'</td></tr>';
+
+	$vn = floatval($_POST['vn']) ;
+	
+	echo '<tr><td>Valore nominale richiesto:</td><td>Eur '.number_format($vn, 2, ',' , '.').'</td></tr>';
+
+	// Quantità posizioni in cessione, compresa quella in esame
+	echo '<tr><td width="50%" '.$evidenza.'>Quantita\' di posizioni precedenti</td><td '.$evidenzab.'>'.$datisocio['qta']. '</td></tr>';
+
+	// Totale delle cessioni presenti, prima di quella in esame e compresa la stessa
+	$importo_totale_cessioni = $datisocio['importo'] + $vn - 51153;  // meno il valore della Fondazione CM
+
+	echo '<tr><td width="50%" '.$evidenza.'>Importo cessioni precedenti da erogare (comprensiva della richiesta)</td><td '.$evidenzab.'>Eur '.number_format($importo_totale_cessioni, 0, ',', '.').'&nbsp;&nbsp;&nbsp;&nbsp;(A)</td></tr>'; 
+
+	echo '<tr><td colspan="2" align="center" style="background-color:gray;"><br></td></tr>';
+
+	}
+
+$rowcount_a = 12;       // i mesi di media sono gli ultimi 12 !!
+
+echo '<br><br>';
+
+// Verifico se il plafond è capiente rispetto al fondo
+// *****************************************************************************
+/*
+if ($plafond < $fondo)
+    {$margine = $plafond ;                 // se plafond inferiore al fondo, il margine è solo il plafond
+     $colore = ' style="color:gray;" ';
+    }
+else
+    {$margine = $fondo;       				// se plafond è superiore al fondo, il margine è il fondo
+     $colore = ' style="color:red;" ';
+ 	}
+*/
+$liq_da_fare = $plafond;
+$margine = $fondo - $liq_da_fare ;
+
+if ( $margine > 0 ) { $colore = ' style="color:gray;" '; }
+else 				{ $colore = ' style="color:red;" '; }
+
+	echo '<tr>
+			<td>Valore odierno del Fondo Riacquisto Azioni Proprie (1770.990.100)</td>
+			<td>Eur ' .number_format($fondo, 0, ',', '.').'</td></tr>'; 
+	echo '<tr>
+			<td>Valore odierno delle liquidazioni ancora da effettuare nell\'anno corrente </td>
+			<td style="color:red;>Eur ' .number_format($liq_da_fare, 0, ',', '.').'</td></tr>';  
+	echo '<tr>
+			<td>MARGINE ODIERNO DISPONIBILE</td>
+			<td '.$colore.'>Eur ' .number_format($margine, 0, ',', '.').'&nbsp;(B)</td></tr>'; 
+
+
+// Somma del valore nominale delle ammissioni negli ultimi 12 mesi
+// *****************************************************************************
+$select_a1 = "	SELECT sum(controvalore_azioni) as importo
+				FROM sds_sinergiareport_soci 
+				WHERE concat(substr(DATA_ENTRATA,-4), substr(DATA_ENTRATA,-7,2)) >= ".$AnnoMesedipartenzaMedia."
+				";
+$querydati_a1 = mysqli_query($connection, $select_a1);
+	while($datisocio_a1=mysqli_fetch_array($querydati_a1)){ 
+		$valore_a = $datisocio_a1['importo']; 
+	}
+
+// Calcolo valori
+// *****************************************************************************
+$media_mese_ammissioni = number_format(($valore_a / $rowcount_a),0,'','.');
+//$media_mese_esclsoff   = number_format(($valore_e / $rowcount_e),0,'','.');
+//$media_mese_liqeredi   = number_format(($valore_l / $rowcount_l),0,'','.');
+$Differenza            = $importo_totale_cessioni - $margine;  					// quota totale cessione - margine attuale
+$ResiduoInMesi		   = round($Differenza / ($valore_a / $rowcount_a) ) + 1;
+
+	echo '<tr>
+			<td>Importo cessioni da erogare al netto del Fondo</td>
+			<td>Eur ' .number_format($Differenza, 0, ',', '.').'&nbsp;(A - B)</td></tr>';
+	echo '<tr>
+			<td>Media mese del valore nominale di ammissioni nuovi Soci (ultimi 12 mesi)</td>
+			<td>Eur ' .$media_mese_ammissioni.'</td></tr>';
+	echo '<tr>
+			<td>Mesi da aggiungere ad oggi </td>
+			<td><b>'.$ResiduoInMesi.' mesi </b><small>&nbsp;('.number_format($Differenza, 0, ',', '.').' : '.$media_mese_ammissioni.')</small></td></tr>';
+
+$date = new DateTime(); 			// empty for now or pass any date string as param
+$date->modify('+ '.$ResiduoInMesi.' months');		// aggiungo i mesi da oggi
+
+	echo '<tr>
+			<td><h4>Ipotesi rientro </h4></td>
+			<td><h4>' .$date->format('m-Y').'</h4></td></tr>';
+	echo '</tr>';
+
+echo '</table></fieldset></center>';
+
+
+// ********************************************************************************
+// CREAZIONE OUTPUT CSV CON TUTTE LE POSIZIONI IN CESSIONE 
+// ********************************************************************************
+$contenutoOutput = '';
+/*
+$selectOutput1 = "	select Filiale, nag, nominativo, Data_Richiesta, Valore_Nominale as importo, id , id2,
+				 	id2 - (select min(id2) from tab_xls_cessionibanca
+				 		 where Rimborsato <> 'S' 
+					) as posizioni_precedenti
+
+					from tab_xls_cessionibanca
+								where Rimborsato <> 'S'
+					ORDER BY id2
+					";
+*/
+$selectOutput1 = "	select Filiale, nag, nominativo, Data_Richiesta, Valore_Nominale as importo, id , id2
+
+					from tab_xls_cessionibanca
+								where Rimborsato <> 'S'
+					ORDER BY id2
+					";
+
+$querydatiOutput1 = mysqli_query($connection, $selectOutput1);
+
+$myfilecessioni = fopen("tmp/cessioni_ipotesirimborso.csv", "w");
+$contenutoOutput .= "File aggiornato al ".date("d.m.Y")." - per ricalcolare, passare da singola inquiry su Socio in cessione\n";
+$contenutoOutput .= "Filiale;Nag;Nominativo;DataRichiesta;ValoreRichiesto;ID;QtaPosizPreced;ValoreImportoPreced;ValoreAttualeMargine;ValoreNettoPreced;MediaMeseAmmissioni;MesiAggiunti;IpotesiRientro\n";
+
+	$contatore = 0;
+
+	while($datisocioOutput1=mysqli_fetch_array($querydatiOutput1)){ 
+
+	$cont = $contatore++;
+
+		$selectOutput2 = "	select id2, sum(Valore_Nominale) as importo_precedente,
+							'".$margine."' as margine,
+							(sum(Valore_Nominale) - ".$fondo.") as importo_netto,
+							".round(($valore_a / $rowcount_a))." as MediaMeseAmmissioni
+							from tab_xls_cessionibanca
+								where Rimborsato <> 'S'
+								and id2 < ".$datisocioOutput1['id2']."
+							order by id2 "; 
+		$querydatiOutput2 = mysqli_query($connection, $selectOutput2);
+		while($datisocioOutput2=mysqli_fetch_array($querydatiOutput2)){ 
+
+			$ResiduoInMesi = round($datisocioOutput2['importo_netto'] / $datisocioOutput2['MediaMeseAmmissioni'] );
+
+
+	$contenutoOutput .= $datisocioOutput1['Filiale'].";".
+						$datisocioOutput1['nag'].";".
+						$datisocioOutput1['nominativo'].";".
+						$datisocioOutput1['Data_Richiesta'].";".
+						$datisocioOutput1['importo'].";".
+						$datisocioOutput1['id2'].";".
+						$cont .";".
+						$datisocioOutput2['importo_precedente'].";".
+						$datisocioOutput2['margine'].";".
+						$datisocioOutput2['importo_netto'].";".
+						$datisocioOutput2['MediaMeseAmmissioni'].";".
+						$ResiduoInMesi.";";
+
+			$date = new DateTime(); 			// empty for now or pass any date string as param
+			
+			if ($ResiduoInMesi > 0)	{$date->modify('+ '.$ResiduoInMesi.' months');	}	// aggiungo i mesi da oggi
+			$contenutoOutput .= $date->format('m-Y');
+			}
+
+	$contenutoOutput .= "\n";
+
+	}
+
+fwrite($myfilecessioni, $contenutoOutput);
+fclose($myfilecessioni);
+
+echo '<br><center>
+		<a href="tmp/cessioni_ipotesirimborso.csv" style="text-color:white;" target="_blank">Scarica il tracciato previsionale di TUTTE le cessioni residue</a>
+		</center>';
+
+// *****************************************************
+// Fine
+}
+
+?>

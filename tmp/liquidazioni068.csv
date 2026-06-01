@@ -1,0 +1,17 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Liquid.Eredi;68;PF;3047568;NUTI RENZA;34;1023;17/02/2021;;2022;11/12/2020;;S;;;;;
+Sofferenze;68;PF;374831;CONTE SIMONA;40;1203;30/03/2018;;2019;;;;;;S;;
+Sofferenze;68;PF;3285004;GIOMETTI SILVANO;85;2557;30/03/2018;;2019;;;;;;S;;
+Sofferenze;68;PG;3241907;NICCOLAI E GIOVANNELLI SRL;17;511;03/08/2018;;2019;;;;;;S;;
+Sofferenze;68;PF;3255611;BETTACCINI SERGIO;17;511;05/11/2018;;2019;;;;;;S;;
+Sofferenze;68;PG;3290852;MONDIAL SERVICES SRL SEMPLIFICATA;51;1534;13/12/2018;;2019;;;;;;S;;
+Sofferenze;68;PG;3060942;LATINI SRL;51;1534;16/01/2020;;2021;;;;;;S;;
+Sofferenze;68;PG;3275088;F.LLI PUGGELLI DI PUGGELLI ANGIOLO E C. S.N.C.                      ;34;1023;09/04/2020;;2021;;;;;;S;;
+Esclusione;68;PF;3281737;ARQUATI ELENA;1;30;12/01/2021;Rapporti chiusi ;2022;;;;;S;;;
+Esclusione;68;PF;3014589;FIESOLI ORESTE;17;511;23/01/2021;RAC - Non sussistono i requisiti - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;68;PF;3028080;MATUCCI ADRIANO RAFFAELLO;17;511;14/04/2021;LET - Rapporti Chiusi;2022;;;;;S;;;
+Esclusione;68;PF;3282526;FONDI EDI;34;1023;04/06/2021;LET - Rapporti Chiusi;2022;;;;;S;;;
+Cessione Banca;68;;3288559;TEMPESTINI ALESSANDRO;40;1203;01/12/2018;PERSONALI ;;;;;;;;T;S
+Cessione Banca;68;PF;3021892;RAFANELLI ALESSANDRO;40;1203;03/05/2021;RAC - Rapporti ancora aperti;;;;;;;;T;S
+Cessione Banca;68;PF;3057095;BRUTI MANUELA;17;511;08/06/2021;RAC - Rapporti ancora aperti;;;;;;;;T;S
+Cessione Banca;68;PF;3036612;ZASSO PAOLO;85;2557;04/06/2021;LET - Rapporti ancora aperti;;;;;;;;T;S

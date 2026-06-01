@@ -1,0 +1,1329 @@
+<?php
+date_default_timezone_set('Europe/Rome');
+//////////////////////////////////////////////////////////////////
+// CREA TABELLE SDS_SOCI
+// Viene usato l'utente ODBCUSER01 creato per SOCI
+// Author: Alessio Fedi - 03.11.2022
+//////////////////////////////////////////////////////////////////
+// Nome Script
+$NOME_SCRIPT = 'CREA_SDS_SOCI';
+$TITOLO = 'Raccolta Dati Soci';
+
+// Execution Time = 0 - No Limit
+ini_set('max_execution_time', '0');
+
+// Includo i dati di connessione
+include("config/_config.php");
+include("config/_functions.php");
+
+echo '<html>
+        <head>
+        <title>'.$TITOLO.'</title>
+        </head>
+
+        <body><br><br>
+        ';
+
+// Connessione all'ODBC SADAS
+$connect = odbc_connect('SADAS', NULL, NULL) or die ('0');
+
+// Connessione a MYSQL
+$connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+
+$adesso = date("d.m.Y");
+$anno   = date("Y");
+
+// Calcolo data di partenza Under 30
+// *****************************************************************************
+$date = new DateTime();                   // empty for now or pass any date string as param
+$date->modify('- 35 years');                     // 35 anni indietro da oggi
+$AnnoMesedipartenzaU30 = $date->format('Y');   // formato output AAAA
+
+// FINE SEZIONE DA NON MODIFICARE
+// --------------------------------------------------------------------
+
+
+// -------------------------------------
+// MAIL - Parametri invio Mail
+// -------------------------------------
+
+      //No email sabato o domenica
+      if(date('w')=="0" || date('w')=="6") return;
+      
+      //Parm email
+      // ini_set('SMTP', 'smtp.crtnet'); 
+      ini_set('SMTP', 'smtp.bccsi.bcc.it'); 
+      ini_set('smtp_port', 25); 
+      ini_set('sendmail_from','soci@chiantibanca.it');
+      
+      $adesso = date('d/m');
+      $orario1 = date("H:i:s");
+      
+      //Parm others
+      //$mail_cc = $filiale_mail ; 
+      //$mail_cc = "soci@chiantibanca.it"; 
+      $nome_mittente = 'Ufficio Soci';
+      $mail_dest     = 'soci@chiantibanca.it' ; 
+      $mail_mittente = 'soci@chiantibanca.it' ; 
+      $mail_oggetto  = "Situazione aggiornamento Tabelle SADAS > MySQL del ".$adesso;
+      $mail_corpo    = '<html><body style="font-family:verdana;font-size:8.5pt;"> 
+                          ';  
+
+
+      $mail_corpo   .= '<br> Orario inizio : '.$orario1.'<br>';                       
+// -------------------------------------
+// CONTEGGIO MYSQL e CANCELLAZIONE DATI
+// -------------------------------------
+
+    // A - SDS_SOCI
+
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_A1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI");
+      $dati_count_MySql_A1 = mysqli_fetch_array($result_count_MySql_A1);
+      $count_MySql_A1=(int)$dati_count_MySql_A1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_A1.' Records preesistenti su MySQL tab SDS_SOCI ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI = mysqli_query($connection,"TRUNCATE SDS_SOCI") or die(mysqli_error($connection));;
+
+    // B - SDS_SOCI_CERTIFICATI
+
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_B1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_CERTIFICATI");
+      $dati_count_MySql_B1 = mysqli_fetch_array($result_count_MySql_B1);
+      $count_MySql_B1=(int)$dati_count_MySql_B1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_B1.' Records preesistenti su MySQL tab SDS_SOCI_CERTIFICATI ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_CERTIFICATI = mysqli_query($connection,"TRUNCATE SDS_SOCI_CERTIFICATI") or die(mysqli_error($connection));;
+
+    // C - SDS_SOCI_DATICONTATTO
+    
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_C1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_DATICONTATTO");
+      $dati_count_MySql_C1 = mysqli_fetch_array($result_count_MySql_C1);
+      $count_MySql_C1=(int)$dati_count_MySql_C1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_C1.' Records preesistenti su MySQL tab SDS_SOCI_DATICONTATTO ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_DATICONTATTO = mysqli_query($connection,"TRUNCATE SDS_SOCI_DATICONTATTO") or die(mysqli_error($connection));;
+
+    // D - SDS_SOCI_SUBENTRATI
+    
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_D1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_SUBENTRATI");
+      $dati_count_MySql_D1 = mysqli_fetch_array($result_count_MySql_D1);
+      $count_MySql_D1=(int)$dati_count_MySql_D1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_D1.' Records preesistenti su MySQL tab SDS_SOCI_SUBENTRATI ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_SUBENTRATI = mysqli_query($connection,"TRUNCATE SDS_SOCI_SUBENTRATI") or die(mysqli_error($connection));;
+
+    // E - SDS_SOCI_TRASFERIMENTI
+
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_E1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_TRASFERIMENTI");
+      $dati_count_MySql_E1 = mysqli_fetch_array($result_count_MySql_E1);
+      $count_MySql_E1=(int)$dati_count_MySql_E1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_E1.' Records preesistenti su MySQL tab SDS_SOCI_TRASFERIMENTI ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_TRASFERIMENTI = mysqli_query($connection,"TRUNCATE SDS_SOCI_TRASFERIMENTI") or die(mysqli_error($connection));;
+
+    // F - SDS_SOCI_MOVINOUT
+    
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_F1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_MOVINOUT");
+      $dati_count_MySql_F1 = mysqli_fetch_array($result_count_MySql_F1);
+      $count_MySql_F1=(int)$dati_count_MySql_F1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_F1.' Records preesistenti su MySQL tab SDS_SOCI_MOVINOUT ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_MOVINOUT = mysqli_query($connection,"TRUNCATE SDS_SOCI_MOVINOUT") or die(mysqli_error($connection));;
+
+    // G - SDS_SOCI_DOMANDE
+
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_G1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_DOMANDE");
+      $dati_count_MySql_G1 = mysqli_fetch_array($result_count_MySql_G1);
+      $count_MySql_G1=(int)$dati_count_MySql_G1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_G1.' Records preesistenti su MySQL tab SDS_SOCI_DOMANDE ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_DOMANDE = mysqli_query($connection,"TRUNCATE SDS_SOCI_DOMANDE") or die(mysqli_error($connection));;
+
+    // H - SDS_SOCI_UNDER35
+
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_H1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_UNDER35");
+      $dati_count_MySql_H1 = mysqli_fetch_array($result_count_MySql_H1);
+      $count_MySql_H1=(int)$dati_count_MySql_H1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_H1.' Records preesistenti su MySQL tab SDS_SOCI_UNDER35 ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $SDS_SOCI_UNDER35 = mysqli_query($connection,"TRUNCATE SDS_SOCI_UNDER35") or die(mysqli_error($connection));;
+
+
+    // I - SDS_SOCI_ISIDOC
+    
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_I1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_ISIDOC");
+      $dati_count_MySql_I1 = mysqli_fetch_array($result_count_MySql_I1);
+      $count_MySql_I1=(int)$dati_count_MySql_I1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_I1.' Records preesistenti su MySQL tab SDS_SOCI_ISIDOC ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_ISIDOC = mysqli_query($connection,"TRUNCATE SDS_SOCI_ISIDOC") or die(mysqli_error($connection));;
+
+
+    // L - PRODOTTI CC
+    
+      // ---- Conto i records nella tabella esistente MySql prima di cancellarne il contenuto
+      $result_count_MySql_L1 = mysqli_query($connection,"select count(*) as qtaMySql_1 from SDS_SOCI_PRODOTTO_CC");
+      $dati_count_MySql_L1 = mysqli_fetch_array($result_count_MySql_L1);
+      $count_MySql_L1=(int)$dati_count_MySql_L1['qtaMySql_1'];
+
+            //$mail_corpo .= '<br>'.$count_MySql_L1.' Records preesistenti su MySQL tab SDS_SOCI_PRODOTTO_CC ';
+
+      // ---- Sego via tutti i records nella tabella 
+      $truncatetabella_SDS_SOCI_PRODOTTO_CC = mysqli_query($connection,"TRUNCATE SDS_SOCI_PRODOTTO_CC") or die(mysqli_error($connection));;
+
+            //$mail_corpo .= '<br><br>';
+
+       
+// -------------------------------------
+// A - ANAG_NAG + SOCI_ANAGRAFICA
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_A =   "
+            SELECT COUNT(*) as QTA
+            FROM 
+            SOCI_ANAGRAFICA LEFT JOIN ANAG_NAG ON (SOCI_ANAGRAFICA.NAG = ANAG_NAG.NAG),
+            SOCI_ANAGRAFICA LEFT JOIN ANAG_PERSONE_FISICHE ON (SOCI_ANAGRAFICA.NAG = ANAG_PERSONE_FISICHE.NAG ),
+            SOCI_ANAGRAFICA LEFT JOIN SOCI_RAPPRESENTANTI ON (SOCI_ANAGRAFICA.IDSOCIO = SOCI_RAPPRESENTANTI.IDSOCIO )
+            WHERE SOCI_RAPPRESENTANTI.DATA_FINE_RAPP = '00/00/0000'
+            ";
+      $result_cnt_Sadas_A = odbc_exec($connect, $select_cnt_Sadas_A);
+      while($dati_cnt_Sadas_A = odbc_fetch_object($result_cnt_Sadas_A)) {
+            $cnt_Sadas_A = $dati_cnt_Sadas_A->QTA;
+      }
+
+      $mail_corpo .= '<br> A - ANAG_NAG + SOCI_ANAGRAFICA
+                      <br> ----------------------------------------------------------------------------- 
+                      <br> '.$count_MySql_A1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_A.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_A =   "
+            SELECT            
+             SOCI_ANAGRAFICA.IDSOCIO
+            ,SOCI_ANAGRAFICA.NAG
+            ,rtrim(ANAG_NAG.INTESTAZIONE_A) as INTESTAZIONE_A
+            ,rtrim(ANAG_NAG.INTESTAZIONE_B) as INTESTAZIONE_B
+            ,ANAG_NAG.CODICE_FISCALE
+            ,ANAG_NAG.PARTITA_IVA
+            ,ANAG_NAG.TIPO_NAG
+            ,ANAG_NAG.TIPO_SOGGETTO
+            ,ANAG_PERSONE_FISICHE.SESSO
+            ,ANAG_NAG.FILIALE_CAPOFILA
+            ,ANAG_NAG.STATO_NAG
+            ,ANAG_NAG.SOCIO_ISTITUTO
+            ,ANAG_PERSONE_FISICHE.DATA_NASCITA
+            ,'' AS ETA
+            ,ANAG_PERSONE_FISICHE.DATA_DECESSO            
+            ,ANAG_NAG.SETTORISTA
+            ,ANAG_NAG.SETTORE
+            ,ANAG_NAG.RAMO
+            ,ANAG_NAG.PROF_ATTIVITA
+            ,ANAG_NAG.SEGMENTO_CLIENTE
+            ,ANAG_NAG.PA_3
+            ,SOCI_ANAGRAFICA.DATA_USCITA
+            ,SOCI_ANAGRAFICA.DATA_ENTRATA
+            ,DATEADD('DD',90,SOCI_ANAGRAFICA.DATA_ENTRATA) AS DIRITTO_DI_VOTO
+            ,SOCI_ANAGRAFICA.CTIPMOVUSCITA
+            ,'' AS AZIONI
+            ,'' AS VALORE_NOMINALE
+            ,SOCI_ANAGRAFICA.COD_RAPP
+            ,SOCI_ANAGRAFICA.FILIALE_RAPP
+            ,SOCI_ANAGRAFICA.NUM_RAPP
+            ,SOCI_ANAGRAFICA.IDSOCIO_SUB
+            ,SOCI_ANAGRAFICA.ACQUISTO_PERIOD
+            ,SOCI_ANAGRAFICA.NAZIONI_PERIOD
+            ,SOCI_ANAGRAFICA.DATA_FINEPACK_PERIOD
+            ,rtrim(ANAG_NAG.VIA_RES) AS VIA_RES
+            ,ANAG_NAG.CAP_RES
+            ,rtrim(ANAG_NAG.DESCR_COM_RES) AS DESCR_COM_RES
+            ,rtrim(ANAG_NAG.LOCALITA_RES) AS LOCALITA_RES
+            ,rtrim(ANAG_NAG.PROVINCIA_RES) AS PROVINCIA_RES
+            ,rtrim(ANAG_NAG.INTESTAZ_CORR) AS INTESTAZ_CORR
+            ,rtrim(ANAG_NAG.VIA_CORR) AS VIA_CORR
+            ,ANAG_NAG.CAP_CORR
+            ,rtrim(ANAG_NAG.DESCR_COM_CORR) AS DESCR_COM_CORR
+            ,rtrim(ANAG_NAG.LOCALITA_CORR) AS LOCALITA_CORR
+            ,rtrim(ANAG_NAG.SIGLA_PROV_CORR) AS PROVINCIA_CORR
+            ,'' AS TEL
+            ,'' AS CELL
+            ,'' AS MAIL
+            ,'' AS PEC
+            ,SOCI_RAPPRESENTANTI.NAG AS NAG_RAPPR
+            ,rtrim(SOCI_RAPPRESENTANTI.XINTESTAZIONE) AS INTESTAZIONE_RAPPR            
+            ,SOCI_RAPPRESENTANTI.CCODFISC AS CODICE_FISCALE_RAPPR
+            ,SOCI_RAPPRESENTANTI.DATA_NASCITA AS DATA_NASCITA_RAPPR            
+            ,SOCI_RAPPRESENTANTI.XTELEFONO AS TEL_RAPPR           
+            ,SOCI_ANAGRAFICA.DATA_ENTRATA_ORIG AS DATA_ENTRATA_ORIG                  
+            FROM 
+            SOCI_ANAGRAFICA LEFT JOIN ANAG_NAG ON (SOCI_ANAGRAFICA.NAG = ANAG_NAG.NAG),
+            SOCI_ANAGRAFICA LEFT JOIN ANAG_PERSONE_FISICHE ON (SOCI_ANAGRAFICA.NAG = ANAG_PERSONE_FISICHE.NAG ),
+            SOCI_ANAGRAFICA LEFT JOIN SOCI_RAPPRESENTANTI ON (SOCI_ANAGRAFICA.IDSOCIO = SOCI_RAPPRESENTANTI.IDSOCIO )
+            WHERE SOCI_RAPPRESENTANTI.DATA_FINE_RAPP = '00/00/0000'
+            ";
+
+      //echo $select_query_Sadas_A ;
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_A = odbc_exec($connect, $select_query_Sadas_A);
+      while($dati_query_Sadas_A = odbc_fetch_object($result_query_Sadas_A)) {
+
+      $select_insert_Sadas_A = "
+            INSERT INTO SDS_SOCI 
+            VALUES 
+           (
+             '".$dati_query_Sadas_A->IDSOCIO."'
+            ,'".$dati_query_Sadas_A->NAG."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->INTESTAZIONE_A)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->INTESTAZIONE_B)."'
+            ,'".$dati_query_Sadas_A->CODICE_FISCALE."'
+            ,'".$dati_query_Sadas_A->PARTITA_IVA."'
+            ,'".$dati_query_Sadas_A->TIPO_NAG."'
+            ,'".$dati_query_Sadas_A->TIPO_SOGGETTO."'
+            ,'".$dati_query_Sadas_A->SESSO."'
+            ,'".$dati_query_Sadas_A->FILIALE_CAPOFILA."'
+            ,'".$dati_query_Sadas_A->STATO_NAG."'
+            ,'".$dati_query_Sadas_A->SOCIO_ISTITUTO."'
+            ,'".$dati_query_Sadas_A->DATA_NASCITA."'
+            ,'".$dati_query_Sadas_A->ETA."'
+            ,'".$dati_query_Sadas_A->DATA_DECESSO."'
+            ,'".$dati_query_Sadas_A->SETTORISTA."'
+            ,'".$dati_query_Sadas_A->SETTORE."'
+            ,'".$dati_query_Sadas_A->RAMO."'
+            ,'".$dati_query_Sadas_A->PROF_ATTIVITA."'
+            ,'".$dati_query_Sadas_A->SEGMENTO_CLIENTE."'
+            ,'".$dati_query_Sadas_A->PA_3."'
+            ,'".$dati_query_Sadas_A->DATA_USCITA."'
+            ,'".$dati_query_Sadas_A->DATA_ENTRATA."'
+            ,'".$dati_query_Sadas_A->DIRITTO_DI_VOTO."'
+            ,'".$dati_query_Sadas_A->CTIPMOVUSCITA."'
+            ,'".$dati_query_Sadas_A->AZIONI."'
+            ,'".$dati_query_Sadas_A->VALORE_NOMINALE."'
+            ,'".$dati_query_Sadas_A->COD_RAPP."'
+            ,'".$dati_query_Sadas_A->FILIALE_RAPP."'
+            ,'".$dati_query_Sadas_A->NUM_RAPP."'
+            ,'".$dati_query_Sadas_A->IDSOCIO_SUB."'
+            ,'".$dati_query_Sadas_A->ACQUISTO_PERIOD."'
+            ,'".$dati_query_Sadas_A->NAZIONI_PERIOD."'
+            ,'".$dati_query_Sadas_A->DATA_FINEPACK_PERIOD."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->VIA_RES)."'
+            ,'".$dati_query_Sadas_A->CAP_RES."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->DESCR_COM_RES)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->LOCALITA_RES)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->PROVINCIA_RES)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->INTESTAZ_CORR)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->VIA_CORR)."'
+            ,'".$dati_query_Sadas_A->CAP_CORR."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->DESCR_COM_CORR)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->LOCALITA_CORR)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->PROVINCIA_CORR)."'
+            ,'".$dati_query_Sadas_A->TEL."'
+            ,'".$dati_query_Sadas_A->CELL."'
+            ,'".$dati_query_Sadas_A->MAIL."'
+            ,'".$dati_query_Sadas_A->PEC."'
+            ,'".$dati_query_Sadas_A->NAG_RAPPR."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_A->INTESTAZIONE_RAPPR)."'
+            ,'".$dati_query_Sadas_A->CODICE_FISCALE_RAPPR."'
+            ,'".$dati_query_Sadas_A->DATA_NASCITA_RAPPR."'
+            ,'".$dati_query_Sadas_A->TEL_RAPPR."'
+            ,'".$dati_query_Sadas_A->DATA_ENTRATA_ORIG."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_A;                    
+        mysqli_query($connection, $select_insert_Sadas_A )
+                    or die("INSERT --- select_insert_Sadas_A --- ".mysqli_error($connection));;
+      }
+      
+      // Ricalcolo l'età e aggiorno la tabella
+      $select_eta = "   UPDATE SDS_SOCI
+                        SET ETA = ".$anno." - substr(DATA_NASCITA,1,4) 
+                        WHERE TIPO_NAG = 'PF'
+                    ";
+      $querydati_eta = mysqli_query($connection, $select_eta);
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_A2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI");
+      $dati_count_MySql_A2 = mysqli_fetch_array($result_count_MySql_A2);
+      $count_MySql_A2=(int)$dati_count_MySql_A2['qtaMySql_2'];
+
+      $diff_A = $count_MySql_A2 - $count_MySql_A1;
+
+            $mail_corpo .= '<br>'.$count_MySql_A2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI 
+                            <br>'.$diff_A.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI' 
+                              WHERE fonte='SDS_SOCI'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+// -------------------------------------
+// B - VALORE AZIONI E QUANTITA'
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_B =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_CERTIFICATI  
+            WHERE DATA_ANNULLAMENTO = '00/00/0000' 
+            AND 
+                  DATA_VENDITA = '00/00/0000'
+            ";
+            //echo $select_cnt_Sadas_B ;
+      $result_cnt_Sadas_B = odbc_exec($connect, $select_cnt_Sadas_B);
+      while($dati_cnt_Sadas_B = odbc_fetch_object($result_cnt_Sadas_B)) {
+            $cnt_Sadas_B = $dati_cnt_Sadas_B->QTA; 
+            //echo $cnt_Sadas_B;
+      }
+
+      $mail_corpo .= '<br> B - VALORE AZIONI E QUANTITA\'
+                      <br> -----------------------------------------------------------------------------  
+                      <br> '.$count_MySql_B1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_B.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_B =   "
+            SELECT
+                  SOCI_CERTIFICATI.IDSOCIO ,
+                  SUM(SOCI_CERTIFICATI.NAZIONI) AS NUMERO_AZIONI ,
+                  (SUM(SOCI_CERTIFICATI.NAZIONI) * 30.33) AS VALORE_AZIONI
+            FROM
+                  SOCI_CERTIFICATI  
+            WHERE DATA_ANNULLAMENTO = '00/00/0000' 
+            AND 
+                  DATA_VENDITA = '00/00/0000'
+            GROUP BY
+                  IDSOCIO
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_B = odbc_exec($connect, $select_query_Sadas_B);
+      while($dati_query_Sadas_B = odbc_fetch_object($result_query_Sadas_B)) {
+
+      $select_insert_Sadas_B = "
+            INSERT INTO SDS_SOCI_CERTIFICATI
+            VALUES 
+           (
+             '".$dati_query_Sadas_B->IDSOCIO."'
+            ,'".$dati_query_Sadas_B->NUMERO_AZIONI."'
+            ,'".$dati_query_Sadas_B->VALORE_AZIONI."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_B;                    
+        mysqli_query($connection, $select_insert_Sadas_B )
+                    or die("INSERT --- select_insert_Sadas_B --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_B2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_CERTIFICATI");
+      $dati_count_MySql_B2 = mysqli_fetch_array($result_count_MySql_B2);
+      $count_MySql_B2=(int)$dati_count_MySql_B2['qtaMySql_2'];
+
+      $diff_B = $count_MySql_B2 - $count_MySql_B1;
+
+            $mail_corpo .= '<br>'.$count_MySql_B2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_CERTIFICATI 
+                            <br>'.$diff_B.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_CERTIFICATI' 
+                              WHERE fonte='SDS_SOCI_CERTIFICATI'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+// -------------------------------------
+// C - DATI CONTATTO
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_C =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_ANAGRAFICA INNER JOIN ANAG_DATI_CONTATTO_CLIENTE ON (SOCI_ANAGRAFICA.NAG = ANAG_DATI_CONTATTO_CLIENTE.NAG )  
+            WHERE
+                  ANAG_DATI_CONTATTO_CLIENTE.PROGRESSIVO =  '001'  
+            AND
+                  ANAG_DATI_CONTATTO_CLIENTE.PROCEDURA IN ( 'ANAGRAFE','SOCI' ) 
+            AND
+                  ANAG_DATI_CONTATTO_CLIENTE.TIPO_DATO_CNT IN ( 'TEL','CELL','MAIL','PEC','' )
+            ";
+            //echo $select_cnt_Sadas_C ;
+      $result_cnt_Sadas_C = odbc_exec($connect, $select_cnt_Sadas_C);
+      while($dati_cnt_Sadas_C = odbc_fetch_object($result_cnt_Sadas_C)) {
+            $cnt_Sadas_C = $dati_cnt_Sadas_C->QTA; 
+            //echo $cnt_Sadas_C;
+      }
+
+      $mail_corpo .= '<br> C - DATI CONTATTO (MAIL, PEC, TEL, CELL)
+                      <br> -----------------------------------------------------------------------------  
+                      <br> '.$count_MySql_C1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_C.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_C =   "
+            SELECT
+                   ANAG_DATI_CONTATTO_CLIENTE.NAG  ,
+                   ANAG_DATI_CONTATTO_CLIENTE.PROCEDURA  ,
+                   ANAG_DATI_CONTATTO_CLIENTE.TIPO_DATO_CNT  ,
+                   ANAG_DATI_CONTATTO_CLIENTE.PROGRESSIVO  ,
+                   ANAG_DATI_CONTATTO_CLIENTE.VALORE_DATO_CNT  ,
+                   ANAG_DATI_CONTATTO_CLIENTE.NOTE  
+            FROM
+                  SOCI_ANAGRAFICA INNER JOIN ANAG_DATI_CONTATTO_CLIENTE ON (SOCI_ANAGRAFICA.NAG = ANAG_DATI_CONTATTO_CLIENTE.NAG )  
+            WHERE
+                  ANAG_DATI_CONTATTO_CLIENTE.FL_PREF =  'S'  
+            AND 
+                  ANAG_DATI_CONTATTO_CLIENTE.PROGRESSIVO =  '001'  
+            AND
+                  ANAG_DATI_CONTATTO_CLIENTE.PROCEDURA IN ( 'ANAGRAFE','SOCI' ) 
+            AND
+                  ANAG_DATI_CONTATTO_CLIENTE.TIPO_DATO_CNT IN ( 'TEL','CELL','MAIL','PEC','' )
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_C = odbc_exec($connect, $select_query_Sadas_C);
+      while($dati_query_Sadas_C = odbc_fetch_object($result_query_Sadas_C)) {
+
+      $select_insert_Sadas_C = "
+            INSERT INTO SDS_SOCI_DATICONTATTO
+            VALUES 
+           (
+             '".$dati_query_Sadas_C->NAG."'
+            ,'".$dati_query_Sadas_C->PROCEDURA."'
+            ,'".$dati_query_Sadas_C->TIPO_DATO_CNT."'
+            ,'".$dati_query_Sadas_C->PROGRESSIVO."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_C->VALORE_DATO_CNT)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_C->NOTE)."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_C;                    
+        mysqli_query($connection, $select_insert_Sadas_C )
+                    or die("INSERT --- select_insert_Sadas_C --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_C2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_DATICONTATTO");
+      $dati_count_MySql_C2 = mysqli_fetch_array($result_count_MySql_C2);
+      $count_MySql_C2=(int)$dati_count_MySql_C2['qtaMySql_2'];
+
+      $diff_C = $count_MySql_C2 - $count_MySql_C1;
+
+            $mail_corpo .= '<br>'.$count_MySql_C2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_DATICONTATTO 
+                            <br>'.$diff_C.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_DATICONTATTO' 
+                              WHERE fonte='SDS_SOCI_DATICONTATTO'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+
+// -------------------------------------
+// D - SUBENTRATI
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_D =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_01 INNER JOIN SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_02  ON (SOCI_ANAGRAFICA_01.IDSOCIO_SUB = SOCI_ANAGRAFICA_02.IDSOCIO ) ,
+                  SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_01 INNER JOIN ANAG_NAG AS ANAG_NAG_02  ON (SOCI_ANAGRAFICA_01.NAG = ANAG_NAG_02.NAG ) ,
+                  SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_02 INNER JOIN ANAG_NAG AS ANAG_NAG_01  ON (SOCI_ANAGRAFICA_02.NAG = ANAG_NAG_01.NAG ) 
+            ";
+            //echo $select_cnt_Sadas_D ;
+      $result_cnt_Sadas_D = odbc_exec($connect, $select_cnt_Sadas_D);
+      while($dati_cnt_Sadas_D = odbc_fetch_object($result_cnt_Sadas_D)) {
+            $cnt_Sadas_D = $dati_cnt_Sadas_D->QTA; 
+            //echo $cnt_Sadas_D;
+      }
+
+      $mail_corpo .= '<br> D - SOCI SUBENTRATI
+                      <br> ----------------------------------------------------------------------------- 
+                      <br> '.$count_MySql_D1.' Records presenti su MySQL pre-importazione 
+                      <br> '.$cnt_Sadas_D.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_D =   "
+SELECT
+       SOCI_ANAGRAFICA_01.IDSOCIO AS IDSOCIO ,
+       SOCI_ANAGRAFICA_01.NAG AS NAG ,
+       ANAG_NAG_02.INTESTAZIONE_A AS INTESTAZIONE_A ,
+       ANAG_NAG_02.INTESTAZIONE_B AS INTESTAZIONE_B ,
+       SOCI_ANAGRAFICA_01.IDSOCIO_SUB AS IDSOCIO_SUB ,
+       SOCI_ANAGRAFICA_02.NAG AS NAG_SUB ,
+       ANAG_NAG_01.INTESTAZIONE_A AS INTESTAZIONE_A_SUB ,
+       ANAG_NAG_01.INTESTAZIONE_B AS INTESTAZIONE_B_SUB 
+FROM
+      SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_01 INNER JOIN SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_02  ON (SOCI_ANAGRAFICA_01.IDSOCIO_SUB = SOCI_ANAGRAFICA_02.IDSOCIO ) ,
+      SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_01 INNER JOIN ANAG_NAG AS ANAG_NAG_02  ON (SOCI_ANAGRAFICA_01.NAG = ANAG_NAG_02.NAG ) ,
+      SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_02 INNER JOIN ANAG_NAG AS ANAG_NAG_01  ON (SOCI_ANAGRAFICA_02.NAG = ANAG_NAG_01.NAG ) 
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_D = odbc_exec($connect, $select_query_Sadas_D);
+      while($dati_query_Sadas_D = odbc_fetch_object($result_query_Sadas_D)) {
+
+      $select_insert_Sadas_D = "
+            INSERT INTO SDS_SOCI_SUBENTRATI
+            VALUES 
+           (
+             '".$dati_query_Sadas_D->IDSOCIO."'
+            ,'".$dati_query_Sadas_D->NAG."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_D->INTESTAZIONE_A)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_D->INTESTAZIONE_B)."'
+            ,'".$dati_query_Sadas_D->IDSOCIO_SUB."'
+            ,'".$dati_query_Sadas_D->NAG_SUB."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_D->INTESTAZIONE_A_SUB)."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_D->INTESTAZIONE_B_SUB)."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_D;                    
+        mysqli_query($connection, $select_insert_Sadas_D )
+                    or die("INSERT --- select_insert_Sadas_D --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_D2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_SUBENTRATI");
+      $dati_count_MySql_D2 = mysqli_fetch_array($result_count_MySql_D2);
+      $count_MySql_D2=(int)$dati_count_MySql_D2['qtaMySql_2'];
+
+      $diff_D = $count_MySql_D2 - $count_MySql_D1;
+
+            $mail_corpo .= '<br>'.$count_MySql_D2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_SUBENTRATI 
+                            <br>'.$diff_D.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_SUBENTRATI' 
+                              WHERE fonte='SDS_SOCI_SUBENTRATI'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+
+// -------------------------------------
+// E - TRASFERIMENTI
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_E =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_ANAGRAFICA  AS SOCI_ANAGRAFICA_02 INNER JOIN SOCI_MOVIMENTI AS SOCI_MOVIMENTI_01  ON (SOCI_ANAGRAFICA_02.IDSOCIO = SOCI_MOVIMENTI_01.CSOCIO_TRASF ) ,
+                  SOCI_ANAGRAFICA  AS SOCI_ANAGRAFICA_02 INNER JOIN ANAG_NAG AS ANAG_NAG_02  ON (SOCI_ANAGRAFICA_02.NAG = ANAG_NAG_02.NAG ) ,
+                  SOCI_MOVIMENTI  AS SOCI_MOVIMENTI_01 INNER JOIN SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_01  ON (SOCI_MOVIMENTI_01.IDSOCIO = SOCI_ANAGRAFICA_01.IDSOCIO ) ,
+                  SOCI_ANAGRAFICA  AS SOCI_ANAGRAFICA_01 INNER JOIN ANAG_NAG AS ANAG_NAG_01  ON (SOCI_ANAGRAFICA_01.NAG = ANAG_NAG_01.NAG )  
+            WHERE
+                  SOCI_MOVIMENTI_01.CTIPOMOV IN ( 'TR','CO','FU','DO','SU' ) 
+            ";
+            //echo $select_cnt_Sadas_D ;
+      $result_cnt_Sadas_E = odbc_exec($connect, $select_cnt_Sadas_E);
+      while($dati_cnt_Sadas_E = odbc_fetch_object($result_cnt_Sadas_E)) {
+            $cnt_Sadas_E = $dati_cnt_Sadas_E->QTA; 
+            //echo $cnt_Sadas_E;
+      }
+
+      $mail_corpo .= '<br> E - SOCI TRASFERIMENTI
+                      <br> ----------------------------------------------------------------------------- 
+                      <br> '.$count_MySql_E1.' Records presenti su MySQL pre-importazione 
+                      <br> '.$cnt_Sadas_E.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_E =   "
+                        SELECT
+                               SOCI_ANAGRAFICA_01.FILIALE AS FILIALE,
+                               SOCI_ANAGRAFICA_01.NAG AS NAG_TRASFERENTE ,
+                               SOCI_MOVIMENTI_01.IDSOCIO AS IDSOCIO_TRASFERENTE ,
+                               ANAG_NAG_01.INTESTAZIONE_A + ' ' + ANAG_NAG_01.INTESTAZIONE_B AS SOCIO_TRASFERENTE,
+                               SOCI_ANAGRAFICA_02.NAG AS NAG_RICEVENTE ,
+                               SOCI_MOVIMENTI_01.CSOCIO_TRASF AS IDSOCIO_RICEVENTE,
+                               ANAG_NAG_02.INTESTAZIONE_A + ' ' + ANAG_NAG_02.INTESTAZIONE_B AS SOCIO_RICEVENTE,
+                               SOCI_MOVIMENTI_01.DATA_MOVIMENTO AS DATA_MOVIMENTO ,
+                               abs(SOCI_MOVIMENTI_01.IMPORTO / 30.33)  as AZIONI,
+                               abs(SOCI_MOVIMENTI_01.IMPORTO) AS IMPORTO ,
+                               abs(SOCI_MOVIMENTI_01.ISOVRAPPREZZO) AS ISOVRAPPREZZO ,
+                               SOCI_MOVIMENTI_01.CTIPOMOV AS CTIPOMOV
+                        FROM
+                              SOCI_ANAGRAFICA  AS SOCI_ANAGRAFICA_02 INNER JOIN SOCI_MOVIMENTI AS SOCI_MOVIMENTI_01  ON (SOCI_ANAGRAFICA_02.IDSOCIO = SOCI_MOVIMENTI_01.CSOCIO_TRASF ) ,
+                              SOCI_ANAGRAFICA  AS SOCI_ANAGRAFICA_02 INNER JOIN ANAG_NAG AS ANAG_NAG_02  ON (SOCI_ANAGRAFICA_02.NAG = ANAG_NAG_02.NAG ) ,
+                              SOCI_MOVIMENTI  AS SOCI_MOVIMENTI_01 INNER JOIN SOCI_ANAGRAFICA AS SOCI_ANAGRAFICA_01  ON (SOCI_MOVIMENTI_01.IDSOCIO = SOCI_ANAGRAFICA_01.IDSOCIO ) ,
+                              SOCI_ANAGRAFICA  AS SOCI_ANAGRAFICA_01 INNER JOIN ANAG_NAG AS ANAG_NAG_01  ON (SOCI_ANAGRAFICA_01.NAG = ANAG_NAG_01.NAG )  
+                        WHERE
+                              SOCI_MOVIMENTI_01.CTIPOMOV IN ( 'TR','CO','FU','DO','SU' ) 
+
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_E = odbc_exec($connect, $select_query_Sadas_E);
+      while($dati_query_Sadas_E = odbc_fetch_object($result_query_Sadas_E)) {
+
+      $select_insert_Sadas_E = "
+            INSERT INTO SDS_SOCI_TRASFERIMENTI
+            VALUES 
+           (
+             '".$dati_query_Sadas_E->FILIALE."'
+            ,'".$dati_query_Sadas_E->NAG_TRASFERENTE."'
+            ,'".$dati_query_Sadas_E->IDSOCIO_TRASFERENTE."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_E->SOCIO_TRASFERENTE)."'
+            ,'".$dati_query_Sadas_E->NAG_RICEVENTE."'
+            ,'".$dati_query_Sadas_E->IDSOCIO_RICEVENTE."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_E->SOCIO_RICEVENTE)."'
+            ,'".$dati_query_Sadas_E->DATA_MOVIMENTO."'
+            ,'".$dati_query_Sadas_E->AZIONI."'
+            ,'".$dati_query_Sadas_E->IMPORTO."'
+            ,'".$dati_query_Sadas_E->ISOVRAPPREZZO."'
+            ,'".$dati_query_Sadas_E->CTIPOMOV."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_E;                    
+        mysqli_query($connection, $select_insert_Sadas_E )
+                    or die("INSERT --- select_insert_Sadas_E - ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_E2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_TRASFERIMENTI");
+      $dati_count_MySql_E2 = mysqli_fetch_array($result_count_MySql_E2);
+      $count_MySql_E2=(int)$dati_count_MySql_E2['qtaMySql_2'];
+
+      $diff_E = $count_MySql_E2 - $count_MySql_E1;
+
+            $mail_corpo .= '<br>'.$count_MySql_E2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_TRASFERIMENTI 
+                            <br>'.$diff_E.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_TRASFERIMENTI' 
+                              WHERE fonte='SDS_SOCI_TRASFERIMENTI'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+// -------------------------------------
+// F - MOVIMENTI IN & OUT
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_F =   "
+            SELECT COUNT(*) as QTA
+            FROM SOCI_MOVIMENTI
+            WHERE CTIPOMOV IN ('AM','ID','ES','RE','MO','RS','RL','SU')
+            ";
+            //echo $select_cnt_Sadas_F ;
+      $result_cnt_Sadas_F = odbc_exec($connect, $select_cnt_Sadas_F);
+      while($dati_cnt_Sadas_F = odbc_fetch_object($result_cnt_Sadas_F)) {
+            $cnt_Sadas_F = $dati_cnt_Sadas_F->QTA; 
+            //echo $cnt_Sadas_F;
+      }
+
+      $mail_corpo .= '<br> F - MOVIMENTI IN & OUT (AM,ID,ES,RE,MO,RS,RL,SU)
+                      <br> -----------------------------------------------------------------------------  
+                      <br> '.$count_MySql_F1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_F.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_F =   "
+            SELECT
+                  IDSOCIO,
+                  IDMOVIMENTO,
+                  CTIPOMOV,
+                  DATA_MOVIMENTO,
+                  DATA_DELIBERA,
+                  DATA_PAGAMENTO,
+                  COPERAZIONE2,
+                  IMPORTO,
+                  ISOVRAPPREZZO,
+                  IMPORTO_RIACQ_AZIONI,
+                  IMPORTO_NETTO_LIQ,
+                  XMOTIVO
+            FROM SOCI_MOVIMENTI
+            WHERE CTIPOMOV IN ('AM','ID','ES','RE','MO','RS','RL','SU')
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_F = odbc_exec($connect, $select_query_Sadas_F);
+      while($dati_query_Sadas_F = odbc_fetch_object($result_query_Sadas_F)) {
+
+      $select_insert_Sadas_F = "
+            INSERT INTO SDS_SOCI_MOVINOUT
+            VALUES 
+           (
+             '".$dati_query_Sadas_F->IDSOCIO."'
+            ,'".$dati_query_Sadas_F->IDMOVIMENTO."'
+            ,'".$dati_query_Sadas_F->CTIPOMOV."'
+            ,'".$dati_query_Sadas_F->DATA_MOVIMENTO."'
+            ,'".$dati_query_Sadas_F->DATA_DELIBERA."'
+            ,'".$dati_query_Sadas_F->DATA_PAGAMENTO."'
+            ,'".$dati_query_Sadas_F->COPERAZIONE2."'
+            ,'".$dati_query_Sadas_F->IMPORTO."'
+            ,'".$dati_query_Sadas_F->ISOVRAPPREZZO."'
+            ,'".$dati_query_Sadas_F->IMPORTO_RIACQ_AZIONI."'
+            ,'".$dati_query_Sadas_F->IMPORTO_NETTO_LIQ."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_F->XMOTIVO)."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_F;                    
+        mysqli_query($connection, $select_insert_Sadas_F )
+                    or die("INSERT --- select_insert_Sadas_F --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_F2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_MOVINOUT");
+      $dati_count_MySql_F2 = mysqli_fetch_array($result_count_MySql_F2);
+      $count_MySql_F2=(int)$dati_count_MySql_F2['qtaMySql_2'];
+
+      $diff_F = $count_MySql_F2 - $count_MySql_F1;
+
+            $mail_corpo .= '<br>'.$count_MySql_F2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_MOVINOUT 
+                            <br>'.$diff_F.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_MOVINOUT' 
+                              WHERE fonte='SDS_SOCI_MOVINOUT'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+// -------------------------------------
+// G - DOMANDE A SOCIO
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_G =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_DOMANDE 
+            ";
+            //echo $select_cnt_Sadas_I ;
+      $result_cnt_Sadas_G = odbc_exec($connect, $select_cnt_Sadas_G);
+      while($dati_cnt_Sadas_G = odbc_fetch_object($result_cnt_Sadas_G)) {
+            $cnt_Sadas_G = $dati_cnt_Sadas_G->QTA; 
+            //echo $cnt_Sadas_I;
+      }
+
+      $mail_corpo .= '<br> G - DOMANDE SOCI
+                      <br> ----------------------------------------------------------------------------- 
+                      <br> '.$count_MySql_G1.' Records presenti su MySQL pre-importazione 
+                      <br> '.$cnt_Sadas_G.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_G =   "
+            SELECT
+                   SOCI_DOMANDE.NAG ,
+                   SOCI_DOMANDE.XNOME ,
+                   SOCI_DOMANDE.DATA_DOMANDA  ,
+                   SOCI_DOMANDE.DATA_DELIBERA ,
+                   SOCI_DOMANDE.FILIALE_DOMANDA ,
+                   SOCI_DOMANDE.NAZIONI  ,
+                   SOCI_DOMANDE.ISOVRAPPREZZO  ,
+                   SOCI_DOMANDE.CTIPODOM  ,
+                   SOCI_DOMANDE.CTIPOESITO ,
+                   SOCI_DOMANDE.IDSOCIO_DOM  AS SUBENTRANTE_IDSOCIO,
+                   SOCI_DOMANDE.IDSOCIO_RIC AS TRASFERIMENTO_DA_IDSOCIO ,
+                   SOCI_DOMANDE.NAG_RIC AS TRASFERIMENTO_DA_NAG ,
+                   SOCI_DOMANDE.IDSOCIO_SUB AS DEFUNTO_IDSOCIO,
+                   SOCI_DOMANDE.IDCERT_TRASF  ,
+                   SOCI_DOMANDE.FLAG_RES_ZONA_BANCA ,
+                   SOCI_DOMANDE.DATA_OPERAZIONE  ,
+                   SOCI_DOMANDE.ORA_OPERAZIONE  ,
+                   SOCI_DOMANDE.DATA_ACCOGLIMENTO  ,
+                   SOCI_DOMANDE.ORA_ACCOGLIMENTO  ,
+                   SOCI_DOMANDE.SOGLIA  ,
+                   SOCI_DOMANDE.PROF_COMUNE   ,  
+                   SOCI_DOMANDE.PROF_VIA   ,  
+                   SOCI_DOMANDE.PROF_PRESSO   ,  
+                   SOCI_DOMANDE.PROF_PROV   ,  
+                   SOCI_DOMANDE.IMM_COMUNE   ,  
+                   SOCI_DOMANDE.IMM_VIA   ,  
+                   SOCI_DOMANDE.IMM_PRESSO   ,  
+                   SOCI_DOMANDE.IMM_PROV   
+            FROM
+                  SOCI_DOMANDE 
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_G = odbc_exec($connect, $select_query_Sadas_G);
+      while($dati_query_Sadas_G = odbc_fetch_object($result_query_Sadas_G)) {
+
+      $select_insert_Sadas_G = "
+            INSERT INTO SDS_SOCI_DOMANDE
+            VALUES 
+           (
+            '".$dati_query_Sadas_G->NAG."'
+            ,'".$dati_query_Sadas_G->XNOME."'
+            ,'".$dati_query_Sadas_G->DATA_DOMANDA."'
+            ,'".$dati_query_Sadas_G->DATA_DELIBERA."'
+            ,'".$dati_query_Sadas_G->FILIALE_DOMANDA."'
+            ,'".$dati_query_Sadas_G->NAZIONI."'
+            ,'".$dati_query_Sadas_G->ISOVRAPPREZZO."'
+            ,'".$dati_query_Sadas_G->CTIPODOM."'
+            ,'".$dati_query_Sadas_G->CTIPOESITO."'
+            ,'".$dati_query_Sadas_G->SUBENTRANTE_IDSOCIO."'
+            ,'".$dati_query_Sadas_G->TRASFERIMENTO_DA_IDSOCIO."'
+            ,'".$dati_query_Sadas_G->TRASFERIMENTO_DA_NAG."'
+            ,'".$dati_query_Sadas_G->DEFUNTO_IDSOCIO."'
+            ,'".$dati_query_Sadas_G->IDCERT_TRASF."'
+            ,'".$dati_query_Sadas_G->FLAG_RES_ZONA_BANCA."'
+            ,'".$dati_query_Sadas_G->DATA_OPERAZIONE."'
+            ,'".$dati_query_Sadas_G->ORA_OPERAZIONE."'
+            ,'".$dati_query_Sadas_G->DATA_ACCOGLIMENTO."'
+            ,'".$dati_query_Sadas_G->ORA_ACCOGLIMENTO."'
+            ,'".$dati_query_Sadas_G->SOGLIA."'
+            ,'".$dati_query_Sadas_G->PROF_COMUNE."'
+            ,'".$dati_query_Sadas_G->PROF_VIA."'
+            ,'".$dati_query_Sadas_G->PROF_PRESSO."'
+            ,'".$dati_query_Sadas_G->PROF_PROV."'
+            ,'".$dati_query_Sadas_G->IMM_COMUNE."'
+            ,'".$dati_query_Sadas_G->IMM_VIA."'
+            ,'".$dati_query_Sadas_G->IMM_PRESSO."'
+            ,'".$dati_query_Sadas_G->IMM_PROV."'
+            )
+            ";
+
+                        
+        mysqli_query($connection, $select_insert_Sadas_G )
+                    or die("INSERT --- select_insert_Sadas_G --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_G2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_DOMANDE");
+      $dati_count_MySql_G2 = mysqli_fetch_array($result_count_MySql_G2);
+      $count_MySql_G2=(int)$dati_count_MySql_G2['qtaMySql_2'];
+
+      $diff_G = $count_MySql_G2 - $count_MySql_G1;
+
+            $mail_corpo .= '<br>'.$count_MySql_G2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_DOMANDE 
+                            <br>'.$diff_G.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_DOMANDE' 
+                              WHERE fonte='SDS_SOCI_DOMANDE'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+
+// -------------------------------------
+// H - GIOVANI UNDER 35
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_H =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  ANAG_PERSONE_FISICHE INNER JOIN IMPIEGHI_E_RACCOLTA ON (ANAG_PERSONE_FISICHE.NAG = IMPIEGHI_E_RACCOLTA.NAG )   
+            WHERE
+                  ANAG_PERSONE_FISICHE.DATA_NASCITA >=  '".$AnnoMesedipartenzaU30."' 
+            ";
+            //echo $select_cnt_Sadas_H ;
+      $result_cnt_Sadas_H = odbc_exec($connect, $select_cnt_Sadas_H);
+      while($dati_cnt_Sadas_H = odbc_fetch_object($result_cnt_Sadas_H)) {
+            $cnt_Sadas_H = $dati_cnt_Sadas_H->QTA; 
+            //echo $cnt_Sadas_H;
+      }
+
+      $mail_corpo .= '<br> H - GIOVANI UNDER 35
+                      <br> -----------------------------------------------------------------------------  
+                      <br> '.$count_MySql_H1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_H.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_H =   "
+                        SELECT
+                            ANAG_PERSONE_FISICHE.NAG ,
+                            IMPIEGHI_E_RACCOLTA.FIL_ANAGRAFICA,
+                            ANAG_NAG.INTESTAZIONE_A,
+                            ANAG_NAG.INTESTAZIONE_B,
+                            ANAG_PERSONE_FISICHE.DATA_NASCITA,
+
+                             DATEDIFF('YY',
+                                  (
+                                  TO_DATE(
+                                      substr(ANAG_PERSONE_FISICHE.DATA_NASCITA,7,2) + '/' +
+                                      substr(ANAG_PERSONE_FISICHE.DATA_NASCITA,5,2) + '/' +
+                                      substr(ANAG_PERSONE_FISICHE.DATA_NASCITA,0,4) 
+                                          )
+                                  )
+                                  ,
+                                  TODAY
+                              ) AS ETA,
+                            CASE IMPIEGHI_E_RACCOLTA.SOCIO_ISTITUTO
+                                when '0' then 'NO'
+                                when '1' then 'SI'
+                                when '9' then 'EX'
+                             else '' end as SOCIOBANCA,
+                            CASE IMPIEGHI_E_RACCOLTA.PRESENZA_RAPPORTI 
+                                when 'N' then 'NO'
+                                when 'S' then 'SI'
+                             else '' end as RAPPORTI
+                            FROM
+                                ANAG_PERSONE_FISICHE INNER JOIN IMPIEGHI_E_RACCOLTA ON (ANAG_PERSONE_FISICHE.NAG = IMPIEGHI_E_RACCOLTA.NAG ) ,
+                                ANAG_PERSONE_FISICHE INNER JOIN ANAG_NAG ON (ANAG_PERSONE_FISICHE.NAG = ANAG_NAG.NAG ) 
+                            WHERE
+                                ANAG_PERSONE_FISICHE.DATA_NASCITA >=  '".$AnnoMesedipartenzaU30."0101'
+                            ORDER BY NAG 
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_H = odbc_exec($connect, $select_query_Sadas_H);
+      while($dati_query_Sadas_H = odbc_fetch_object($result_query_Sadas_H)) {
+
+      $select_insert_Sadas_H = "
+            INSERT INTO SDS_SOCI_UNDER35
+            VALUES 
+           (
+            '".$dati_query_Sadas_H->NAG."'
+            ,'".$dati_query_Sadas_H->FIL_ANAGRAFICA."'
+            ,'".$dati_query_Sadas_H->INTESTAZIONE_A."'
+            ,'".$dati_query_Sadas_H->INTESTAZIONE_B."'
+            ,'".$dati_query_Sadas_H->DATA_NASCITA."'
+            ,'".$dati_query_Sadas_H->ETA."'
+            ,'".$dati_query_Sadas_H->SOCIOBANCA."'
+            ,'".$dati_query_Sadas_H->RAPPORTI."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_H;                    
+        mysqli_query($connection, $select_insert_Sadas_H )
+                    or die("INSERT --- select_insert_Sadas_H --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_H2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_UNDER35");
+      $dati_count_MySql_H2 = mysqli_fetch_array($result_count_MySql_H2);
+      $count_MySql_H2=(int)$dati_count_MySql_H2['qtaMySql_2'];
+
+      $diff_H = $count_MySql_H2 - $count_MySql_H1;
+
+            $mail_corpo .= '<br>'.$count_MySql_H2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_UNDER35 
+                            <br>'.$diff_H.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_UNDER35' 
+                              WHERE fonte='SDS_SOCI_UNDER35'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+
+// -------------------------------------
+// I - CONTRATTI e DOCUMENTI ISIDOC
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_I =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_ANAGRAFICA INNER JOIN ISIDOC_CONTRATTI ON (SOCI_ANAGRAFICA.NAG = ISIDOC_CONTRATTI.NAG )  
+            WHERE
+                  ISIDOC_CONTRATTI.COD_CONTRATTO =  'SOCICN02' 
+            ";
+            //echo $select_cnt_Sadas_I ;
+      $result_cnt_Sadas_I = odbc_exec($connect, $select_cnt_Sadas_I);
+      while($dati_cnt_Sadas_I = odbc_fetch_object($result_cnt_Sadas_I)) {
+            $cnt_Sadas_I = $dati_cnt_Sadas_I->QTA; 
+            //echo $cnt_Sadas_I;
+      }
+
+      $mail_corpo .= '<br> I - DOCUMENTI E CONTRATTI ISIDOC
+                      <br> -----------------------------------------------------------------------------  
+                      <br> '.$count_MySql_I1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_I.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_I =   "
+            SELECT
+                   SOCI_ANAGRAFICA.IDSOCIO  ,
+                   SOCI_ANAGRAFICA.NAG  ,
+                   ISIDOC_CONTRATTI.COD_CONTRATTO ,
+                   ISIDOC_CONTRATTI.DESCR_CONTRATTO ,
+                   ISIDOC_CONTRATTI.COD_DOCUMENTO ,
+                   ISIDOC_CONTRATTI.DESCR_DOCUMENTO ,
+                   ISIDOC_CONTRATTI.DATA_DOCUMENTO ,
+                   ISIDOC_CONTRATTI.DATA_ACQUISIZIONE ,
+                   ISIDOC_CONTRATTI.NOTE_CONTRATTO ,
+                   ISIDOC_CONTRATTI.STATO_DOC ,
+                   ISIDOC_CONTRATTI.PRESENZA_DOCUMENTO ,
+                   ISIDOC_CONTRATTI.PRESENZA_NOTE 
+            FROM
+                  SOCI_ANAGRAFICA INNER JOIN ISIDOC_CONTRATTI ON (SOCI_ANAGRAFICA.NAG = ISIDOC_CONTRATTI.NAG )  
+            WHERE
+                  ISIDOC_CONTRATTI.COD_CONTRATTO =  'SOCICN02' 
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_I = odbc_exec($connect, $select_query_Sadas_I);
+      while($dati_query_Sadas_I = odbc_fetch_object($result_query_Sadas_I)) {
+
+      $select_insert_Sadas_I = "
+            INSERT INTO SDS_SOCI_ISIDOC
+            VALUES 
+           (
+             '".$dati_query_Sadas_I->IDSOCIO."'
+            ,'".$dati_query_Sadas_I->NAG."'
+            ,'".$dati_query_Sadas_I->COD_CONTRATTO."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_I->DESCR_CONTRATTO)."'
+            ,'".$dati_query_Sadas_I->COD_DOCUMENTO."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_I->DESCR_DOCUMENTO)."'
+            ,'".$dati_query_Sadas_I->DATA_DOCUMENTO."'
+            ,'".$dati_query_Sadas_I->DATA_ACQUISIZIONE."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_I->NOTE_CONTRATTO)."'
+            ,'".$dati_query_Sadas_I->STATO_DOC."'
+            ,'".$dati_query_Sadas_I->PRESENZA_DOCUMENTO."'
+            ,'".$dati_query_Sadas_I->PRESENZA_NOTE."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_I;                    
+        mysqli_query($connection, $select_insert_Sadas_I )
+                    or die("INSERT --- select_insert_Sadas_I --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_I2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_ISIDOC");
+      $dati_count_MySql_I2 = mysqli_fetch_array($result_count_MySql_I2);
+      $count_MySql_I2=(int)$dati_count_MySql_I2['qtaMySql_2'];
+
+      $diff_I = $count_MySql_I2 - $count_MySql_I1;
+
+            $mail_corpo .= '<br>'.$count_MySql_I2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_ISIDOC 
+                            <br>'.$diff_I.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_ISIDOC' 
+                              WHERE fonte='SDS_SOCI_ISIDOC'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+      // ------------------------------------------------
+      // Estraggo le domande senza PDF caricato in ISIDOC
+      // ------------------------------------------------
+      $truncatetabella_SDS_SOCI_DOMANDE_NOPDF = mysqli_query($connection,"TRUNCATE SDS_SOCI_DOMANDE_NOPDF") or die(mysqli_error($connection));;
+
+      $select_query_Sadas_I_noPDF =   "
+            SELECT
+                   SOCI_DOMANDE.NAG  ,
+                   SOCI_DOMANDE.XNOME  ,
+                   SOCI_DOMANDE.DATA_DOMANDA,
+                   SOCI_DOMANDE.FILIALE_DOMANDA
+            FROM
+                  SOCI_DOMANDE   
+            WHERE
+                  SOCI_DOMANDE.DATA_DELIBERA = '00/00/0000'
+            AND SOCI_DOMANDE.CTIPOESITO =  'DE'                  
+            AND SOCI_DOMANDE.NAG NOT IN (SELECT NAG FROM ISIDOC_CONTRATTI where COD_CONTRATTO = 'SOCICN02')
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_I_noPDF = odbc_exec($connect, $select_query_Sadas_I_noPDF);
+      while($dati_query_Sadas_I_noPDF = odbc_fetch_object($result_query_Sadas_I_noPDF)) {
+
+      $select_insert_Sadas_I_noPDF = "
+            INSERT INTO SDS_SOCI_DOMANDE_NOPDF
+            VALUES 
+           (
+            '".$dati_query_Sadas_I_noPDF->NAG."'
+            ,'".$dati_query_Sadas_I_noPDF->XNOME."'
+            ,'".$dati_query_Sadas_I_noPDF->DATA_DOMANDA."'
+            ,'".$dati_query_Sadas_I_noPDF->FILIALE_DOMANDA."'
+            )
+            ";
+
+      mysqli_query($connection, $select_insert_Sadas_I_noPDF )
+                    or die("INSERT --- select_insert_Sadas_I_noPDF --- ".mysqli_error($connection));;
+      }
+
+
+// -------------------------------------
+// L - PRODOTTO CC DEI SOCI
+// -------------------------------------
+
+      // Conteggio records presenti su Sadas pre-importazione
+      $select_cnt_Sadas_L =   "
+            SELECT COUNT(*) as QTA
+            FROM
+                  SOCI_ANAGRAFICA INNER JOIN CC_CONTI_CORRENTI ON (SOCI_ANAGRAFICA.NUM_RAPP = CC_CONTI_CORRENTI.NUM_RAPP  
+            AND
+                  SOCI_ANAGRAFICA.COD_RAPP = CC_CONTI_CORRENTI.COD_RAPP  
+            AND
+                  SOCI_ANAGRAFICA.FILIALE_RAPP = CC_CONTI_CORRENTI.FILIALE ) ,
+                  CC_CONTI_CORRENTI INNER JOIN CC_ISC_PER_PRODOTTO ON (CC_CONTI_CORRENTI.CODICE_PRODOTTO_ISC = CC_ISC_PER_PRODOTTO.PRODOTTO )  
+            ";
+            // echo $select_cnt_Sadas_L ;
+      $result_cnt_Sadas_L = odbc_exec($connect, $select_cnt_Sadas_L);
+      while($dati_cnt_Sadas_L = odbc_fetch_object($result_cnt_Sadas_L)) {
+            $cnt_Sadas_L = $dati_cnt_Sadas_L->QTA; 
+            // echo $cnt_Sadas_L;
+      }
+
+      $mail_corpo .= '<br> L - PRODOTTO C/C 
+                      <br> -----------------------------------------------------------------------------  
+                      <br> '.$count_MySql_L1.' Records presenti su MySQL pre-importazione
+                      <br> '.$cnt_Sadas_L.' Records presenti su Sadas pre-importazione ';
+
+      // Dati 
+      $select_query_Sadas_L =   "
+            SELECT
+                   SOCI_ANAGRAFICA.IDSOCIO ,
+                   SOCI_ANAGRAFICA.NAG  ,
+                   SOCI_ANAGRAFICA.COD_RAPP ,
+                   SOCI_ANAGRAFICA.FILIALE_RAPP ,
+                   SOCI_ANAGRAFICA.NUM_RAPP ,
+                   CC_CONTI_CORRENTI.STATO ,
+                   CC_CONTI_CORRENTI.COD_CLASSE ,
+                   CC_CONTI_CORRENTI.DATA_DECOR_CLASSE ,
+                   CC_ISC_PER_PRODOTTO.DESCRIZIONE 
+            FROM
+                  SOCI_ANAGRAFICA INNER JOIN CC_CONTI_CORRENTI ON (SOCI_ANAGRAFICA.NUM_RAPP = CC_CONTI_CORRENTI.NUM_RAPP  
+            AND
+                  SOCI_ANAGRAFICA.COD_RAPP = CC_CONTI_CORRENTI.COD_RAPP  
+            AND
+                  SOCI_ANAGRAFICA.FILIALE_RAPP = CC_CONTI_CORRENTI.FILIALE ) ,
+                  CC_CONTI_CORRENTI INNER JOIN CC_ISC_PER_PRODOTTO ON (CC_CONTI_CORRENTI.CODICE_PRODOTTO_ISC = CC_ISC_PER_PRODOTTO.PRODOTTO ) 
+            ";
+
+      // ---- Inserisco i records in tabella 
+      $result_query_Sadas_L = odbc_exec($connect, $select_query_Sadas_L);
+      while($dati_query_Sadas_L = odbc_fetch_object($result_query_Sadas_L)) {
+
+      $select_insert_Sadas_L = "
+            INSERT INTO SDS_SOCI_PRODOTTO_CC
+            VALUES 
+           (
+             '".$dati_query_Sadas_L->IDSOCIO."'
+            ,'".$dati_query_Sadas_L->NAG."'
+            ,'".$dati_query_Sadas_L->COD_RAPP."'
+            ,'".$dati_query_Sadas_L->FILIALE_RAPP."'
+            ,'".$dati_query_Sadas_L->NUM_RAPP."'
+            ,'".$dati_query_Sadas_L->STATO."'
+            ,'".$dati_query_Sadas_L->COD_CLASSE."'
+            ,'".$dati_query_Sadas_L->DATA_DECOR_CLASSE."'
+            ,'".mysqli_real_escape_string($connection, $dati_query_Sadas_L->DESCRIZIONE)."'
+            )
+            ";
+
+      //echo $select_insert_Sadas_L;                    
+        mysqli_query($connection, $select_insert_Sadas_L )
+                    or die("INSERT --- select_insert_Sadas_L --- ".mysqli_error($connection));;
+      }
+      
+
+      // ---- Conto i records nella tabella esistente DOPO l'inserimento del contenuto
+      $result_count_MySql_L2 = mysqli_query($connection,"select count(*) as qtaMySql_2 from SDS_SOCI_PRODOTTO_CC");
+      $dati_count_MySql_L2 = mysqli_fetch_array($result_count_MySql_L2);
+      $count_MySql_L2=(int)$dati_count_MySql_L2['qtaMySql_2'];
+
+      $diff_L = $count_MySql_L2 - $count_MySql_L1;
+
+            $mail_corpo .= '<br>'.$count_MySql_L2.' Records dopo l\'inserimento su MySQL tab SDS_SOCI_PRODOTTO_CC 
+                            <br>'.$diff_L.'
+                            <br>-----------------------------------------------------------------------------';
+
+      // ---- Aggiorno la tabella ULTIMO_CARICAMENTO
+      $updcaricamento = "     UPDATE tab_ultimo_caricamento
+                              SET   caricamento=now(), fonte='SDS_SOCI_PRODOTTO_CC' 
+                              WHERE fonte='SDS_SOCI_PRODOTTO_CC'
+                        ";
+      $querydati_updcaricamento = mysqli_query($connection, $updcaricamento);      
+
+
+// ----------------------
+// Close ODBC
+// ----------------------
+odbc_close($connect);
+
+
+// ----------------------
+// Chiusura ed invio Mail
+// ----------------------
+$orario2 = date("H:i:s");
+
+$mail_corpo .= '<br><br> Orario fine : '.$orario2;                       
+$mail_corpo .= "<br><small>Questa mail viene generata in maniera automatica. In caso di problemi, contattare Ufficio Soci.</small>";
+$mail_corpo .= "</body></html>\r\n";
+
+      $mail_headers = "From: " . $nome_mittente . " <" . $mail_mittente . ">\r\n";
+      $mail_headers .= "Reply-To: " . $mail_mittente . "\r\n";
+      $mail_headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+      $mail_headers .= "MIME-Version: 1.0\r\n";
+      $mail_headers .= "Content-type: text/html; charset=UTF-8\r\n";
+      $mail_headers .= "Content-Transfer-Encoding: base64";
+      //$mail_headers .= "CC: ".$mail_cc."\r\n";
+      
+      //$mail_oggetto_encoded = '=?UTF-8?B?' . base64_encode($mail_oggetto) . '?=';
+      $mail_corpo_encoded = base64_encode($mail_corpo);
+
+      if (mail($mail_dest, $mail_oggetto, $mail_corpo_encoded, $mail_headers)) {
+        echo "<center>Messaggio inviato a " . $mail_dest . "<br />\r\n";
+      } else {
+        echo "<center>Errore. Nessun messaggio inviato. <br />\r\n";
+      }
+
+echo $mail_corpo;
+
+include ("crea_sds_soci_dati_consolidati.php");
+include ("crea_previsionale.php");
+include ("crea_impieghiraccolta.php");
+include ("crea_decaduti_nonliquidati.php");
+include ("crea_decaduti_liquidati.php");
+// include ("routines\mail_mutua.php");         //#MZ Disattivato invio email 11/10/2024
+
+?>

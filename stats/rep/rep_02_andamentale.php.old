@@ -1,0 +1,301 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2021)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+
+echo '
+<center>
+<div class="col-lg-12">
+  <div class="alert alert-dismissible alert-success"><h3>Andamentale Ingressi e Uscite</h3>
+  '.$titolofiliale.'</div>
+</div>
+';
+
+$dbhandle = new mysqli($host, $db_user, $db_psw, $db_name);
+ 
+if ($dbhandle -> connect_error) {
+    exit("There was an error with your connection: ".$dbhandle -> connect_error);
+}
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// DETTAGLIO 
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+$tab_dettaglioA =  ' <div class="alert alert-dismissible alert-primary">
+        <strong>Situazione andamentale storica (mesi di calcolo '.$numeromesi.' dal '.$datarichiesta.')</strong>
+        <br>I dati si basano sulle effettive richieste giunte nel periodo, escludendo quelle pregresse
+       </div>';
+
+// Interrogo la view
+$dettaglioA = " 
+                SELECT  filiale, 
+                        sum(qta_DL)     as qta_DL, 
+                        sum(Importo_DL) as Importo_DL, 
+                        sum(qta_DA)     as qta_DA, 
+                        sum(Importo_DA) as Importo_DA, 
+                        sum(qta_SO)     as qta_SO,
+                        sum(Importo_SO) as Importo_SO, 
+                        sum(qta_ET)     as qta_ET, 
+                        sum(Importo_ET) as Importo_ET, 
+                        sum(qta_CE)     as qta_CE,
+                        sum(Importo_CE) as Importo_CE,
+                        sum(qta_AM)     as qta_AM,
+                        sum(Importo_AM) as Importo_AM
+                FROM view_andamentale
+                WHERE filiale <> 999 
+                ".$Condizione_AnnoMeseRichiesta."
+                ".$condizionefiliale."
+                GROUP BY filiale
+                 ";
+
+$result_areeA = $dbhandle->query($dettaglioA) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dettaglioA .= '<table border="1" valign="top" width="100%">
+        <tr class="table-light">
+          <td rowspan="2">Filiale</td>
+          <td colspan="2" align="center">Defunti<br><small>richiesta liquidazione</small></td>
+          <td colspan="2" align="center">Defunti<br><small>in attesa decisione eredi</small></td>
+          <td colspan="2" align="center">Sofferenze</td>
+          <td colspan="2" align="center">Esclusioni</td>
+          <td colspan="2" align="center">Cessioni Banca</td>          
+          <td colspan="2" align="center" style="background-color:red;color:white;">TOTALE USCITE<br><small>No Succ</small></td>   
+          <td colspan="2" align="center" style="background-color:green;color:white;">TOTALE ENTRATE<br><small>No Cess/Succ/Donaz</small></td>  
+          <td colspan="2" align="center" style="background-color:#F39C12;">DIFFERENZA</td>  
+        </tr>
+        <tr class="table-light">
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+          <td align="right" style="background-color:red;color:white;">Qtà</td>
+          <td align="right" style="background-color:red;color:white;">Importo</td>
+          <td align="right" style="background-color:green;color:white;">Qtà</td>
+          <td align="right" style="background-color:green;color:white;">Importo</td>
+          <td align="right" style="background-color:#F39C12;">Qtà</td>
+          <td align="right" style="background-color:#F39C12;">Importo</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_areeA = mysqli_fetch_array($result_areeA)) {
+
+    $tab_dettaglioA .=  "<tr>
+                          <td align='right' width='4%'>".$row_areeA['filiale']."&nbsp;</td>
+                          <td align='right' width='5%'>".number_format($row_areeA['qta_DL'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA['Importo_DL'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeA['qta_DA'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA['Importo_DA'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeA['qta_SO'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA['Importo_SO'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeA['qta_ET'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA['Importo_ET'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeA['qta_CE'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA['Importo_CE'],0,',','.')."</td>
+                        ";
+
+    $totale_qtaA = $row_areeA['qta_DL'] + $row_areeA['qta_DA'] + $row_areeA['qta_SO'] + $row_areeA['qta_ET'] + $row_areeA['qta_CE'];
+    $totale_valA = $row_areeA['Importo_DL'] + $row_areeA['Importo_DA'] + $row_areeA['Importo_SO'] + $row_areeA['Importo_ET'] + $row_areeA['Importo_CE'];
+
+    $tab_dettaglioA .=  " <td align='right' width='5%'>".number_format($totale_qtaA,0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($totale_valA,0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeA['qta_AM'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA['Importo_AM'],0,',','.')."</td>       
+                          ";
+    $differenza_qta = $row_areeA['qta_AM'] - $totale_qtaA;
+    $differenza_val = $row_areeA['Importo_AM'] - $totale_valA;
+
+    if ($differenza_qta < 0) {$coloredifferenzaqta = " style=color:red;" ;} else {$coloredifferenzaqta = "";}
+    if ($differenza_val < 0) {$coloredifferenzaval = " style=color:red;" ;} else {$coloredifferenzaval = "";}
+    
+    $tab_dettaglioA .=  " <td align='right' width='5%' ".$coloredifferenzaqta.">".number_format($differenza_qta,0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%' ".$coloredifferenzaval.">".number_format($differenza_val,0,',','.')."</td>       
+                          ";
+
+    $tab_dettaglioA .=  "</tr> ";
+
+  // chiudo ciclo WHILE  
+  }
+
+// CALCOLO I TOTALI
+  $dettaglioT = " 
+                SELECT   
+                        sum(qta_DL)     as qta_DL, 
+                        sum(Importo_DL) as Importo_DL, 
+                        sum(qta_DA)     as qta_DA, 
+                        sum(Importo_DA) as Importo_DA, 
+                        sum(qta_SO)     as qta_SO,
+                        sum(Importo_SO) as Importo_SO, 
+                        sum(qta_ET)     as qta_ET, 
+                        sum(Importo_ET) as Importo_ET, 
+                        sum(qta_CE)     as qta_CE,
+                        sum(Importo_CE) as Importo_CE,
+                        sum(qta_AM)     as qta_AM,
+                        sum(Importo_AM) as Importo_AM
+                FROM view_andamentale
+                WHERE filiale <> 999 
+                ".$Condizione_AnnoMeseRichiesta."
+                ".$condizionefiliale."
+                 ";
+
+$result_areeT = $dbhandle->query($dettaglioT) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+ while ($row_areeT = mysqli_fetch_array($result_areeT)) {
+
+    $tab_dettaglioA .=  "<tr class='table-light'>
+                          <td align='right' width='4%'>TOTALE&nbsp;</td>
+                          <td align='right' width='5%'>".number_format($row_areeT['qta_DL'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeT['Importo_DL'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeT['qta_DA'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeT['Importo_DA'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeT['qta_SO'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeT['Importo_SO'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeT['qta_ET'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeT['Importo_ET'],0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeT['qta_CE'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeT['Importo_CE'],0,',','.')."</td>
+                        ";
+
+    $totale_qtaT = $row_areeT['qta_DL'] + $row_areeT['qta_DA'] + $row_areeT['qta_SO'] + $row_areeT['qta_ET'] + $row_areeT['qta_CE'];
+    $totale_valT = $row_areeT['Importo_DL'] + $row_areeT['Importo_DA'] + $row_areeT['Importo_SO'] + $row_areeT['Importo_ET'] + $row_areeT['Importo_CE'];
+
+    $tab_dettaglioA .=  " <td align='right' width='5%'>".number_format($totale_qtaT,0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($totale_valT,0,',','.')."</td>
+                          <td align='right' width='5%'>".number_format($row_areeT['qta_AM'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeT['Importo_AM'],0,',','.')."</td>       
+                          ";
+    $differenza_qtaT = $row_areeT['qta_AM'] - $totale_qtaT;
+    $differenza_valT = $row_areeT['Importo_AM'] - $totale_valT;
+
+    if ($differenza_qtaT < 0) {$coloredifferenzaqtaT = " style=color:red;" ;} else {$coloredifferenzaqtaT = "";}
+    if ($differenza_valT < 0) {$coloredifferenzavalT = " style=color:red;" ;} else {$coloredifferenzavalT = "";}
+    
+    $tab_dettaglioA .=  " <td align='right' width='5%' ".$coloredifferenzaqtaT.">".number_format($differenza_qtaT,0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%' ".$coloredifferenzavalT.">".number_format($differenza_valT,0,',','.')."</td>       
+                          ";
+
+    $tab_dettaglioA .=  "</tr> ";
+
+
+}
+
+
+// Chiudo la tabella
+$tab_dettaglioA .=  '</table>';
+
+
+
+
+    // -------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------
+    // MEDIA ENTRATE/USCITE PER MESE PER FILIALE
+    // -------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------
+    $tab_dettaglioA3 =  ' <div class="alert alert-dismissible alert-primary">
+            <strong>Media mensile delle entrate e uscite (mesi di calcolo '.$numeromesi.')
+           </div>';
+
+    $dettaglioA3 = " 
+                SELECT  filiale, 
+                        ((sum(Importo_DL) + sum(Importo_DA) + sum(Importo_SO) + 
+                        sum(Importo_ET) + sum(Importo_CE)) / ".$numeromesi.") as MediaUsciteMese,
+                        (sum(Importo_AM) / ".$numeromesi.") as MediaEntrateMese
+                FROM view_andamentale
+                WHERE filiale <> 999 
+                ".$Condizione_AnnoMeseRichiesta."
+                ".$condizionefiliale."
+                GROUP BY filiale
+                 ";  
+
+    $result_areeA3 = $dbhandle->query($dettaglioA3) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+    $tab_dettaglioA3 .= '<table border="1" valign="top" width="100%">
+            <tr class="table-light">
+              <td align="right">Filiale</td>            
+              <td align="right">Media Uscite / Mese</td>
+              <td align="right">Media Entrate / Mese</td>  
+              <td align="right">Differenza</td>
+              <td align="right">Ulteriore qtà Soci necessari al pareggio</td>                
+            </tr>
+          ';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_areeA3 = mysqli_fetch_array($result_areeA3)) {
+
+    $differenzaA3 = $row_areeA3['MediaEntrateMese'] - $row_areeA3['MediaUsciteMese'] ;
+    $quoteA3    = $differenzaA3 / 30.09;
+    $sociA3     = $quoteA3 / 33;
+
+    if ($differenzaA3 < 0) {$coloredifferenzaA3 = " style=color:red;" ;} else {$coloredifferenzaA3 = " style=color:green;";}
+        
+    $tab_dettaglioA3 .=  "<tr>
+                          <td align='right' width='4%'>".$row_areeA3['filiale']."&nbsp;</td>
+                          <td align='right' width='5%'>".number_format($row_areeA3['MediaUsciteMese'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA3['MediaEntrateMese'],0,',','.')."</td>
+                          <td align='right' width='8%'>".number_format($differenzaA3,0,',','.')."</td>
+                          <td align='right' width='8%'".$coloredifferenzaA3."'>".(number_format($sociA3,0,',','.')*-1)."</td>
+                          </tr>";
+          
+  }
+  
+  // CALCOLO IL TOTALE
+    $dettaglioA3T = " 
+                SELECT  ((sum(Importo_DL) + sum(Importo_DA) + sum(Importo_SO) + 
+                        sum(Importo_ET) + sum(Importo_CE)) / ".$numeromesi.") as MediaUsciteMese,
+                        (sum(Importo_AM) / ".$numeromesi.") as MediaEntrateMese
+                FROM view_andamentale
+                WHERE filiale <> 999 
+                ".$Condizione_AnnoMeseRichiesta."
+                ".$condizionefiliale."
+                 ";  
+
+    $result_areeA3T = $dbhandle->query($dettaglioA3T) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+    while ($row_areeA3T = mysqli_fetch_array($result_areeA3T)) {
+    $differenzaA3T = $row_areeA3T['MediaEntrateMese'] - $row_areeA3T['MediaUsciteMese'] ;
+    $quoteA3T    = $differenzaA3T / 30.09;
+    $sociA3T     = $quoteA3T / 33;
+    $tab_dettaglioA3 .=  "<tr class='table-light'>
+                          <td align='right' width='4%'>TOTALE</td>
+                          <td align='right' width='5%'>".number_format($row_areeA3T['MediaUsciteMese'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='8%'>".number_format($row_areeA3T['MediaEntrateMese'],0,',','.')."</td>
+                          <td align='right' width='8%'>".number_format($differenzaA3T,0,',','.')."</td>
+                          <td align='right' width='8%'>".(number_format($sociA3T,0,',','.')*-1)."</td>
+                          </tr>";
+          
+  }  
+// Chiudo la tabella
+$tab_dettaglioA3 .=  '</table>';
+       
+?>
+
+
+<br>
+
+<table border="0" align="center" width="90%">
+  <tr>     
+       <td valign="top" width="100%"><?php echo $tab_dettaglioA; ?></td>
+  </tr>
+</table>
+<br>
+
+<table border="0" align="center" width="90%">
+  <tr>     
+       <td valign="top" width="100%"><?php  echo $tab_dettaglioA3; ?></td>
+  </tr>
+</table>
+<br>
+
+<p>
+  I dati di Entrata ed Uscita sono considerati al netto di eventuali passaggi senza movimentazione di quote (donazioni, successioni, cessioni).<br>
+  Il periodo è conteggiato considerando la "Data Richiesta" ovvero la data di stampa del contratto.<br>
+</p>

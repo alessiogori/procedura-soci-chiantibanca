@@ -1,0 +1,107 @@
+
+CREATE VIEW view_fasce_anzianitasocio AS 
+
+SELECT
+    'Socio 10' AS Fascia,
+    cag,
+    concat(int1Socio, ' ', int2Socio) as Nominativo,
+    dataEntrata,
+    substr(curdate(),1,4) - substr((dataEntrata),7,4) as AnzSocio,  
+    nAzTot,
+    round(nAzTot*30.09) as Importo,
+    dataNasc,
+    substr(curdate(),1,4) - substr((dataNasc),7,4) as Eta,
+    telefono,
+    indirizzoEMail,
+    codFil as Filiale,
+    int1Filiale as NomeFiliale
+FROM tab_soci_as37 
+WHERE substring(dataEntrata,-4) BETWEEN ((substr(curdate(),1,4) - 10) - 10) AND (substr(curdate(),1,4) - 10)
+AND StatoVAL not in ('E','S','N') 	
+AND codFil <> 90
+
+UNION
+
+SELECT
+    'Socio 20' AS Fascia,
+    cag,
+    concat(int1Socio, ' ', int2Socio) as Nominativo,
+    dataEntrata,
+    substr(curdate(),1,4) - substr((dataEntrata),7,4) as AnzSocio,  
+    nAzTot,
+    round(nAzTot*30.09) as Importo,
+    dataNasc,
+    substr(curdate(),1,4) - substr((dataNasc),7,4) as Eta,
+    telefono,
+    indirizzoEMail,
+    codFil as Filiale,
+    int1Filiale as NomeFiliale
+FROM tab_soci_as37 
+WHERE substring(dataEntrata,-4) BETWEEN ((substr(curdate(),1,4) - 20) - 10) AND (substr(curdate(),1,4) - 20)
+AND StatoVAL not in ('E','S','N') 	
+AND codFil <> 90
+
+UNION
+
+SELECT
+    'Socio 30' AS Fascia,
+    cag,
+    concat(int1Socio, ' ', int2Socio) as Nominativo,
+    dataEntrata,
+    substr(curdate(),1,4) - substr((dataEntrata),7,4) as AnzSocio,  
+    nAzTot,
+    round(nAzTot*30.09) as Importo,
+    dataNasc,
+    substr(curdate(),1,4) - substr((dataNasc),7,4) as Eta,
+    telefono,
+    indirizzoEMail,
+    codFil as Filiale,
+    int1Filiale as NomeFiliale
+FROM tab_soci_as37 
+WHERE substring(dataEntrata,-4) BETWEEN ((substr(curdate(),1,4) - 30) - 10) AND (substr(curdate(),1,4) - 30)
+AND StatoVAL not in ('E','S','N') 	
+AND codFil <> 90
+
+UNION
+
+SELECT
+    'Socio 40' AS Fascia,
+    cag,
+    concat(int1Socio, ' ', int2Socio) as Nominativo,
+    dataEntrata,
+    substr(curdate(),1,4) - substr((dataEntrata),7,4) as AnzSocio,  
+    nAzTot,
+    round(nAzTot*30.09) as Importo,
+    dataNasc,
+    substr(curdate(),1,4) - substr((dataNasc),7,4) as Eta,
+    telefono,
+    indirizzoEMail,
+    codFil as Filiale,
+    int1Filiale as NomeFiliale
+FROM tab_soci_as37 
+WHERE substring(dataEntrata,-4) BETWEEN ((substr(curdate(),1,4) - 40) - 10) AND (substr(curdate(),1,4) - 40)
+AND StatoVAL not in ('E','S','N') 	
+AND codFil <> 90
+
+UNION
+
+SELECT
+    'Socio 50' AS Fascia,
+    cag,
+    concat(int1Socio, ' ', int2Socio) as Nominativo,
+    dataEntrata,
+    substr(curdate(),1,4) - substr((dataEntrata),7,4) as AnzSocio,    
+    nAzTot,
+    round(nAzTot*30.09) as Importo,
+    dataNasc,
+    substr(curdate(),1,4) - substr((dataNasc),7,4) as Eta,
+    telefono,
+    indirizzoEMail,
+    codFil as Filiale,
+    int1Filiale as NomeFiliale
+FROM tab_soci_as37 
+WHERE substring(dataEntrata,-4) < (substr(curdate(),1,4) - 50) 
+AND StatoVAL not in ('E','S','N') 
+AND codFil <> 90
+
+ORDER BY  1, 2, 3

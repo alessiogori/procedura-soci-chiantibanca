@@ -1,0 +1,48 @@
+// Soci Pistoia alla fusione
+SELECT count(*) as qta, codFil as Filiale
+FROM `tab_soci_as37` 
+WHERE codFil in (60,61,62,63,64,66,67,68)
+AND date_format(str_to_date(DataAmmiss, '%d/%m/%Y'), '%Y%m') <= '30/06/2016'
+AND (date_format(str_to_date(DataEstinzione, '%d/%m/%Y'), '%Y%m') is null 
+OR date_format(str_to_date(DataEstinzione, '%d/%m/%Y'), '%Y%m') >= '30/06/2016')
+GROUP BY codFil
+
+// Soci Pistoia ad oggi
+SELECT count(*) as qta, codFil as Filiale
+FROM `tab_soci_as37` 
+WHERE codFil in (60,61,62,63,64,66,67,68)
+AND date_format(str_to_date(DataAmmiss, '%d/%m/%Y'), '%Y%m') > '30/06/2016'
+AND date_format(str_to_date(DataEstinzione, '%d/%m/%Y'), '%Y%m') is null 
+GROUP BY codFil
+
+SELECT count(*) as qta, codFil as Filiale
+FROM `tab_soci_as37` 
+WHERE codFil in (60,61,62,63,64,66,67,68)
+AND STATOVAL not in ('S','N','E')
+AND date_format(str_to_date(DataAmmiss, '%d/%m/%Y'), '%Y%m') <= '30/06/2016'
+GROUP BY codFil
+
+
+
+SELECT count(*) as qta, 
+CASE
+    WHEN codFil = 66 THEN 60
+    WHEN codFil = 67 THEN 60
+    WHEN codFil = 43 THEN 40
+    ELSE area
+END as area
+         FROM tab_soci_as37 as a, tab_psw as p 
+                  WHERE a.statoVAL not in ('E','S','N')
+                  AND a.codFil = CAST(p.filiale AS UNSIGNED)
+                  GROUP BY area 
+                  ORDER BY 1 desc
+
+
+Area	Qtà Soci
+CAMPI	3110
+CENTRO IMPRESE	276
+CHIANTI FIRENZE	7157
+PISTOIA	5003
+PRATO	3779
+SIENA	6929
+TIRRENO	1181

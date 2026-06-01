@@ -1,0 +1,203 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+
+// require_once('_functions.php');   //logquery ($selectdati); 
+// include("../config/_config.php");
+// $connection = mysqli_connect($host, $db_user, $db_psw, $db_name);
+// Head e CSS
+// include("../css/main.php");
+// include("../css/menu.php");
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+$usr_id = 'LN00'.$_COOKIE['usr_id'];
+
+echo '<center>
+        <h2>SEGNALAZIONE SOCIO DECEDUTO</h2>';
+        
+echo '  <style type="text/css">
+          @import "../css/bootstrap.css";
+          @import "../css/bootstrap.min.css";
+          @import "../css/fontawesome-free/css/all.min.css";
+        </style> ';
+        
+if 	(!isset($_POST['inviamail'])) {
+?>
+        <h3>Integra le informazioni necessarie per completare il modulo</h3>
+
+        
+<style>
+//.frmSearch {width:610px; border: 1px solid #a8d4b1;background-color: #c6f7d0;margin: 2px 0px;padding:40px;border-radius:4px;}
+#country-list{float:left;list-style:none;margin-top:-3px;padding:0;width:480px;position: absolute;}
+#country-list li{padding: 10px; background: #f0f0f0; border-bottom: #bbb9b9 1px solid;color:black;text-align:left;}
+#country-list li:hover{background:#ece3d2;cursor: pointer;color:black;text-align:left;}
+#search-box{width:500px;padding: 10px;border: #a8d4b1 1px solid;border-radius:4px;background-color: #c6f7d0;}
+
+@font-face {
+    font-family: 'product_sansregular';
+    src: url('product_sans_regular-webfont.woff2') format('woff2'),
+         url('product_sans_regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+</style>
+<script src="../js/jquery.min.js" type="text/javascript"></script>
+<script>
+$(document).ready(function(){
+	$("#search-box").keyup(function(){
+		$.ajax({
+		type: "POST",
+		url: "mail_decesso_search.php",
+		data:'keyword='+$(this).val(),
+		beforeSend: function(){
+			$("#search-box").css("background","#FFF url(../img/LoaderIcon.gif) no-repeat 165px");
+		},
+		success: function(data){
+			$("#suggesstion-box").show();
+			$("#suggesstion-box").html(data);
+			$("#search-box").css("background","#FFF");
+		}
+		});
+	});
+});
+
+function selectCountry(val) {
+$("#search-box").val(val);
+$("#suggesstion-box").hide();
+}
+</script>
+<br><br>
+<form action="SO06_mail_decesso_form.php" method="POST" onsubmit="return ray.ajax()">
+<table border="0" align="center">
+    <tr>
+        <td align="left" valign="top">
+            <div class="form-group">
+            <input type="text" class="form-control" id="search-box" name="search-box" placeholder="Socio deceduto" required>
+            <div id="suggesstion-box"></div>
+            </div>
+        </td>
+    </tr>    
+    <tr>
+        <td align="left">
+        	<label>Data Decesso
+            <div class="form-group">
+              <input type="date" class="form-control" id="datadecesso" name="datadecesso" placeholder="Data decesso (gg/mm/aaaa)" required>
+              <!-- <input type="text" class="form-control" id="datadecesso" name="datadecesso" placeholder="Data decesso (gg/mm/aaaa)" required> -->
+            </div>
+        	</label>	
+        </td>
+    </tr>    
+    <tr>
+        <td align="left">    
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="si" id="flagdocumentale" name="flagdocumentale" required>
+                <label class="form-check-label" for="flexCheckDefault">
+                  Confermo che la documentazione è archiviata sul documentale
+                </label>
+            </div>   
+            <br>
+        </td>
+    </tr>      
+    <tr>
+        <td>
+        	<label>Dipendente
+            <div class="form-group">
+              <input type="text" class="form-control" id="dipendente" name="dipendente" value="<?php echo $usr_id; ?>" required>
+            </div>
+            </label>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <div class="form-group">
+              <input type="text" class="form-control" id="note" name="note" placeholder="Indicare qui eventuali note" >
+            </div>
+        </td>
+    </tr>
+    <tr >
+        <td align="center"><br>
+            <div class="form-group">
+                <button type="submit" class="btn btn-danger mb-2"><i class="fas fa-upload fa-2x text-lightgray-300 col-auto"></i>INVIA SEGNALAZIONE A UFFICIO SOCI</button>
+            </div>
+        </td>
+    </tr>
+    
+</table>
+
+ <input type="hidden" name="inviamail" value="si">
+                            
+</form>
+
+<?php
+	}
+elseif 
+    ($_POST['inviamail'] == "si")
+	{
+        global $debug;
+		//No email sabato o domenica
+		if(date('w')=="0" || date('w')=="6") return;
+		
+		//Parm email
+		//ini_set('SMTP', 'smtp.bccsi.bcc.it'); 
+		ini_set('SMTP', 'smtp.bccsi.bcc.it'); 
+		ini_set('smtp_port', 25); 
+		ini_set('sendmail_from','noreply@chiantibanca.it');
+		
+		//Parm others
+		$mail_cc = "";  
+		$mail_dest = "soci@chiantibanca.it"; 
+		$nome_mittente = "Portale Soci"; //"Alessio Fedi by SMTP BCCSI";
+		$mail_mittente = "noreply@chiantibanca.it";
+		
+		$mail_oggetto = "Portale Soci - Segnalazione Socio Deceduto ".$_POST['search-box'];
+		
+		$mail_corpo = "<html><body>\r\n";
+		$mail_corpo .= "<style type='text/css'>  body{font-family:'Courier New',Courier,monospace;font-size:11pt;} </style>";
+    		
+		$mail_corpo .= "Risulta deceduto il socio <b style='color:brown;'>".$_POST['search-box']."</b> \r\n";
+		$mail_corpo .= "in data <b>".$_POST['datadecesso']."</b> \r\n";
+		$mail_corpo .= "(Documentale = ".strtoupper($_POST['flagdocumentale'])." -  \r\n";
+		$mail_corpo .= "segnalato da ".strtoupper($_POST['dipendente']).") \r\n";
+		$mail_corpo .= " ".$_POST['note']." \r\n";
+
+		$mail_corpo .= "</body></html>\r\n";
+		
+		$mail_headers = "From: " . $nome_mittente . " <" . $mail_mittente . ">\r\n";
+		$mail_headers .= "Reply-To: " . $mail_mittente . "\r\n";
+		$mail_headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+		$mail_headers .= "MIME-Version: 1.0\r\n";
+		$mail_headers .= "Content-type: text/html; charset=UTF-8\r\n";
+		$mail_headers .= "Content-Transfer-Encoding: base64";
+		
+		if(!empty($mail_cc)) $mail_headers .= "CC: ".$mail_cc."\r\n";
+		
+		$mail_oggetto_encoded = '=?UTF-8?B?' . base64_encode($mail_oggetto) . '?=';
+		$mail_corpo_encoded = base64_encode($mail_corpo);
+
+		if (mail($mail_dest, $mail_oggetto_encoded, $mail_corpo_encoded, $mail_headers)) {
+		  if($debug) echo "Messaggio inviato a " . $mail_dest . "<br /> Puoi chiudere questa finestra.\r\n";
+		} else {
+		  if($debug) echo "Errore. Nessun messaggio inviato. <br> \r\n";
+		}
+		
+	echo '<br><br><br>
+	<center>Messaggio inviato</center>';
+
+    	}
+    	
+
+
+?>
+
+                

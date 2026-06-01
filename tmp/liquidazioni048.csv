@@ -1,0 +1,21 @@
+Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca
+Attesa Eredi;48;PF;1042403;FANI SIRIO;40;1203;09/02/2021;;2022;15/12/2020;;;;;;;
+Sofferenze;48;PG;337600;C.S. SRL;40;1203;13/02/2020;;2021;;;;;;S;;
+Sofferenze;48;PG;1135629;LIBERA SRL;210;6318;17/06/2020;Fallimento;2021;;;;;;S;;
+Sofferenze;48;PG;353059;RADDI BABY SOCIETA' A RESP.LIMITATA SEMPLIFICATA;40;1203;22/03/2021;;2022;;;;;;S;;
+Sofferenze;48;PG;328252;CO&CO - SNC DI CORTI FABIO E COLICI GNO ANTONELLA;100;3009;09/04/2021;;2022;;;;;;S;;
+Sofferenze;48;PF;361500;ABBASALIZADEH AJAMI NASIM;40;1203;11/04/2018;Sofferenze non segnalate a suo tempo (inserite 06.07.2021);2019;;;;;;S;;
+Sofferenze;48;PF;355490;VOLPI SILVIA;40;1203;18/12/2019;Sofferenze non segnalate a suo tempo (inserite 06.07.2021);2020;;;;;;S;;
+Esclusione;48;PF;339054;PINTI GABRIELLA;60;1805;24/02/2021;LET - Rapporti chiusi;2022;;;;;S;;;
+Esclusione;48;PF;339057;TERRAGLIA PASQUALE;100;3009;24/02/2021;LET - Rapporti chiusi;2022;;;;;S;;;
+Esclusione;48;PG;341301;HUNGRY & FOOLISH SRL ;40;1203;05/08/2021;A seguito revisione zone di competenza (CLO Filiale) - Italia;2022;;;;S;;;;
+Cessione Banca;48;;1022844;BASSI ALVARO;40;1203;07/03/2019;DISSAPORI CON FILIALE ;;;;;;;;T;S
+Cessione Banca;48;PF;1435828;ANTONELLI FRANCO;40;1203;03/07/2019;;;;;;;;;T;S
+Cessione Banca;48;PF;1100746;SORSINO NATASCIA;40;1203;31/07/2019;;;;;;;;;T;S
+Cessione Banca;48;PF;1119687;MANCARELLA FILIPPO;40;1203;02/08/2019;;;;;;;;;T;S
+Cessione Banca;48;PF;383216;BONAIUTI BARBARA;7;210;18/11/2019;Ridotta a 7 azioni con cessione a Socio ROSSETTI SERGIO del 16.04.2020;;;;;;;;T;S
+Cessione Banca;48;PF;1031280;BENEDETTI VALERIO;127;3821;23/12/2019;;;;;;;;;P;S
+Cessione Banca;48;PF;355193;RANFAGNI FRANCESCO;40;1203;14/01/2020;;;;;;;;;T;S
+Cessione Banca;48;PG;360051;SCANDILAND SAS;47;1414;20/01/2020;;;;;;;;;P;S
+Cessione Banca;48;PG;414667;RISTORANTE PIZZZERIA DA AMEDEO;33;992;03/09/2020;;;;;;;;;T;S
+Cessione Banca;48;PF;357735;DELLI RUSSI STEFANIA;40;1203;21/04/2021;RAC - Rapporti ancora aperti;;;;;;;;T;S

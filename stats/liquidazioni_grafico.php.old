@@ -1,0 +1,722 @@
+<?php
+// *****************************************************************************
+// Portale ChiantiBanca - Soci
+// Sviluppo e realizzazione: Alessio Fedi (2020)
+// *****************************************************************************
+// SEZIONE DA NON MODIFICARE
+
+// Nascondo gli errori
+error_reporting(E_ALL ^ E_DEPRECATED);
+
+// Includo i dati di connessione
+include("../config/_config.php");
+include("../config/_functions.php");
+
+// including FusionCharts PHP wrapper
+include("../graph/fusioncharts.php"); 
+
+echo '<html>
+        <head>
+        <script type="text/javascript" src="../js/fusioncharts/fusioncharts.js"></script>
+        <script type="text/javascript" src="../js/fusioncharts/themes/fusioncharts.theme.candy.js"></script>
+        <title>Stats Liquidazioni</title>
+        </head>
+        <style type="text/css">
+          @import "../css/bootstrap.css";
+          @import "../css/bootstrap.min.css";
+        </style> 
+
+        <body><br><br>
+        ';
+
+// FINE SEZIONE DA NON MODIFICARE
+// *****************************************************************************
+
+$adesso = date("d.m.Y");
+$adesso_anno = date("Y");
+
+$data1 = new DateTime('2019-01-01');
+$data2 = new DateTime(date("Y-m-d"));
+$mesi = $data2->diff($data1); 
+$numeromesi = (($mesi->y) * 12) + ($mesi->m);
+// echo $howeverManyMonths;
+
+// Controllo se è stato richiesto un periodo particolare
+if (!isset($_GET['periodo']))
+    {
+   $datarichiesta = $adesso_anno - 1;    // conteggio da un anno indietro rispetto ad oggi
+    }
+    else
+    {
+   $datarichiesta = $_GET['periodo'];
+  }
+
+// Controllo se la richiesta arriva   
+if (!isset($_GET['key']))
+    {$condizionefiliale = '';
+     $titolofiliale = '';
+     $filiale = '';
+     $area = '';
+    }
+    else
+    {
+  // da un FILIALE
+     if (!isset($_GET['area']))   
+     {    
+     $condizionefiliale = 'AND filiale = '.substr($_GET['key'],0,3);
+     $titolofiliale = ' - Filiale '.substr($_GET['key'],0,3);  
+     $filiale = substr($_GET['key'],0,3);
+     }
+     else
+  // da una AREA   
+     {    
+     $condizionefiliale = 'AND filiale in '.$_GET['key'];
+     $titolofiliale = ' - Area '.$_GET['area'];  
+     $filiale = $_GET['area'];
+     }
+    }
+
+echo '
+  <div class="alert alert-dismissible alert-warning">
+      <h2 class="alert-heading">Liquidazioni '.$titolofiliale.'</h2>
+      <p class="mb-0 justify-content-between align-items-left">Questo report rappresenta la situazione delle liquidazioni ancora da fare.</p>
+  </div>
+';
+
+$dbhandle = new mysqli($host, $db_user, $db_psw, $db_name);
+ 
+if ($dbhandle -> connect_error) {
+    exit("There was an error with your connection: ".$dbhandle -> connect_error);
+}
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// DETTAGLIO PER TIPOLOGIA
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+$tab_dettaglioA =  ' <div class="alert alert-dismissible alert-primary">
+        <strong>Situazione Liquidazioni da fare<br>(TOTALE)
+       </div>';
+
+// CREO LA VISTA DI APPOGGIO
+$truncateviewA = mysqli_query($dbhandle,"DROP VIEW view_liquidazioni") or die(mysql_error());;
+$viewA = mysqli_query($dbhandle," CREATE VIEW view_liquidazioni as 
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'LIQUIDAZIONI AD EREDI' as Tipo, Anno_Liquidazione, '1' as id
+                FROM tab_xls_decessi_eredi
+                WHERE Liquidazione_a_eredi = 'S'
+                and Note_AO08 not in ('S2','SM')
+                GROUP BY filiale, Anno_Liquidazione
+                UNION
+               
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'IN ATTESA DECISIONE EREDI' as Tipo, Anno_Liquidazione, '2' as id
+                FROM tab_xls_decessi_eredi
+                WHERE Intestazione_a_eredi <> 'S' 
+                AND Liquidazione_a_eredi <> 'S'
+                and Note_AO08 not in ('S2','SM','')
+                GROUP BY filiale, Anno_Liquidazione
+                UNION
+                
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'SOFFERENZE' as Tipo, Anno_Liquidazione, '4' as id
+                FROM tab_xls_recessi_esclusioni_sofferenze
+                WHERE Escluso_x_Passaggio_a_Sofferenze = 'S' 
+                and Note_AO08 not in ('S4','SA','SB','SC','')
+                GROUP BY filiale, Anno_Liquidazione
+                UNION
+                
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'ESCLUSIONI' as Tipo, Anno_Liquidazione, '3' as id
+                FROM tab_xls_recessi_esclusioni_sofferenze
+                WHERE Escluso_x_Passaggio_a_Sofferenze <> 'S'
+                and Note_AO08 not in ('S4','SA','SB','SC','')
+                GROUP BY filiale, Anno_Liquidazione
+                UNION
+                
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'CESSIONI A BANCA' as Tipo, '' as Anno_Liquidazione, '5' as id
+                FROM tab_xls_cessioni
+                WHERE Cessione_a_Banca ='S' 
+                and Note_AO08 not in ('S5','S4','SA','SB','SC','SM','VB') 
+                GROUP BY filiale, Anno_Liquidazione 
+
+                ") or die(mysql_error());;
+
+
+// Interrogo la view
+$dettaglioA = " 
+                SELECT  Tipo,
+                        sum(qta)     as qta, 
+                        sum(Importo) as Importo
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                GROUP BY Tipo
+                ORDER BY id
+                 ";
+
+$result_areeA = $dbhandle->query($dettaglioA) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dettaglioA .= '<table border="1" valign="top" width="100%">
+        <tr class="table-secondary">
+          <td align="left">Tipo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_areeA = mysqli_fetch_array($result_areeA)) {
+
+    $tab_dettaglioA .=  "<tr>
+                          <td align='left' width='70%'>".$row_areeA['Tipo']."&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeA['qta'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeA['Importo'],0,',','.')."</td>
+                        </tr>";
+  // chiudo ciclo WHILE  
+  }
+
+// CALCOLO I TOTALI
+  $dettaglioT = " 
+                SELECT   
+                        sum(qta)     as qta_tot, 
+                        sum(Importo) as Importo_tot
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                 ";
+
+$result_areeT = $dbhandle->query($dettaglioT) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+ while ($row_areeT = mysqli_fetch_array($result_areeT)) {
+
+    $tab_dettaglioA .=  "<tr class='table-secondary'>
+                          <td align='right' width='70%'>TOTALE&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeT['qta_tot'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeT['Importo_tot'],0,',','.')."</td>
+                         </tr> ";
+
+}
+
+// Chiudo la tabella
+$tab_dettaglioA .=  '</table>';
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// RIEPILOGO PER FILIALE (TOTALE)
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+$tab_dettaglioA1 =  ' <div class="alert alert-dismissible alert-primary">
+        <strong>Totale per Filiale
+       </div>';
+
+// Interrogo la view
+$dettaglioA1 = " 
+                SELECT  filiale,
+                        sum(qta)     as qta, 
+                        sum(Importo) as Importo
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                GROUP BY filiale
+                ORDER BY filiale
+                 ";
+
+$result_areeA1 = $dbhandle->query($dettaglioA1) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dettaglioA1 .= '<table border="1" valign="top" width="100%">
+        <tr class="table-secondary">
+          <td align="left">Filiale</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_areeA1 = mysqli_fetch_array($result_areeA1)) {
+
+    $tab_dettaglioA1 .=  "<tr>
+                          <td align='left' width='70%'>".$row_areeA1['filiale']."&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeA1['qta'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeA1['Importo'],0,',','.')."</td>
+                        </tr>";
+  // chiudo ciclo WHILE  
+  }
+
+// Chiudo la tabella
+$tab_dettaglioA1 .=  '</table>';
+
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// DETTAGLIO ANNO IN CORSO
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+$tab_dettaglioB =  ' <div class="alert alert-dismissible alert-primary">
+        <strong>Situazione Liquidazioni da fare<br>(anno in corso, Plafond permettendo)
+       </div>';
+
+
+// Interrogo la view
+$dettaglioB = " 
+                SELECT  Tipo,
+                        sum(qta)     as qta, 
+                        sum(Importo) as Importo
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                AND Anno_Liquidazione <= ".$adesso_anno."
+                AND id <> 5
+                GROUP BY Tipo
+                ORDER BY id
+                 ";
+
+$result_areeB = $dbhandle->query($dettaglioB) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dettaglioB .= '<table border="1" valign="top" width="100%">
+        <tr class="table-secondary">
+          <td align="left">Tipo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_areeB = mysqli_fetch_array($result_areeB)) {
+
+    $tab_dettaglioB .=  "<tr>
+                          <td align='left' width='70%'>".$row_areeB['Tipo']."&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeB['qta'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeB['Importo'],0,',','.')."</td>
+                        </tr>";
+  // chiudo ciclo WHILE  
+  }
+
+ $tab_dettaglioB .=  "<tr>
+                          <td align='left' width='70%'>&nbsp;</td>
+                          <td align='right' width='10%'>&nbsp;</td>
+                          <td align='right' width='20%'>&nbsp;</td>
+                        </tr>";
+
+// CALCOLO I TOTALI
+  $dettaglioBT = " 
+                SELECT   
+                        sum(qta)     as qta_tot, 
+                        sum(Importo) as Importo_tot
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                AND Anno_Liquidazione <= ".$adesso_anno."
+                AND id <> 5
+                 ";
+
+$result_areeBT = $dbhandle->query($dettaglioBT) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+ while ($row_areeBT = mysqli_fetch_array($result_areeBT)) {
+
+    $tab_dettaglioB .=  "<tr class='table-secondary'>
+                          <td align='right' width='70%'>TOTALE&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeBT['qta_tot'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeBT['Importo_tot'],0,',','.')."</td>
+                         </tr> ";
+}
+
+// Chiudo la tabella
+$tab_dettaglioB .=  '</table>';
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// RIEPILOGO PER FILIALE (ANNO IN CORSO)
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+$tab_dettaglioB1 =  ' <div class="alert alert-dismissible alert-primary">
+        <strong>Totale per Filiale (anno in corso, Plafond permettendo)
+       </div>';
+
+// Interrogo la view
+$dettaglioB1 = " SELECT  filiale,
+                        sum(qta)     as qta, 
+                        sum(Importo) as Importo
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                AND Anno_Liquidazione <= ".$adesso_anno."
+                AND id <> 5
+                GROUP BY filiale
+                ORDER BY filiale
+                 ";
+
+$result_areeB1 = $dbhandle->query($dettaglioB1) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dettaglioB1 .= '<table border="1" valign="top" width="100%">
+        <tr class="table-secondary">
+          <td align="left">Filiale</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo</td>
+        </tr>';
+
+  // iterating over each data and pushing it into $arrData array
+  while ($row_areeB1 = mysqli_fetch_array($result_areeB1)) {
+
+    $tab_dettaglioB1 .=  "<tr>
+                          <td align='left' width='70%'>".$row_areeB1['filiale']."&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeB1['qta'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeB1['Importo'],0,',','.')."</td>
+                        </tr>";
+  // chiudo ciclo WHILE  
+  }
+
+// Chiudo la tabella
+$tab_dettaglioB1 .=  '</table>';
+
+
+    // -------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------
+    // GRAFICO TOTALI PER IMPORTO - TOTALE
+    // -------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------
+    $dettaglioA2 = " 
+                SELECT  Tipo, 
+                        sum(Importo) as Importo
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                GROUP BY Tipo
+                ORDER BY id
+                 ";  
+    $result_areeA2 = $dbhandle->query($dettaglioA2) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+      if ($result_areeA2) {
+      $arrData = array(
+      "chart" => array(
+        "theme" => "candy",
+        "caption" => "Liquidazioni da fare per importo",
+        //"subcaption" => "(Plafond permettendo)",
+        "captionFontSize" => "24",
+        "subcaptionFontSize" => "20",
+        "subcaptionFontColor" => "#646464",
+        "bgColor" => "#222222",
+        //"paletteColors" => "#A2A5FC, #41CBE3, #EEDA54, #BB423F #,F35685",
+        "baseFont" => "Quicksand, sans-serif",
+        "showLegend" => "0",
+        //"exportEnabled" => "1"
+        )
+      );
+     
+      $arrData["data"] = array();
+      while ($row2 = mysqli_fetch_array($result_areeA2)) { 
+       array_push($arrData["data"], array(
+          "label" => $row2["Tipo"],
+          "value" => $row2["Importo"]
+        ));
+      }
+      $jsonEncodedData = json_encode($arrData);
+    }
+    $Chartpie2d = new FusionCharts("pie2d", "myChart" , "50%", "450", "liquidazioni", "json", $jsonEncodedData);
+    $Chartpie2d->render();
+
+    // -------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------
+    // GRAFICO TOTALI PER IMPORTO - ANNO IN CORSO
+    // -------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------
+    $dettaglioB2 = " 
+                SELECT  Tipo, 
+                        sum(Importo) as Importo
+                FROM view_liquidazioni
+                WHERE filiale <> 999 
+                ".$condizionefiliale."
+                AND Anno_Liquidazione <= ".$adesso_anno."
+                AND id <> 5
+                GROUP BY Tipo
+                ORDER BY id
+                 ";  
+    $result_areeB2 = $dbhandle->query($dettaglioB2) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+      if ($result_areeB2) {
+      $arrDatab2 = array(
+      "chart" => array(
+        "theme" => "candy",
+        "caption" => "Liquidazioni da fare per importo nel ".$adesso_anno."",
+        "subcaption" => "(Plafond permettendo)",
+        "captionFontSize" => "24",
+        "subcaptionFontSize" => "20",
+        "subcaptionFontColor" => "#646464",
+        "bgColor" => "#222222",
+        //"paletteColors" => "#B2A5FC, #41CBE3, #EEDA54, #BB423F #,F35685",
+        "baseFont" => "Quicksand, sans-serif",
+        "showLegend" => "0",
+        //"exportEnabled" => "1"
+        )
+      );
+     
+      $arrDatab2["data"] = array();
+      while ($rowb2 = mysqli_fetch_array($result_areeB2)) { 
+       array_push($arrDatab2["data"], array(
+          "label" => $rowb2["Tipo"],
+          "value" => $rowb2["Importo"]
+        ));
+      }
+      $jsonEncodedDatab2 = json_encode($arrDatab2);
+    }
+    $Chartpie2db2 = new FusionCharts("pie2d", "myChartb2" , "50%", "450", "liquidazionib2", "json", $jsonEncodedDatab2);
+    $Chartpie2db2->render();
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// DETTAGLIO PER LIQUIDAZIONI FATTE
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+$tab_dettaglioF =  ' <div class="alert alert-dismissible alert-primary">
+        <strong>Situazione Liquidazioni fatte per anno<br>(TOTALE)
+       </div>';
+
+// CREO LA VISTA DI APPOGGIO
+$truncateviewF = mysqli_query($dbhandle,"DROP VIEW view_liquidazioni_fatte") or die(mysql_error());;
+$viewF = mysqli_query($dbhandle," CREATE VIEW view_liquidazioni_fatte as 
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'LIQUIDAZIONI AD EREDI' as Tipo, right(Data,4) as Anno_Liquidazione, '1' as id
+                FROM tab_xls_decessi_eredi
+                WHERE Liquidazione_a_eredi in ('S','')
+                and Note_AO08 in ('SM')
+                GROUP BY filiale, right(Data,4)
+                UNION
+                
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'SOFFERENZE' as Tipo, right(Data_AO08,4) as Anno_Liquidazione, '4' as id
+                FROM tab_xls_recessi_esclusioni_sofferenze
+                WHERE Escluso_x_Passaggio_a_Sofferenze = 'S' 
+                and Note_AO08 in ('SC')
+                GROUP BY filiale, right(Data_AO08,4)
+                UNION
+                
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'ESCLUSIONI' as Tipo, right(Data_AO08,4) as Anno_Liquidazione, '3' as id
+                FROM tab_xls_recessi_esclusioni_sofferenze
+                WHERE Escluso_x_Passaggio_a_Sofferenze <> 'S'
+                and Note_AO08 in ('S4','SA','SB','SC')
+                GROUP BY filiale, right(Data_AO08,4)
+                UNION
+                
+                SELECT filiale, count(*) as qta, sum(Valore_Nominale) as Importo, 'CESSIONI A BANCA' as Tipo, right(Data,4) as Anno_Liquidazione, '5' as id
+                FROM tab_xls_cessioni
+                WHERE Cessione_a_Banca ='S' 
+                and Note_AO08 in ('S5','S4','SA','SB','SC','SM','VB') 
+                GROUP BY filiale, right(Data,4) 
+
+                ") or die(mysql_error());;
+
+
+// Interrogo la view
+$dettaglioF = " 
+                SELECT  Tipo,
+                        sum(qta)     as qta, 
+                        sum(Importo) as Importo,
+                        Anno_Liquidazione
+                FROM view_liquidazioni_fatte
+                WHERE filiale <> 999 
+                AND Anno_Liquidazione >= 2020
+                ".$condizionefiliale."
+                GROUP BY Tipo, Anno_Liquidazione
+                ORDER BY Anno_Liquidazione, id
+                 ";
+
+$result_areeF = $dbhandle->query($dettaglioF) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+$tab_dettaglioF .= '<table border="1" valign="top" width="100%">
+        <tr class="table-secondary">
+          <td align="left">Tipo</td>
+          <td align="right">Qtà</td>
+          <td align="right">Importo Liquidato</td>
+          <td align="right">Anno Liquidazione</td>
+        </tr>';
+
+  while ($row_areeF = mysqli_fetch_array($result_areeF)) {
+
+    $tab_dettaglioF .=  "<tr>
+                          <td align='left' width='60%'>".$row_areeF['Tipo']."&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeF['qta'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeF['Importo'],0,',','.')."</td>
+                          <td align='right' width='10%'>".$row_areeF['Anno_Liquidazione']."&nbsp;</td>
+                        </tr>";
+  // chiudo ciclo WHILE  
+  }
+
+// CALCOLO I TOTALI
+  $dettaglioTF = " 
+                SELECT   
+                        sum(qta)     as qta_tot, 
+                        sum(Importo) as Importo_tot
+                FROM view_liquidazioni_fatte
+                WHERE filiale <> 999 
+                AND Anno_Liquidazione >= 2020
+                ".$condizionefiliale."
+                 ";
+
+$result_areeTF = $dbhandle->query($dettaglioTF) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");
+
+ while ($row_areeTF = mysqli_fetch_array($result_areeTF)) {
+
+    $tab_dettaglioF .=  "<tr class='table-secondary'>
+                          <td align='right' width='60%'>TOTALE&nbsp;</td>
+                          <td align='right' width='10%'>".number_format($row_areeTF['qta_tot'],0,',','.')."&nbsp;</td>
+                          <td align='right' width='20%'>".number_format($row_areeTF['Importo_tot'],0,',','.')."</td>
+                          <td align='right' width='10%'>&nbsp;</td>
+                         </tr> ";
+
+}
+
+// Chiudo la tabella
+$tab_dettaglioF .=  '</table>';
+
+
+       
+?>
+
+<table border="0" align="center">
+  <tr>     
+       <td><div id="liquidazioni"><!-- Fusion Charts will also be rendered here--></div></td>
+       <td><div id="liquidazionib2"><!-- Fusion Charts will also be rendered here--></div></td>
+  </tr>
+</table>
+<br>
+
+<table border="0" align="center" width="70%">
+  <tr>     
+       <td valign="top" width="50%"><?php echo $tab_dettaglioA; ?></td>
+       <td>&nbsp;&nbsp;&nbsp;</td>
+       <td valign="top" width="50%"><?php echo $tab_dettaglioB; ?></td>
+  </tr>
+</table>
+<br>
+
+<table border="0" align="center" width="70%">
+  <tr>     
+       <td valign="top" width="50%"><?php echo $tab_dettaglioF; ?></td>
+       <td>&nbsp;&nbsp;&nbsp;</td>
+       <td>&nbsp;&nbsp;&nbsp;</td>
+  </tr>
+</table>
+<br>
+
+<?php
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+// ESPORTAZIONE ELENCO
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+						
+    // Preparo il file per l'estrazione in CSV
+    $contenutofile = '';
+    $select_file = "	
+	                SELECT 'Liquid.Eredi' as Tipo, filiale, pf_pg, cag, Nominativo, Numero_Azioni, Valore_Nominale, Data_Richiesta, Note_Motivazioni, Anno_Liquidazione,
+	                Data_Decesso, Intestazione_a_Eredi, Liquidazione_a_Eredi,
+	                '' as Escluso_art_6, '' as Escluso_art_14, '' as Escluso_x_passaggio_a_Sofferenze,
+	                '' as Totale_Parziale, '' as Cessione_a_Banca
+	                FROM tab_xls_decessi_eredi
+	                WHERE Liquidazione_a_eredi = 'S'
+	                and Note_AO08 not in ('S2','SM')
+	                ".$condizionefiliale."
+
+	                UNION
+	               
+	                SELECT 'Attesa Eredi' as Tipo, filiale, pf_pg, cag, Nominativo, Numero_Azioni, Valore_Nominale, Data_Richiesta, Note_Motivazioni, Anno_Liquidazione,
+	                Data_Decesso, Intestazione_a_Eredi, Liquidazione_a_Eredi,
+	                '' as Escluso_art_6, '' as Escluso_art_14, '' as Escluso_x_passaggio_a_Sofferenze,
+	                '' as Totale_Parziale, '' as Cessione_a_Banca
+	                FROM tab_xls_decessi_eredi
+	                WHERE Intestazione_a_eredi <> 'S' 
+	                AND Liquidazione_a_eredi <> 'S'
+	                and Note_AO08 not in ('S2','SM','')
+	                ".$condizionefiliale."
+
+	                UNION
+	                
+	                SELECT 'Sofferenze' as Tipo, filiale, pf_pg, cag, Nominativo, Numero_Azioni, Valore_Nominale, Data_Richiesta, Note_Motivazioni, Anno_Liquidazione,
+	                '' as Data_Decesso, '' as Intestazione_a_Eredi, '' as Liquidazione_a_Eredi,
+	                Escluso_art_6, Escluso_art_14, Escluso_x_passaggio_a_Sofferenze,
+	                '' as Totale_Parziale, '' as Cessione_a_Banca
+	                FROM tab_xls_recessi_esclusioni_sofferenze
+	                WHERE Escluso_x_Passaggio_a_Sofferenze = 'S' 
+	                and Note_AO08 not in ('S4','SB','SC','')
+	                ".$condizionefiliale."
+
+	                UNION
+	                
+	                SELECT 'Esclusione' as Tipo, filiale, pf_pg, cag, Nominativo, Numero_Azioni, Valore_Nominale, Data_Richiesta, Note_Motivazioni, Anno_Liquidazione,
+	                '' as Data_Decesso, '' as Intestazione_a_Eredi, '' as Liquidazione_a_Eredi,
+	                Escluso_art_6, Escluso_art_14, Escluso_x_passaggio_a_Sofferenze,
+	                '' as Totale_Parziale, '' as Cessione_a_Banca
+	                FROM tab_xls_recessi_esclusioni_sofferenze
+	                WHERE Escluso_x_Passaggio_a_Sofferenze <> 'S'
+	                and Note_AO08 not in ('S4','SA','SB','SC','')
+	                ".$condizionefiliale."
+
+	                UNION
+	                
+	                SELECT 'Cessione Banca' as Tipo, filiale, pf_pg, cag, Nominativo, Numero_Azioni, Valore_Nominale, Data_Richiesta, Note_Motivazioni, '' as Anno_Liquidazione,
+	                '' as Data_Decesso, '' as Intestazione_a_Eredi, '' as Liquidazione_a_Eredi,
+	                '' as Escluso_art_6, '' as Escluso_art_14, '' as Escluso_x_passaggio_a_Sofferenze,
+	                Totale_Parziale, Cessione_a_Banca
+	                FROM tab_xls_cessioni
+	                WHERE Cessione_a_Banca ='S' 
+	                and Note_AO08 not in ('S5','S4','SA','SB','SC','SM','VB') 
+	                ".$condizionefiliale."
+
+                    " ;
+    //echo $select_file;
+    $qry_file = $dbhandle->query($select_file) or exit("Error code ({$dbhandle->errno}): {$dbhandle->error}");    
+    $myfile = fopen("../tmp/liquidazioni".$filiale.".csv", "w");
+    $contenutofile .= "Tipo;filiale;pf_pg;cag;Nominativo;Numero_Azioni;Valore_Nominale;Data_Richiesta;Note_Motivazioni;Anno_Liquidazione;Data_Decesso; Intestazione_a_Eredi;Liquidazione_a_Eredi;Escluso_art_6;Escluso_art_14;Escluso_x_passaggio_a_Sofferenze;Totale_Parziale;Cessione_a_Banca\n";
+    while($cnt_file = mysqli_fetch_array($qry_file)){ 
+        $contenutofile .= 
+			$cnt_file['Tipo'].";".
+			$cnt_file['filiale'].";".
+			$cnt_file['pf_pg'].";".
+			$cnt_file['cag'].";".
+			$cnt_file['Nominativo'].";".
+			$cnt_file['Numero_Azioni'].";".	
+			$cnt_file['Valore_Nominale'].";".
+			$cnt_file['Data_Richiesta'].";".
+			$cnt_file['Note_Motivazioni'].";".		
+			$cnt_file['Anno_Liquidazione'].";".		
+			$cnt_file['Data_Decesso'].";".		
+			$cnt_file['Intestazione_a_Eredi'].";".		
+			$cnt_file['Liquidazione_a_Eredi'].";".		
+			$cnt_file['Escluso_art_6'].";".		
+			$cnt_file['Escluso_art_14'].";".		
+			$cnt_file['Escluso_x_passaggio_a_Sofferenze'].";".		
+			$cnt_file['Totale_Parziale'].";".
+			$cnt_file['Cessione_a_Banca']."\n";
+    }
+    fwrite($myfile, $contenutofile);
+    fclose($myfile);
+
+
+    echo '<center><a class="btn btn-outline-warning" href="../tmp/liquidazioni'.$filiale.'.csv">Scarica il dettaglio completo</a><br><br>';
+
+
+     // Se la richiesta arriva da una Filiale, NON mostro la tabella dei Totali di Filiale
+     if (!isset($_GET['area']))   
+     { echo ''; }
+     else
+     {
+?>
+<table border="0" align="center" width="70%">
+  <tr>     
+       <td valign="top" width="50%"><?php echo $tab_dettaglioA1; ?></td>
+       <td>&nbsp;&nbsp;&nbsp;</td>
+       <td valign="top" width="50%"><?php echo $tab_dettaglioB1; ?></td>
+  </tr>
+</table>
+<br>
+
+<?php
+    }
+// closing database connection      
+$dbhandle->close();       
+?>
+
+    <center>
+        <br><br>
+        <a href="javascript:history.back();" title="Torna alla ricerca"><img src="../img/frecciasx.png">
+    </center>
+
+</body>
+</html>
