@@ -49,7 +49,7 @@ $oggi = date("d.m.Y");
 // Azioni 
 $NumAzioni      = $_GET['numaz'];  
 $FilCC          = $_GET['filcc'];  
-$Calcolo        = $NumAzioni * 30.33;
+$Calcolo        = $NumAzioni * 30.75;
 $Valore         = number_format($Calcolo, 2, ',', '.') ;
 
 // ---------------------------------------

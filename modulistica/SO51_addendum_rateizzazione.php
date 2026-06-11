@@ -51,13 +51,13 @@ $oggi = date("d.m.Y");
 if ($_GET['scelta'] == 'U30')
     { 
         $NumAzioni      = 3 ;
-        $ValorePrimeAzioni= number_format(93.99, 2, ',', '.');
-        $ValoreAzioni   = number_format(90.99, 2, ',', '.');
+        $ValorePrimeAzioni= number_format(95.25, 2, ',', '.');
+        $ValoreAzioni   = number_format(92.25, 2, ',', '.');
         // $AzioniUlteriori= 30;
         $AzioniUlteriori= $_GET['numaz'];
         $NumAzioniTotali= 33;
         $QtaAzioniTotali= $AzioniUlteriori * 3;
-        $ValAzioniTotali= 30 * 30.33;   //#MZ Correzione per numero azioni. (Richiesta Becattini)
+        $ValAzioniTotali= 30 * 30.75;   //#MZ Correzione per numero azioni. (Richiesta Becattini)
         $TotAddebito    = number_format($ValAzioniTotali, 2, ',', '.');
         $Titolo         = 'UNDER 35';
         $Dichiarazione  = '';
@@ -66,12 +66,12 @@ if ($_GET['scelta'] == 'U30')
 if ($_GET['scelta'] == 'CM')
     { 
         $NumAzioni      = 8 ;
-        $ValorePrimeAzioni   = number_format(250.64, 2, ',', '.');
-        $ValoreAzioni   = number_format(242.64, 2, ',', '.');
+        $ValorePrimeAzioni   = number_format(254.00, 2, ',', '.');
+        $ValoreAzioni   = number_format(246.00, 2, ',', '.');
         $AzioniUlteriori= 8;
         $NumAzioniTotali= 16;
         $QtaAzioniTotali= 8;
-        $TotAddebito    = number_format(250.64, 2, ',', '.');
+        $TotAddebito    = number_format(254.00, 2, ',', '.');
         $Titolo         = 'SOCIO CHIANTIMUTUA';
 
         // Estrazione della data di ingresso in ChiantiMutua

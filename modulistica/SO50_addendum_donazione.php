@@ -50,7 +50,7 @@ $oggi = date("d.m.Y");
 // Azioni Donate
 $NumAzioni      = $_GET['numaz'];  
 $NumAzioniTotali= $_GET['numaztotali'];  
-$Calcolo        = $NumAzioni * 30.33;
+$Calcolo        = $NumAzioni * 30.75;
 $ValoreCessione = number_format($Calcolo, 2, ',', '.') ;
 
 // ---------------------------------------

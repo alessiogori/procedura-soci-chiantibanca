@@ -43,7 +43,7 @@ $titolo = '';
 // ---------------------------------------
 
 $NumAzioni      = $_GET['numazioni'];  
-$Calcolo        = $NumAzioni * 30.33;
+$Calcolo        = $NumAzioni * 30.75;
 $ValoreCessione = number_format($Calcolo, 2, ',', '.') ;
 // ---------------------------------------
         include("../config/_config.php");
